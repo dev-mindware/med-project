@@ -1,0 +1,30 @@
+import { AuditableEntity } from "./common";
+import { VonalpCompletionStatus } from "./vonalp";
+
+export type EntryData = {
+  entry: string;
+  pronunciation?: string;
+  syllabicDivision?: string;
+  etymology?: string;
+  firstDefinition: string;
+  secondDefinition?: string;
+  thirdDefinition?: string;
+  usageExample?: string;
+  abbreviation?: string;
+  acronym?: string;
+  acronymMeaning?: string;
+  reduction?: string;
+  reductionMeaning?: string;
+  shortForm?: string;
+  fullForm?: string;
+  grammaticalCategory?: string;
+  grammaticalSubcategory?: string;
+  grammaticalStatus?: string;
+  languageCode?: string;
+  isVocabulary?: boolean;
+  isVocabularyEP?: boolean;
+  isForeignism?: boolean;
+  vonalpCompletionStatus?: VonalpCompletionStatus;
+  vonalpEpCompletionStatus?: VonalpCompletionStatus;
+};
+export type EntryResponse = EntryData & AuditableEntity;

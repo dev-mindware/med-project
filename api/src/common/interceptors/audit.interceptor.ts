@@ -1,0 +1,578 @@
+import {
+  Injectable,
+  NestInterceptor,
+  ExecutionContext,
+  CallHandler,
+} from '@nestjs/common';
+import { Observable } from 'rxjs';
+import { catchError, tap } from 'rxjs/operators';
+import { throwError } from 'rxjs';
+import { ApprovalStatus, UserRole } from '@prisma/client';
+import { PrismaService } from '../../prisma/prisma.service';
+
+type ContentEntityConfig = {
+  delegateName: string;
+  label: string;
+  pluralLabel: string;
+  itemKey: string;
+  createTitle: string;
+  statusTitle: string;
+  articlePhrase: string;
+};
+
+type ActorSnapshot = {
+  id: string;
+  name: string;
+  email: string;
+  role: UserRole;
+  supervisorId?: string | null;
+};
+
+type ContentSnapshot = {
+  id: string;
+  createdById?: string | null;
+  approvalStatus?: ApprovalStatus | string | null;
+  createdBy?: ActorSnapshot | null;
+  [key: string]: any;
+};
+
+type NotificationDraft = {
+  userId: string;
+  title: string;
+  message: string;
+  type: string;
+  entity?: string | null;
+  entityId?: string | null;
+};
+
+type AuditNotificationData = {
+  actorId?: string;
+  actorRole?: UserRole;
+  action: string;
+  entity: string;
+  entityId?: string | null;
+  path: string;
+  oldValues: any;
+  newValues: any;
+  result: any;
+};
+
+const CONTENT_ENTITIES: Record<string, ContentEntityConfig> = {
+  Entry: {
+    delegateName: 'entry',
+    label: 'entrada',
+    pluralLabel: 'entradas',
+    itemKey: 'entry',
+    createTitle: 'Nova entrada criada',
+    statusTitle: 'Estado da entrada atualizado',
+    articlePhrase: 'da entrada',
+  },
+  Neologism: {
+    delegateName: 'neologism',
+    label: 'neologismo',
+    pluralLabel: 'neologismos',
+    itemKey: 'entry',
+    createTitle: 'Novo neologismo criado',
+    statusTitle: 'Estado do neologismo atualizado',
+    articlePhrase: 'do neologismo',
+  },
+  Toponym: {
+    delegateName: 'toponym',
+    label: 'topónimo',
+    pluralLabel: 'topónimos',
+    itemKey: 'toponym',
+    createTitle: 'Novo topónimo criado',
+    statusTitle: 'Estado do topónimo atualizado',
+    articlePhrase: 'do topónimo',
+  },
+  Anthroponym: {
+    delegateName: 'anthroponym',
+    label: 'antropónimo',
+    pluralLabel: 'antropónimos',
+    itemKey: 'name',
+    createTitle: 'Novo antropónimo criado',
+    statusTitle: 'Estado do antropónimo atualizado',
+    articlePhrase: 'do antropónimo',
+  },
+  Foreignism: {
+    delegateName: 'foreignism',
+    label: 'estrangeirismo',
+    pluralLabel: 'estrangeirismos',
+    itemKey: 'term',
+    createTitle: 'Novo estrangeirismo criado',
+    statusTitle: 'Estado do estrangeirismo atualizado',
+    articlePhrase: 'do estrangeirismo',
+  },
+};
+
+@Injectable()
+export class AuditInterceptor implements NestInterceptor {
+  constructor(private prisma: PrismaService) {}
+
+  intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
+    const request = context.switchToHttp().getRequest();
+    const response = context.switchToHttp().getResponse();
+    const { method, url, user, body, ip, params, query, route } = request;
+    const userAgent = request.get('user-agent');
+    const path = url.split('?')[0];
+    const shouldAudit = method !== 'GET';
+    const actionName = this.getActionName(method, url);
+    const { entityName, delegateName } = this.getEntityInfo(path);
+    const entityId = params?.id || path.split('/').filter(Boolean)[1] || null;
+    const sanitizedBody = this.sanitize(body);
+    const oldValuesPromise = shouldAudit
+      ? this.getOldValues(delegateName, entityId, method)
+      : Promise.resolve(null);
+
+    return next.handle().pipe(
+      tap(async (data) => {
+        if (!shouldAudit) return;
+
+        const oldValues = await oldValuesPromise;
+        const newValues = method === 'DELETE' ? null : this.sanitize(data?.id ? data : body);
+        const persistedEntityId = data?.id || entityId;
+
+        await this.createAuditLog({
+          actorId: user?.id,
+          actorRole: user?.role,
+          action: actionName,
+          entity: entityName,
+          entityId: persistedEntityId,
+          oldValues,
+          newValues,
+          ipAddress: ip,
+          userAgent,
+          status: 'SUCCESS',
+          metadata: {
+            method,
+            url,
+            path,
+            route: route?.path,
+            params,
+            query,
+            requestBody: sanitizedBody,
+            statusCode: response?.statusCode,
+            changedFields: this.getChangedFields(oldValues, sanitizedBody),
+          },
+        });
+
+        await this.createNotificationsFromAudit({
+          actorId: user?.id,
+          actorRole: user?.role,
+          action: actionName,
+          entity: entityName,
+          entityId: persistedEntityId,
+          path,
+          oldValues,
+          newValues,
+          result: this.sanitize(data),
+        });
+      }),
+      catchError((error) => {
+        if (!shouldAudit) return throwError(() => error);
+
+        void oldValuesPromise.then((oldValues) =>
+          this.createAuditLog({
+            actorId: user?.id,
+            actorRole: user?.role,
+            action: actionName,
+            entity: entityName,
+            entityId,
+            oldValues,
+            newValues: method === 'DELETE' ? null : sanitizedBody,
+            ipAddress: ip,
+            userAgent,
+            status: 'FAILED',
+            failureReason: error?.response?.message || error?.message || 'Erro desconhecido',
+            metadata: {
+              method,
+              url,
+              path,
+              route: route?.path,
+              params,
+              query,
+              requestBody: sanitizedBody,
+              statusCode: error?.status || error?.response?.statusCode,
+              changedFields: this.getChangedFields(oldValues, sanitizedBody),
+            },
+          }),
+        );
+
+        return throwError(() => error);
+      }),
+    );
+  }
+
+  private getActionName(method: string, url: string) {
+    if (url.includes('/auth/login') || url.includes('/auth/refresh')) return 'LOGIN';
+    if (method === 'POST') return 'CREATE';
+    if (method === 'PATCH' || method === 'PUT') return 'UPDATE';
+    if (method === 'DELETE') return 'DELETE';
+    return 'OTHER';
+  }
+
+  private getEntityInfo(path: string) {
+    const resource = path.split('/').filter(Boolean)[0] || 'unknown';
+    const entityMap: Record<string, { entityName: string; delegateName?: string }> = {
+      entries: { entityName: 'Entry', delegateName: 'entry' },
+      neologisms: { entityName: 'Neologism', delegateName: 'neologism' },
+      toponyms: { entityName: 'Toponym', delegateName: 'toponym' },
+      anthroponyms: { entityName: 'Anthroponym', delegateName: 'anthroponym' },
+      foreignisms: { entityName: 'Foreignism', delegateName: 'foreignism' },
+      'blog-posts': { entityName: 'BlogPost', delegateName: 'blogPost' },
+      events: { entityName: 'Event', delegateName: 'event' },
+      'event-registrations': { entityName: 'EventRegistration', delegateName: 'eventRegistration' },
+      users: { entityName: 'User', delegateName: 'user' },
+      media: { entityName: 'MediaAsset', delegateName: 'mediaAsset' },
+      auth: { entityName: 'Auth' },
+    };
+
+    return entityMap[resource] || {
+      entityName: resource.charAt(0).toUpperCase() + resource.slice(1).replace(/s$/, ''),
+    };
+  }
+
+  private async getOldValues(delegateName: string | undefined, entityId: string | null, method: string) {
+    if (!delegateName || !entityId || !['PUT', 'PATCH', 'DELETE'].includes(method)) return null;
+
+    const delegate = (this.prisma as any)[delegateName];
+    if (!delegate?.findUnique) return null;
+
+    try {
+      return this.sanitize(await delegate.findUnique({ where: { id: entityId } }));
+    } catch {
+      return null;
+    }
+  }
+
+  private sanitize(value: any): any {
+    if (!value || typeof value !== 'object') return value ?? null;
+    if (value instanceof Date) return value.toISOString();
+    const sensitiveFields = new Set(['password', 'confirmPassword', 'token', 'accessToken', 'refreshToken', 'hash', 'tokenHash']);
+
+    if (Array.isArray(value)) {
+      return value.map((item) => this.sanitize(item));
+    }
+
+    return Object.fromEntries(
+      Object.entries(value).map(([key, val]) => [
+        key,
+        sensitiveFields.has(key) ? '[REDACTED]' : this.sanitize(val),
+      ]),
+    );
+  }
+
+  private getChangedFields(oldValues: any, newValues: any) {
+    if (!oldValues || !newValues || typeof newValues !== 'object') return [];
+    return Object.keys(newValues).filter((key) => JSON.stringify(oldValues[key]) !== JSON.stringify(newValues[key]));
+  }
+
+  private async createAuditLog(data: any) {
+    try {
+      await this.prisma.auditLog.create({ data });
+    } catch (error) {
+      console.error('Audit log error:', error);
+    }
+  }
+
+  private async createNotificationsFromAudit(data: AuditNotificationData) {
+    const config = CONTENT_ENTITIES[data.entity];
+    if (!config || !data.actorId) return;
+
+    try {
+      const actor = await this.getActorSnapshot(data.actorId);
+      if (!actor) return;
+
+      if (data.action === 'CREATE') {
+        if (data.path.endsWith('/import')) {
+          await this.notifyBulkCreation(data, config, actor);
+          return;
+        }
+
+        await this.notifyContentCreation(data, config, actor);
+        return;
+      }
+
+      if (data.action !== 'UPDATE') return;
+
+      if (this.isReviewPath(data.path)) {
+        await this.notifyReviewAction(data, config, actor);
+        return;
+      }
+
+      await this.notifyNonDraftEdit(data, config, actor);
+    } catch (error) {
+      console.error('Notification error:', error);
+    }
+  }
+
+  private async notifyContentCreation(
+    data: AuditNotificationData,
+    config: ContentEntityConfig,
+    actor: ActorSnapshot,
+  ) {
+    const content = await this.getContentSnapshot(data.entity, data.entityId) || data.newValues;
+    const itemLabel = this.getItemLabel(config, content);
+    const statusLabel = this.translateApprovalStatus(content?.approvalStatus || data.newValues?.approvalStatus);
+    const notifications: NotificationDraft[] = [];
+
+    const admins = await this.getActiveAdminsExcept(actor.id);
+    notifications.push(...admins.map((admin) => ({
+      userId: admin.id,
+      title: config.createTitle,
+      message: `${actor.name} criou ${config.label} "${itemLabel}". O registo ficou em ${statusLabel} e deve ser acompanhado no fluxo editorial.`,
+      type: 'CONTENT_CREATED',
+      entity: data.entity,
+      entityId: data.entityId,
+    })));
+
+    if (actor.role === UserRole.OPERATOR && actor.supervisorId) {
+      const supervisor = await this.getActiveUser(actor.supervisorId);
+      if (supervisor) {
+        notifications.push({
+          userId: supervisor.id,
+          title: config.createTitle,
+          message: `O operador ${actor.name} criou ${config.label} "${itemLabel}". O registo ficou em ${statusLabel} e pode ser acompanhado na fila de supervisão.`,
+          type: 'OPERATOR_CONTENT_CREATED',
+          entity: data.entity,
+          entityId: data.entityId,
+        });
+      }
+    }
+
+    await this.persistNotifications(notifications);
+  }
+
+  private async notifyBulkCreation(
+    data: AuditNotificationData,
+    config: ContentEntityConfig,
+    actor: ActorSnapshot,
+  ) {
+    const successCount = Number(data.result?.successCount || data.result?.created?.length || 0);
+    if (!successCount) return;
+
+    const notifications: NotificationDraft[] = [];
+    const title = `Importação de ${config.pluralLabel} concluída`;
+    const entityId = Array.isArray(data.result?.created) ? data.result.created[0]?.id : null;
+
+    const admins = await this.getActiveAdminsExcept(actor.id);
+    notifications.push(...admins.map((admin) => ({
+      userId: admin.id,
+      title,
+      message: `${actor.name} importou ${successCount} registo${successCount > 1 ? 's' : ''} em ${config.pluralLabel}. Os novos dados ficaram em rascunho e devem seguir o fluxo editorial normal.`,
+      type: 'CONTENT_IMPORTED',
+      entity: data.entity,
+      entityId,
+    })));
+
+    if (actor.role === UserRole.OPERATOR && actor.supervisorId) {
+      const supervisor = await this.getActiveUser(actor.supervisorId);
+      if (supervisor) {
+        notifications.push({
+          userId: supervisor.id,
+          title,
+          message: `O operador ${actor.name} importou ${successCount} registo${successCount > 1 ? 's' : ''} em ${config.pluralLabel}. Os dados ficaram em rascunho para acompanhamento.`,
+          type: 'OPERATOR_CONTENT_IMPORTED',
+          entity: data.entity,
+          entityId,
+        });
+      }
+    }
+
+    await this.persistNotifications(notifications);
+  }
+
+  private async notifyReviewAction(
+    data: AuditNotificationData,
+    config: ContentEntityConfig,
+    actor: ActorSnapshot,
+  ) {
+    if (actor.role !== UserRole.ADMIN && actor.role !== UserRole.SUPERVISOR) return;
+
+    const oldStatus = data.oldValues?.approvalStatus;
+    const newStatus = data.newValues?.approvalStatus || data.result?.approvalStatus;
+    if (!newStatus || oldStatus === newStatus) return;
+
+    const content = await this.getContentSnapshot(data.entity, data.entityId) || data.newValues || data.oldValues;
+    const itemLabel = this.getItemLabel(config, content);
+    const reason = this.getReviewReason(data.newValues);
+    const reasonText = reason ? ` Observação: ${reason}` : '';
+    const statusText = `de ${this.translateApprovalStatus(oldStatus)} para ${this.translateApprovalStatus(newStatus)}`;
+    const notifications: NotificationDraft[] = [];
+
+    const admins = await this.getActiveAdminsExcept(actor.id);
+    notifications.push(...admins.map((admin) => ({
+      userId: admin.id,
+      title: 'Ato de supervisão registado',
+      message: `${actor.name} alterou o estado ${config.articlePhrase} "${itemLabel}" ${statusText}.${reasonText}`,
+      type: 'CONTENT_SUPERVISION',
+      entity: data.entity,
+      entityId: data.entityId,
+    })));
+
+    const creatorId = content?.createdById || data.oldValues?.createdById || data.newValues?.createdById;
+    if (creatorId && creatorId !== actor.id) {
+      const creator = await this.getActiveUser(creatorId);
+      if (creator?.role === UserRole.OPERATOR) {
+        notifications.push({
+          userId: creator.id,
+          title: config.statusTitle,
+          message: `${actor.name} alterou o estado ${config.articlePhrase} "${itemLabel}" ${statusText}.${reasonText}`,
+          type: 'CONTENT_STATUS_CHANGED',
+          entity: data.entity,
+          entityId: data.entityId,
+        });
+      }
+    }
+
+    await this.persistNotifications(notifications);
+  }
+
+  private async notifyNonDraftEdit(
+    data: AuditNotificationData,
+    config: ContentEntityConfig,
+    actor: ActorSnapshot,
+  ) {
+    const oldStatus = data.oldValues?.approvalStatus;
+    if (!oldStatus || oldStatus === ApprovalStatus.DRAFT) return;
+
+    const creatorId = data.oldValues?.createdById || data.newValues?.createdById;
+    if (creatorId && creatorId === actor.id) return;
+
+    const content = await this.getContentSnapshot(data.entity, data.entityId) || data.newValues || data.oldValues;
+    const itemLabel = this.getItemLabel(config, content);
+    const changedFields = this.getChangedFields(data.oldValues, data.newValues);
+    const changedText = changedFields.length
+      ? ` Campos alterados: ${changedFields.map((field) => this.translateField(field)).join(', ')}.`
+      : '';
+
+    const admins = await this.getActiveAdminsExcept(actor.id);
+    await this.persistNotifications(admins.map((admin) => ({
+      userId: admin.id,
+      title: 'Conteúdo não rascunho editado',
+      message: `${actor.name} editou ${config.articlePhrase} "${itemLabel}", que estava em ${this.translateApprovalStatus(oldStatus)}.${changedText} Verifique se a alteração continua adequada ao fluxo editorial.`,
+      type: 'PUBLISHED_CONTENT_UPDATED',
+      entity: data.entity,
+      entityId: data.entityId,
+    })));
+  }
+
+  private async getActorSnapshot(actorId: string): Promise<ActorSnapshot | null> {
+    return this.prisma.user.findUnique({
+      where: { id: actorId },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        supervisorId: true,
+      },
+    });
+  }
+
+  private async getContentSnapshot(entity: string, entityId?: string | null): Promise<ContentSnapshot | null> {
+    if (!entityId || entityId === 'import') return null;
+
+    const config = CONTENT_ENTITIES[entity];
+    if (!config) return null;
+
+    const delegate = (this.prisma as any)[config.delegateName];
+    if (!delegate?.findUnique) return null;
+
+    return delegate.findUnique({
+      where: { id: entityId },
+      select: {
+        id: true,
+        [config.itemKey]: true,
+        approvalStatus: true,
+        createdById: true,
+        createdBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true,
+            supervisorId: true,
+          },
+        },
+      },
+    });
+  }
+
+  private async getActiveAdminsExcept(actorId?: string) {
+    return this.prisma.user.findMany({
+      where: {
+        role: UserRole.ADMIN,
+        isActive: true,
+        ...(actorId ? { NOT: { id: actorId } } : {}),
+      },
+      select: { id: true },
+    });
+  }
+
+  private async getActiveUser(userId: string) {
+    return this.prisma.user.findFirst({
+      where: { id: userId, isActive: true },
+      select: { id: true, role: true },
+    });
+  }
+
+  private async persistNotifications(notifications: NotificationDraft[]) {
+    const uniqueByUser = new Map<string, NotificationDraft>();
+
+    for (const notification of notifications) {
+      if (!notification.userId || uniqueByUser.has(notification.userId)) continue;
+      uniqueByUser.set(notification.userId, notification);
+    }
+
+    const data = Array.from(uniqueByUser.values());
+    if (data.length === 0) return;
+
+    await this.prisma.notification.createMany({ data });
+  }
+
+  private isReviewPath(path: string) {
+    return path.split('/').filter(Boolean).includes('review');
+  }
+
+  private getItemLabel(config: ContentEntityConfig, value: any) {
+    const label = value?.[config.itemKey];
+    if (typeof label === 'string' && label.trim()) return label.trim();
+    return `registo de ${config.label}`;
+  }
+
+  private getReviewReason(value: any) {
+    const reason = value?.rejectionReason || value?.correctionNotes;
+    return typeof reason === 'string' && reason.trim() ? reason.trim() : '';
+  }
+
+  private translateApprovalStatus(status?: string | null) {
+    const labels: Record<string, string> = {
+      DRAFT: 'Rascunho',
+      PENDING_APPROVAL: 'Pendente de aprovação',
+      APPROVED: 'Aprovado',
+      REJECTED: 'Rejeitado',
+      NEEDS_CORRECTION: 'Precisa de correção',
+      ARCHIVED: 'Arquivado',
+    };
+
+    return labels[status || ''] || 'estado não informado';
+  }
+
+  private translateField(field: string) {
+    const labels: Record<string, string> = {
+      entry: 'entrada',
+      firstDefinition: 'primeira definição',
+      toponym: 'topónimo',
+      province: 'província',
+      name: 'nome próprio',
+      term: 'termo estrangeiro',
+      approvalStatus: 'estado',
+      rejectionReason: 'motivo de rejeição',
+      correctionNotes: 'notas de correção',
+      updatedById: 'responsável pela edição',
+    };
+
+    return labels[field] || field;
+  }
+}

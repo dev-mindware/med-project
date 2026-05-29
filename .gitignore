@@ -1,0 +1,69 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.*
+
+# Build output
+dist/
+build/
+.next/
+out/
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-debug.log*
+
+# Test and coverage output
+coverage/
+.nyc_output/
+test-results/
+
+# Caches
+.cache/
+.parcel-cache/
+.eslintcache
+.stylelintcache
+*.tsbuildinfo
+next-env.d.ts
+
+# Databases and generated local files
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+uploads/
+tmp/
+temp/
+
+# Tooling
+.vercel/
+.turbo/
+
+# OS and editors
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+*.swp
+*.swo
+*~
+
+# Certificates and keys
+*.pem
+*.key
+*.cert
+
+# Docker overrides
+docker-compose.override.yml
