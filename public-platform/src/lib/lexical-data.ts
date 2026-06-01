@@ -1,0 +1,32 @@
+import { publicApi, safePublicApi } from "@/lib/public-api"
+
+const EMPTY_META = {
+  total: 0,
+  page: 1,
+  limit: 24,
+  totalPages: 0,
+  hasNextPage: false,
+  hasPreviousPage: false,
+}
+
+const emptyLexicalData = {
+  neologisms: { data: [], meta: EMPTY_META },
+  foreignisms: { data: [], meta: EMPTY_META },
+  toponyms: { data: [], meta: EMPTY_META },
+  anthroponyms: { data: [], meta: EMPTY_META },
+  vonalp: { data: [], meta: EMPTY_META },
+  vonalpEp: { data: [], meta: EMPTY_META },
+}
+
+export async function getLexicalData() {
+  const [neologisms, foreignisms, toponyms, anthroponyms, vonalp, vonalpEp] = await Promise.all([
+    safePublicApi(() => publicApi.neologisms({ limit: 24 }), emptyLexicalData.neologisms),
+    safePublicApi(() => publicApi.foreignisms({ limit: 24 }), emptyLexicalData.foreignisms),
+    safePublicApi(() => publicApi.toponyms({ limit: 24 }), emptyLexicalData.toponyms),
+    safePublicApi(() => publicApi.anthroponyms({ limit: 24 }), emptyLexicalData.anthroponyms),
+    safePublicApi(() => publicApi.vonalp({ limit: 24 }), emptyLexicalData.vonalp),
+    safePublicApi(() => publicApi.vonalpEp({ limit: 24 }), emptyLexicalData.vonalpEp),
+  ])
+
+  return { neologisms, foreignisms, toponyms, anthroponyms, vonalp, vonalpEp }
+}

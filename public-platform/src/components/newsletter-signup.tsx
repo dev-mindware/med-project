@@ -4,29 +4,27 @@ import type React from "react"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Mail, CheckCircle2 } from "lucide-react"
+import { CheckCircle2, Mail } from "lucide-react"
 
 export function NewsletterSignup() {
   const [email, setEmail] = useState("")
   const [submitted, setSubmitted] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSubmit = (event: React.FormEvent) => {
+    event.preventDefault()
     setSubmitted(true)
     setTimeout(() => setSubmitted(false), 4000)
   }
 
   return (
     <div className="relative rounded-2xl overflow-hidden border border-border/50 bg-card">
-      {/* Subtle grid bg */}
       <div
-        className="pointer-events-none absolute inset-0 opacity-[0.025] dark:opacity-[0.05]"
+        className="pointer-events-none absolute inset-0 opacity-[0.025]"
         style={{
           backgroundImage: "radial-gradient(circle, currentColor 1px, transparent 1px)",
           backgroundSize: "24px 24px",
         }}
       />
-      {/* Glow */}
       <div
         className="pointer-events-none absolute inset-0"
         style={{
@@ -45,7 +43,7 @@ export function NewsletterSignup() {
         </p>
 
         {submitted ? (
-          <div className="flex items-center justify-center gap-2 text-emerald-600 dark:text-emerald-400 font-semibold">
+          <div className="flex items-center justify-center gap-2 text-emerald-600 font-semibold">
             <CheckCircle2 className="h-5 w-5" />
             Subscrição confirmada! Obrigado.
           </div>
@@ -55,7 +53,7 @@ export function NewsletterSignup() {
               type="email"
               placeholder="o.seu@email.com"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(event) => setEmail(event.target.value)}
               required
               className="h-11 rounded-lg flex-1"
             />

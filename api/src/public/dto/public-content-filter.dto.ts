@@ -39,6 +39,11 @@ export class PublicContentFilterDto {
   @IsString()
   category?: string;
 
+  @ApiPropertyOptional({ description: 'Subcategoria gramatical, usada em entradas e neologismos.' })
+  @IsOptional()
+  @IsString()
+  grammaticalSubcategory?: string;
+
   @ApiPropertyOptional({ description: 'Código da língua, usado em entradas, neologismos e topónimos.' })
   @IsOptional()
   @IsString()

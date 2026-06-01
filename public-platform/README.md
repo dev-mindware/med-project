@@ -1,7 +1,7 @@
-# Portal Publico
+# Portal Público
 
-Aplicacao publica em Next.js para apresentacao institucional, artigos, eventos,
-dicionario, documentos, media e conteudos ligados a plataforma linguistica.
+Aplicação pública em Next.js para apresentação institucional, artigos, eventos,
+dicionário, documentos, mídia e conteúdos ligados à plataforma linguística.
 
 ## Requisitos
 
@@ -12,6 +12,20 @@ dicionario, documentos, media e conteudos ligados a plataforma linguistica.
 
 ```bash
 pnpm install
+```
+
+## Configuração
+
+Copie o ficheiro de exemplo:
+
+```bash
+cp .env.example .env
+```
+
+Ajuste a URL da API, se necessário:
+
+```env
+NEXT_PUBLIC_API_URL="http://localhost:4000"
 ```
 
 ## Desenvolvimento

@@ -1,16 +1,18 @@
 import type React from "react"
 import type { Metadata } from "next"
-import { Plus_Jakarta_Sans } from "next/font/google"
+import { Manrope, Outfit } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
-import { ThemeProvider } from "@/components/theme-provider"
-import { ScreenshotProtection } from "@/components/screenshot-protection"
-import { Suspense } from "react"
 import "./globals.css"
 
-const plusJakarta = Plus_Jakarta_Sans({
+const manrope = Manrope({
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700", "800"],
-  variable: "--font-sans",
+  variable: "--font-manrope",
+  display: "swap",
+})
+
+const outfit = Outfit({
+  subsets: ["latin"],
+  variable: "--font-outfit",
   display: "swap",
 })
 
@@ -21,8 +23,8 @@ export const metadata: Metadata = {
     template: "%s | CNLP Angola",
   },
   description:
-    "Portal oficial da Comissão Nacional de Língua Portuguesa de Angola — Dicionário, Gramática, VONA e recursos educativos.",
-  keywords: ["língua portuguesa", "Angola", "dicionário", "gramática", "VONA", "educação"],
+    "Portal oficial da Comissão Nacional de Língua Portuguesa de Angola - Dicionário, Gramática, Topónimos, Antropónimos, Vocabulário Ortográfico Nacional de Angola para a Língua Portuguesa e recursos educativos.",
+  keywords: ["língua portuguesa", "Angola", "dicionário", "gramática", "topónimos", "antropónimos", "VONALP", "educação"],
   openGraph: {
     type: "website",
     locale: "pt_AO",
@@ -38,14 +40,9 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="pt" suppressHydrationWarning>
-      <body className={`font-sans ${plusJakarta.variable} antialiased`}>
-        <Suspense fallback={null}>
-          <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
-            <ScreenshotProtection />
-            {children}
-          </ThemeProvider>
-        </Suspense>
+    <html lang="pt">
+      <body className={`${manrope.variable} ${outfit.variable} font-sans antialiased`}>
+        {children}
         <Analytics />
       </body>
     </html>

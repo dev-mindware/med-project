@@ -45,9 +45,10 @@ med-project/
 ```bash
 cp api/.env.example api/.env
 cp back-office/.env.example back-office/.env
+cp public-platform/.env.example public-platform/.env
 ```
 
-2. Ajuste as variaveis em `api/.env` e `back-office/.env`.
+2. Ajuste as variaveis em `api/.env`, `back-office/.env` e `public-platform/.env`.
 
 3. Suba a base de dados local, se for usar Docker:
 
@@ -134,8 +135,7 @@ pnpm lint
 
 - Nao versionar `.env`, `.next`, `dist`, `node_modules`, logs ou ficheiros de
   cache.
-- Confirmar que `api/.env.example` e `back-office/.env.example` contem apenas
-  valores de exemplo.
+- Confirmar que os ficheiros `.env.example` contem apenas valores de exemplo.
 - Remover repositorios Git internos de `api`, `back-office` e
   `public-platform` caso queira publicar tudo como um unico repositorio.
 - Definir a licenca do projecto, se aplicavel.

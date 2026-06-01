@@ -1,101 +1,71 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { BookOpen, TrendingUp, Star } from "lucide-react"
+import type { PublicEntry } from "@/lib/public-api"
+import { getGrammaticalCategoryLabel } from "@/lib/grammatical-labels"
+import { BookOpen, ArrowRight } from "lucide-react"
 import Link from "next/link"
 
-export function FeaturedWords() {
-  const categories = [
-    {
-      title: "Palavras Mais Pesquisadas",
-      icon: TrendingUp,
-      words: [
-        { word: "Ubuntu", class: "substantivo", definition: "Filosofia africana de humanidade e solidariedade" },
-        {
-          word: "Cacimbo",
-          class: "substantivo",
-          definition: "Estação seca em Angola, caracterizada por neblina matinal",
-        },
-        { word: "Kimbo", class: "substantivo", definition: "Aldeia ou povoação tradicional angolana" },
-        { word: "Muxima", class: "substantivo", definition: "Coração, centro espiritual na cultura angolana" },
-      ],
-    },
-    {
-      title: "Palavras Angolanas",
-      icon: Star,
-      words: [
-        { word: "Bué", class: "advérbio", definition: "Muito, bastante (expressão popular angolana)" },
-        { word: "Zungueira", class: "substantivo", definition: "Vendedora ambulante nos mercados de Angola" },
-        { word: "Candonga", class: "substantivo", definition: "Mercado informal, comércio paralelo" },
-        { word: "Gasosa", class: "substantivo", definition: "Refrigerante, bebida gaseificada" },
-      ],
-    },
-    {
-      title: "Termos Gramaticais",
-      icon: BookOpen,
-      words: [
-        {
-          word: "Predicado",
-          class: "substantivo",
-          definition: "Termo essencial da oração que expressa algo sobre o sujeito",
-        },
-        {
-          word: "Complemento",
-          class: "substantivo",
-          definition: "Termo que completa o sentido de verbos, nomes ou adjetivos",
-        },
-        {
-          word: "Adjunto",
-          class: "substantivo",
-          definition: "Termo acessório que modifica ou especifica outros termos",
-        },
-        { word: "Aposto", class: "substantivo", definition: "Termo que explica, especifica ou resume outro termo" },
-      ],
-    },
-  ]
+export function FeaturedWords({ entries = [] }: { entries?: PublicEntry[] }) {
+  const words = entries
+    .filter((entry) => entry.entry && (entry.firstDefinition || entry.secondDefinition || entry.thirdDefinition))
+    .slice(0, 6)
+
+  if (words.length === 0) {
+    return (
+      <div className="rounded-lg border border-dashed border-primary/25 bg-white/70 p-8 text-center">
+        <BookOpen className="mx-auto mb-3 h-8 w-8 text-primary/55" />
+        <h2 className="text-2xl font-extrabold">Sem palavras em destaque</h2>
+        <p className="mx-auto mt-2 max-w-xl text-sm text-muted-foreground">
+          Esta área só mostra entradas reais aprovadas pela API.
+        </p>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-8">
-      <div className="text-center">
-        <h2 className="text-3xl font-bold mb-4">Palavras em Destaque</h2>
-        <p className="text-muted-foreground">
-          Explore as palavras mais pesquisadas e termos únicos da língua portuguesa
+      <div className="flex flex-col gap-3 text-center md:flex-row md:items-end md:justify-between md:text-left">
+        <div>
+          <p className="mb-2 text-xs font-bold uppercase tracking-widest text-primary">Dicionário</p>
+          <h2 className="text-3xl font-extrabold">Entradas publicadas</h2>
+        </div>
+        <p className="max-w-xl text-sm leading-relaxed text-muted-foreground">
+          Uma seleção direta das entradas aprovadas que a API devolveu para esta página.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {categories.map((category, categoryIndex) => {
-          const Icon = category.icon
-          return (
-            <Card key={categoryIndex} className="h-fit">
-              <CardHeader>
-                <div className="flex items-center space-x-2">
-                  <Icon className="h-5 w-5 text-primary" />
-                  <CardTitle className="text-lg">{category.title}</CardTitle>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {category.words.map((word, wordIndex) => (
-                  <div
-                    key={wordIndex}
-                    className="space-y-2 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
-                  >
-                    <div className="flex items-center justify-between">
-                      <h4 className="font-semibold text-primary">{word.word}</h4>
-                      <Badge variant="outline" className="text-xs">
-                        {word.class}
-                      </Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground leading-relaxed">{word.definition}</p>
-                  </div>
-                ))}
-                <Button variant="outline" className="w-full mt-4 bg-transparent" asChild>
-                  <Link href="/dictionary">Ver mais palavras</Link>
-                </Button>
-              </CardContent>
-            </Card>
-          )
-        })}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+        {words.map((word, index) => (
+          <article
+            key={word.id}
+            className="group rounded-lg border border-blue-100/80 bg-white/82 p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary/35 hover:shadow-lg hover:shadow-blue-950/8"
+            style={{ animationDelay: `${index * 70}ms` }}
+          >
+            <div className="mb-4 flex items-start justify-between gap-3">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Entrada</p>
+                <h3 className="mt-1 text-2xl font-extrabold text-primary">{word.entry}</h3>
+              </div>
+              {word.grammaticalCategory && (
+                <Badge variant="outline" className="rounded-md">
+                  {getGrammaticalCategoryLabel(word.grammaticalCategory)}
+                </Badge>
+              )}
+            </div>
+            <p className="line-clamp-3 text-sm leading-relaxed text-muted-foreground">
+              {word.firstDefinition || word.secondDefinition || word.thirdDefinition}
+            </p>
+          </article>
+        ))}
+      </div>
+
+      <div className="text-center">
+        <Button variant="outline" className="rounded-md bg-transparent font-semibold" asChild>
+          <Link href="/dictionary">
+            Ver dicionário completo
+            <ArrowRight className="ml-2 h-4 w-4" />
+          </Link>
+        </Button>
       </div>
     </div>
   )

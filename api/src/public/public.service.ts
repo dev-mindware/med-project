@@ -5,6 +5,7 @@ import {
   PostStatus,
   Prisma,
   RegistrationStatus,
+  VonalpCompletionStatus,
   VonalpVocabularyType,
 } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
@@ -190,6 +191,53 @@ export class PublicService {
     private readonly vonalpService: VonalpService,
   ) {}
 
+  async stats() {
+    const now = new Date();
+
+    const [
+      dictionaryEntries,
+      toponyms,
+      anthroponyms,
+      publishedArticles,
+      publishedEvents,
+      upcomingEvents,
+      vonalpTerms,
+      vonalpEpTerms,
+    ] = await Promise.all([
+      this.prisma.entry.count({ where: { approvalStatus: ApprovalStatus.APPROVED } }),
+      this.prisma.toponym.count({ where: { approvalStatus: ApprovalStatus.APPROVED } }),
+      this.prisma.anthroponym.count({ where: { approvalStatus: ApprovalStatus.APPROVED } }),
+      this.prisma.blogPost.count({ where: { status: PostStatus.PUBLISHED } }),
+      this.prisma.event.count({ where: { status: EventStatus.PUBLISHED } }),
+      this.prisma.event.count({ where: { status: EventStatus.PUBLISHED, startDate: { gt: now } } }),
+      this.prisma.vonalpTerm.count({
+        where: {
+          vocabularyType: VonalpVocabularyType.VONALP,
+          completionStatus: VonalpCompletionStatus.COMPLETE,
+        },
+      }),
+      this.prisma.vonalpTerm.count({
+        where: {
+          vocabularyType: VonalpVocabularyType.VONALP_EP,
+          completionStatus: VonalpCompletionStatus.COMPLETE,
+        },
+      }),
+    ]);
+
+    return {
+      dictionaryEntries,
+      toponyms,
+      anthroponyms,
+      publishedArticles,
+      publishedEvents,
+      upcomingEvents,
+      vonalpTerms,
+      vonalpEpTerms,
+      lexicalTotal: dictionaryEntries + toponyms + anthroponyms + vonalpTerms + vonalpEpTerms,
+      updatedAt: new Date().toISOString(),
+    };
+  }
+
   async search(filters: PublicContentFilterDto) {
     const query = this.searchTerm(filters);
     if (!query) {
@@ -239,6 +287,7 @@ export class PublicService {
       approvalStatus: ApprovalStatus.APPROVED,
       ...(query ? this.entrySearchWhere(query) : {}),
       ...(filters.category ? { grammaticalCategory: filters.category } : {}),
+      ...(filters.grammaticalSubcategory ? { grammaticalSubcategory: filters.grammaticalSubcategory } : {}),
       ...(filters.languageCode ? { languageCode: { equals: filters.languageCode, mode: 'insensitive' } } : {}),
     };
 

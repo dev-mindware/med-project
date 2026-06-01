@@ -3,50 +3,63 @@ interface PageHeroProps {
   title: string
   subtitle?: string
   stats?: { value: string; label: string }[]
+  tone?: "soft" | "ice" | "paper"
 }
 
-export function PageHero({ badge, title, subtitle, stats }: PageHeroProps) {
+const toneClass = {
+  soft: "section-soft",
+  ice: "section-ice",
+  paper: "section-paper",
+}
+
+export function PageHero({ badge, title, subtitle, stats = [], tone = "ice" }: PageHeroProps) {
   return (
-    <section className="relative overflow-hidden border-b border-border/60 bg-background">
-      {/* Dot-grid */}
+    <section className={`relative overflow-hidden border-b border-border/50 ${toneClass[tone]}`}>
+      <div className="pointer-events-none absolute -left-16 top-8 h-56 w-56 rounded-full bg-primary/10 blur-3xl" />
+      <div className="pointer-events-none absolute -right-20 bottom-0 h-64 w-64 rounded-full bg-cyan-500/10 blur-3xl" />
       <div
-        className="pointer-events-none absolute inset-0 opacity-[0.03] dark:opacity-[0.055]"
+        className="pointer-events-none absolute inset-0 opacity-[0.045]"
         style={{
-          backgroundImage: "radial-gradient(circle, currentColor 1px, transparent 1px)",
-          backgroundSize: "28px 28px",
-        }}
-      />
-      {/* Radial glow */}
-      <div
-        className="pointer-events-none absolute inset-0"
-        style={{
-          background:
-            "radial-gradient(ellipse 60% 80% at 50% 0%, oklch(0.85 0.12 264 / 0.13) 0%, transparent 70%)",
+          backgroundImage: "linear-gradient(90deg, currentColor 1px, transparent 1px), linear-gradient(0deg, currentColor 1px, transparent 1px)",
+          backgroundSize: "34px 34px",
         }}
       />
 
-      <div className="relative mx-auto max-w-7xl px-6 sm:px-8 lg:px-12 py-16 md:py-20 text-center">
-        {badge && (
-          <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-4">{badge}</p>
-        )}
-        <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight text-balance mb-4">
-          {title}
-        </h1>
-        {subtitle && (
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto text-balance leading-relaxed">
-            {subtitle}
-          </p>
-        )}
-        {stats && stats.length > 0 && (
-          <div className="mt-10 inline-flex items-center justify-center divide-x divide-border">
-            {stats.map((s) => (
-              <div key={s.label} className="px-8 first:pl-0 last:pr-0 text-center">
-                <p className="text-3xl font-extrabold text-foreground tabular-nums">{s.value}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">{s.label}</p>
-              </div>
-            ))}
-          </div>
-        )}
+      <div className="relative mx-auto grid max-w-7xl gap-8 px-6 py-14 sm:px-8 md:py-18 lg:grid-cols-[1fr_0.72fr] lg:px-12 lg:text-left">
+        <div className="max-w-3xl text-center lg:text-left">
+          {badge && (
+            <p className="mb-4 inline-flex rounded-md border border-primary/15 bg-primary/10 px-3 py-1 text-xs font-bold uppercase tracking-widest text-primary">
+              {badge}
+            </p>
+          )}
+          <h1 className="text-4xl font-extrabold tracking-tight text-balance md:text-5xl lg:text-6xl">
+            {title}
+          </h1>
+          {subtitle && (
+            <p className="mt-5 max-w-2xl text-lg leading-relaxed text-muted-foreground text-balance lg:mx-0 mx-auto">
+              {subtitle}
+            </p>
+          )}
+        </div>
+
+        <div className="flex items-center justify-center lg:justify-end">
+          {stats.length > 0 ? (
+            <div className="grid w-full max-w-md grid-cols-1 gap-3 sm:grid-cols-3 lg:grid-cols-1">
+              {stats.map((s, index) => (
+                <div
+                  key={s.label}
+                  className="rounded-lg border border-blue-100/80 bg-white/78 p-4 text-left shadow-sm backdrop-blur animate-slide-up"
+                  style={{ animationDelay: `${index * 80}ms` }}
+                >
+                  <p className="text-2xl font-extrabold text-primary tabular-nums">{s.value}</p>
+                  <p className="mt-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">{s.label}</p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="hidden h-36 w-full max-w-md rounded-lg border border-dashed border-primary/20 bg-white/45 backdrop-blur lg:block" />
+          )}
+        </div>
       </div>
     </section>
   )

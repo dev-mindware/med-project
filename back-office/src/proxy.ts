@@ -5,21 +5,15 @@ import { ACCESS_TOKEN_KEY } from './constants'
 export function proxy(request: NextRequest) {
   const token = request.cookies.get(ACCESS_TOKEN_KEY)?.value
 
-  // Check if it's an auth route
   const isAuthRoute = request.nextUrl.pathname.startsWith('/auth')
 
-  if (!token && !isAuthRoute) {
-    // Redirect to login if trying to access protected route without token
-    const loginUrl = new URL('/auth/login', request.url)
-    return NextResponse.redirect(loginUrl)
+  if (isAuthRoute) {
+    return NextResponse.next()
   }
 
-  if (token && isAuthRoute) {
-    // Redirect to dashboard if trying to access auth routes while logged in
-    // Exception for logout which is usually an action, but just in case
-    if (!request.nextUrl.pathname.includes('/logout')) {
-      return NextResponse.redirect(new URL('/dashboard', request.url))
-    }
+  if (!token && !isAuthRoute) {
+    const loginUrl = new URL('/auth/login', request.url)
+    return NextResponse.redirect(loginUrl)
   }
 
   return NextResponse.next()

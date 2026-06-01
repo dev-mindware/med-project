@@ -46,61 +46,57 @@ const cols = [
     heading: "Recursos",
     links: [
       { label: "Dicionário", href: "/dictionary" },
-      { label: "Gramática", href: "/grammar" },
-      { label: "VONA", href: "/vona" },
-      { label: "Documentos", href: "/documents" },
-      { label: "Biblioteca", href: "/library" },
+      { label: "Léxico", href: "/lexico" },
+      { label: "Topónimos", href: "/toponimos" },
+      { label: "Antropónimos", href: "/antroponimos" },
+      { label: "VONALP", href: "/vonalp" },
+      { label: "VONALP EP", href: "/vonalp-ep" },
     ],
   },
   {
     heading: "Conteúdos",
     links: [
-      { label: "Artigos", href: "/artigos" },
-      { label: "Multimídia", href: "/media" },
+      { label: "Artigos", href: "/articles" },
       { label: "Eventos", href: "/events" },
-      { label: "Parceiros", href: "/partners" },
     ],
   },
   {
     heading: "Instituição",
     links: [
-      { label: "Sobre a Comissão", href: "/sobre" },
+      { label: "Sobre a Comissão", href: "/about" },
       { label: "Política de Privacidade", href: "/privacidade" },
       { label: "Termos de Uso", href: "/termos" },
       { label: "Acessibilidade", href: "/acessibilidade" },
-      { label: "Administração", href: "/admin-login" },
     ],
   },
 ]
 
 export function Footer() {
   return (
-    <footer className="bg-zinc-900 text-zinc-400">
-
-      {/* CTA band */}
-      <div className="border-b border-white/6">
+    <footer className="bg-[#061f4a] text-blue-100">
+      <div className="border-b border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(0,112,255,0.42),transparent_36%)]">
         <div className="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12 py-16 lg:py-20">
           <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
             <div className="max-w-xl">
-              <p className="text-xs font-semibold uppercase tracking-widest text-zinc-500 mb-3">
-                Comissão Nacional · CN-IILP
+              <p className="text-xs font-semibold uppercase tracking-widest text-blue-200/75 mb-3">
+                Comissão Nacional - CN-IILP
               </p>
               <h2 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight leading-tight">
                 Explore o português<br />de Angola, hoje.
               </h2>
-              <p className="mt-4 text-zinc-400 text-base leading-relaxed max-w-md">
-                Dicionário, gramática, VONA e recursos educativos. Tudo no mesmo portal, totalmente gratuito.
+              <p className="mt-4 text-blue-100/75 text-base leading-relaxed max-w-md">
+                Dicionário, topónimos, antropónimos, Vocabulário Ortográfico Nacional de Angola e publicações relevantes. Tudo no mesmo portal, totalmente gratuito.
               </p>
             </div>
             <div className="flex flex-col sm:flex-row gap-3 shrink-0">
               <Link href="/dictionary">
-                <Button className="rounded-full px-7 h-11 font-semibold bg-white text-black hover:bg-white/90 shadow-none">
+                <Button className="rounded-md px-7 h-11 font-semibold bg-white text-primary hover:bg-blue-50 shadow-none">
                   Consultar Dicionário
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </Link>
-              <Link href="/sobre">
-                <Button variant="outline" className="rounded-full px-7 h-11 font-semibold border-white/15 text-slate-300 bg-transparent hover:bg-white/5 hover:text-white shadow-none">
+              <Link href="/about">
+                <Button variant="outline" className="rounded-md px-7 h-11 font-semibold border-white/25 text-white bg-transparent hover:bg-white/10 hover:text-white shadow-none">
                   Saber mais
                 </Button>
               </Link>
@@ -109,22 +105,19 @@ export function Footer() {
         </div>
       </div>
 
-      {/* Links grid */}
       <div className="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12 pt-14 pb-10">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-12">
-
-          {/* Brand */}
           <div className="space-y-5">
             <img
               src="/cn_illp.png"
-              className="h-9 w-auto brightness-0 invert opacity-70"
+              className="h-9 w-auto brightness-0 invert opacity-90"
               alt="CNLP Angola"
             />
-            <p className="text-sm text-zinc-400 leading-relaxed">
+            <p className="text-sm text-blue-100/75 leading-relaxed">
               A língua preserva,{" "}
-              <span className="text-zinc-200 font-medium">o povo perpetua.</span>
+              <span className="text-white font-medium">o povo perpetua.</span>
             </p>
-            <address className="not-italic text-sm text-zinc-400 space-y-1">
+            <address className="not-italic text-sm text-blue-100/70 space-y-1">
               <p>Ministério da Educação</p>
               <p>Luanda, Angola</p>
               <a href="tel:+244222000000" className="hover:text-white transition-colors block">
@@ -135,14 +128,13 @@ export function Footer() {
               </a>
             </address>
 
-            {/* Social */}
             <div className="flex items-center gap-3 pt-1">
               {socials.map(({ label, href, Icon }) => (
                 <Link
                   key={label}
                   href={href}
                   aria-label={label}
-                  className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/15 text-zinc-400 hover:text-white hover:border-white/30 transition-all duration-200"
+                  className="flex h-8 w-8 items-center justify-center rounded-md border border-white/20 text-blue-100/75 hover:text-white hover:border-white/45 transition-all duration-200"
                 >
                   <Icon />
                 </Link>
@@ -150,10 +142,9 @@ export function Footer() {
             </div>
           </div>
 
-          {/* Link columns */}
           {cols.map((col) => (
             <div key={col.heading}>
-              <p className="text-xs font-semibold uppercase tracking-widest text-zinc-600 mb-5">
+              <p className="text-xs font-semibold uppercase tracking-widest text-blue-200/65 mb-5">
                 {col.heading}
               </p>
               <ul className="space-y-3">
@@ -161,7 +152,7 @@ export function Footer() {
                   <li key={href}>
                     <Link
                       href={href}
-                      className="text-sm text-zinc-500 hover:text-white transition-colors duration-150"
+                      className="text-sm text-blue-100/70 hover:text-white transition-colors duration-150"
                     >
                       {label}
                     </Link>
@@ -172,10 +163,19 @@ export function Footer() {
           ))}
         </div>
 
-        {/* Bottom bar */}
-        <div className="border-t border-white/6 mt-12 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-700">
+        <div className="border-t border-white/10 mt-12 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-blue-100/62">
           <p>© {new Date().getFullYear()} Comissão Nacional de Língua Portuguesa de Angola. Todos os direitos reservados.</p>
-          <p>CN-IILP · Luanda, Angola</p>
+          <p>
+            Desenvolvido por{" "}
+            <a
+              href="https://mindware.ao"
+              target="_blank"
+              rel="noreferrer"
+              className="font-semibold text-white underline-offset-4 hover:underline"
+            >
+              Mindware
+            </a>
+          </p>
         </div>
       </div>
     </footer>

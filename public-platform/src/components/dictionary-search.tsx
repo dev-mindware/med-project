@@ -1,226 +1,455 @@
 "use client"
 
-import { useState } from "react"
+import { useMemo, useState, useTransition } from "react"
+import { usePathname, useRouter } from "next/navigation"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Search, Heart, Volume2, BookOpen, ChevronDown } from "lucide-react"
+import {
+  getGrammaticalCategoryLabel,
+  getGrammaticalStatusLabel,
+  getGrammaticalSubcategoryLabel,
+  grammaticalCategoryOptions,
+} from "@/lib/grammatical-labels"
+import { publicApi, type PublicEntry, type PublicMeta } from "@/lib/public-api"
+import { BookOpen, FileText, Heart, ImageIcon, Search, Video, Volume2 } from "lucide-react"
 
-interface WordResult {
-  word: string
-  pronunciation: string
-  class: string
-  definition: string
-  examples: string[]
-  etymology?: string
-  synonyms?: string[]
-  antonyms?: string[]
+type DictionarySearchProps = {
+  initialResults?: PublicEntry[]
+  initialMeta?: PublicMeta
+  initialQuery?: string
+  initialCategory?: string
+  initialSubcategory?: string
+  initialLanguageCode?: string
 }
 
-export function DictionarySearch() {
-  const [searchTerm, setSearchTerm] = useState("")
-  const [wordClass, setWordClass] = useState("")
-  const [searchResults, setSearchResults] = useState<WordResult[]>([])
-  const [isSearching, setIsSearching] = useState(false)
+const defaultMeta: PublicMeta = {
+  total: 0,
+  page: 1,
+  limit: 20,
+  totalPages: 0,
+  hasNextPage: false,
+  hasPreviousPage: false,
+}
+
+const languageOptions = [
+  { label: "Todas as línguas", value: "all" },
+  { label: "Português", value: "pt" },
+  { label: "Kimbundu", value: "kmb" },
+  { label: "Umbundu", value: "umb" },
+  { label: "Kikongo", value: "kon" },
+  { label: "Cokwe", value: "cjk" },
+  { label: "Nganguela", value: "nba" },
+  { label: "Kwanyama", value: "kua" },
+]
+
+export function DictionarySearch({
+  initialResults = [],
+  initialMeta = defaultMeta,
+  initialQuery = "",
+  initialCategory = "",
+  initialSubcategory = "",
+  initialLanguageCode = "",
+}: DictionarySearchProps) {
+  const router = useRouter()
+  const pathname = usePathname()
+  const [isPending, startTransition] = useTransition()
+  const [searchTerm, setSearchTerm] = useState(initialQuery)
+  const [wordClass, setWordClass] = useState(initialCategory || "all")
+  const [subcategory, setSubcategory] = useState(initialSubcategory || "all")
+  const [languageCode, setLanguageCode] = useState(initialLanguageCode || "all")
+  const [searchResults, setSearchResults] = useState<PublicEntry[]>(initialResults)
+  const [meta, setMeta] = useState<PublicMeta>(initialMeta)
+  const [hasSearched, setHasSearched] = useState(initialResults.length > 0 || Boolean(initialQuery || initialCategory))
   const [favorites, setFavorites] = useState<string[]>([])
 
-  const mockResults: WordResult[] = [
-    {
-      word: "Saudade",
-      pronunciation: "/saw-DA-deh/",
-      class: "substantivo feminino",
-      definition: "Sentimento melancólico de ausência de alguém ou algo que se ama; nostalgia profunda.",
-      examples: [
-        "Sinto saudade dos tempos de criança em Luanda.",
-        "A saudade da terra natal acompanha muitos emigrantes.",
-      ],
-      etymology: "Do latim 'solitas, -atis' (solidão)",
-      synonyms: ["nostalgia", "melancolia", "tristeza"],
-      antonyms: ["alegria", "contentamento"],
-    },
-    {
-      word: "Mulemba",
-      pronunciation: "/mu-LEM-ba/",
-      class: "substantivo feminino",
-      definition: "Árvore sagrada angolana (Ficus sycamorus), símbolo de sabedoria e ancestralidade.",
-      examples: [
-        "Os anciãos reuniam-se sob a mulemba para tomar decisões importantes.",
-        "A mulemba é considerada a árvore da vida na cultura angolana.",
-      ],
-      etymology: "Do quimbundo 'mulemba'",
-      synonyms: ["figueira", "árvore sagrada"],
-    },
-  ]
+  const selectedCategory = grammaticalCategoryOptions.find((item) => item.value === wordClass)
+  const subcategoryOptions = selectedCategory?.subcategories ?? []
 
-  const handleSearch = () => {
-    if (!searchTerm.trim()) return
-    setIsSearching(true)
-    setTimeout(() => {
-      const filtered = mockResults.filter(
-        (r) =>
-          r.word.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          r.definition.toLowerCase().includes(searchTerm.toLowerCase()),
-      )
-      setSearchResults(filtered)
-      setIsSearching(false)
-    }, 500)
+  const updateUrl = (filters: Record<string, string | number | undefined>) => {
+    const params = new URLSearchParams()
+
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && String(value).trim() !== "") {
+        params.set(key, String(value))
+      }
+    })
+
+    const queryString = params.toString()
+    startTransition(() => {
+      router.replace(queryString ? `${pathname}?${queryString}` : pathname, { scroll: false })
+    })
+  }
+
+  const loadResults = async (page = 1) => {
+    const category = wordClass === "all" ? undefined : wordClass
+    const grammaticalSubcategory = subcategory === "all" ? undefined : subcategory
+    const language = languageCode === "all" ? undefined : languageCode
+    const q = searchTerm.trim() || undefined
+
+    setHasSearched(true)
+    updateUrl({ q, category, grammaticalSubcategory, languageCode: language, page: page > 1 ? page : undefined })
+
+    try {
+      const response = await publicApi.dictionary({
+        q,
+        category,
+        grammaticalSubcategory,
+        languageCode: language,
+        page,
+        limit: meta.limit || 20,
+      })
+      setSearchResults(response.data)
+      setMeta(response.meta)
+    } catch {
+      setSearchResults([])
+      setMeta(defaultMeta)
+    }
+  }
+
+  const handleCategoryChange = (value: string) => {
+    setWordClass(value)
+    setSubcategory("all")
   }
 
   const toggleFavorite = (word: string) =>
-    setFavorites((prev) => (prev.includes(word) ? prev.filter((w) => w !== word) : [...prev, word]))
+    setFavorites((prev) => (prev.includes(word) ? prev.filter((item) => item !== word) : [...prev, word]))
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="mx-auto max-w-6xl space-y-6">
+      <div className="rounded-2xl border border-border bg-background p-3 shadow-sm">
+        <div className="grid gap-2 lg:grid-cols-[1fr_190px_190px_170px_auto]">
+          <div className="flex items-center gap-2 rounded-xl border border-border/70 px-3">
+            <Search className="h-4 w-4 text-muted-foreground shrink-0" />
+            <Input
+              placeholder="Pesquisar entrada, definição, etimologia ou exemplo..."
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+              onKeyDown={(event) => event.key === "Enter" && loadResults(1)}
+              className="border-0 bg-transparent shadow-none focus-visible:ring-0 h-11 px-0 text-base"
+            />
+          </div>
 
-      {/* Search bar */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 rounded-2xl border border-border bg-background p-2">
-        <div className="flex items-center gap-2 flex-1 px-3">
-          <Search className="h-4 w-4 text-muted-foreground shrink-0" />
-          <Input
-            placeholder="Digite uma palavra para pesquisar..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-            className="border-0 bg-transparent shadow-none focus-visible:ring-0 h-11 px-0 text-base"
-          />
-        </div>
-        <div className="flex items-center gap-2 shrink-0">
-          <div className="hidden sm:block h-6 w-px bg-border" />
-          <Select value={wordClass} onValueChange={setWordClass}>
-            <SelectTrigger className="w-[150px] border-0 shadow-none bg-transparent focus:ring-0 h-11 text-sm">
-              <SelectValue placeholder="Classe gramatical" />
+          <Select value={wordClass} onValueChange={handleCategoryChange}>
+            <SelectTrigger className="h-11 rounded-xl">
+              <SelectValue placeholder="Classe" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="todas">Todas as classes</SelectItem>
-              <SelectItem value="substantivo">Substantivos</SelectItem>
-              <SelectItem value="verbo">Verbos</SelectItem>
-              <SelectItem value="adjetivo">Adjetivos</SelectItem>
-              <SelectItem value="adverbio">Advérbios</SelectItem>
+              <SelectItem value="all">Todas as classes</SelectItem>
+              {grammaticalCategoryOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
-          <Button
-            onClick={handleSearch}
-            disabled={isSearching}
-            className="rounded-xl h-11 px-6 font-semibold shrink-0"
-          >
-            {isSearching ? "A pesquisar..." : "Pesquisar"}
+
+          <Select value={subcategory} onValueChange={setSubcategory} disabled={wordClass === "all" || subcategoryOptions.length === 0}>
+            <SelectTrigger className="h-11 rounded-xl">
+              <SelectValue placeholder="Subclasse" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas as subclasses</SelectItem>
+              {subcategoryOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select value={languageCode} onValueChange={setLanguageCode}>
+            <SelectTrigger className="h-11 rounded-xl">
+              <SelectValue placeholder="Língua" />
+            </SelectTrigger>
+            <SelectContent>
+              {languageOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Button onClick={() => loadResults(1)} disabled={isPending} className="h-11 rounded-xl px-6 font-semibold">
+            {isPending ? "A pesquisar..." : "Pesquisar"}
           </Button>
         </div>
       </div>
 
-      {/* Results */}
-      {searchResults.length > 0 && (
+      {searchResults.length > 0 ? (
         <div className="space-y-4">
-          <p className="text-sm text-muted-foreground">
-            <span className="font-semibold text-foreground">{searchResults.length}</span> resultado{searchResults.length !== 1 ? "s" : ""} encontrado{searchResults.length !== 1 ? "s" : ""}
-          </p>
-          {searchResults.map((result, i) => (
-            <WordCard
-              key={i}
-              word={result}
-              isFavorite={favorites.includes(result.word)}
-              onToggleFavorite={() => toggleFavorite(result.word)}
-            />
-          ))}
-        </div>
-      )}
+          <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
+            <p>
+              <span className="font-semibold text-foreground">{meta.total}</span> resultado
+              {meta.total === 1 ? "" : "s"} na API
+            </p>
+            <p>
+              Página {meta.page} de {Math.max(meta.totalPages, 1)}
+            </p>
+          </div>
 
-      {/* No results */}
-      {searchTerm && searchResults.length === 0 && !isSearching && (
+          <div className="grid gap-4">
+            {searchResults.map((result) => (
+              <WordCard
+                key={result.id}
+                word={result}
+                isFavorite={favorites.includes(result.entry)}
+                onToggleFavorite={() => toggleFavorite(result.entry)}
+              />
+            ))}
+          </div>
+
+          {(meta.hasPreviousPage || meta.hasNextPage) && (
+            <div className="flex items-center justify-center gap-2 pt-2">
+              <Button variant="outline" disabled={!meta.hasPreviousPage || isPending} onClick={() => loadResults(meta.page - 1)}>
+                Anterior
+              </Button>
+              <Button variant="outline" disabled={!meta.hasNextPage || isPending} onClick={() => loadResults(meta.page + 1)}>
+                Seguinte
+              </Button>
+            </div>
+          )}
+        </div>
+      ) : null}
+
+      {hasSearched && searchResults.length === 0 && !isPending && (
         <div className="rounded-2xl border border-border bg-background p-10 text-center">
           <BookOpen className="h-10 w-10 text-muted-foreground/40 mx-auto mb-3" />
           <h3 className="font-semibold mb-1">Nenhum resultado encontrado</h3>
-          <p className="text-sm text-muted-foreground">Tente pesquisar com termos diferentes ou verifique a ortografia.</p>
+          <p className="text-sm text-muted-foreground">Tente pesquisar com outros filtros ou verifique a ortografia.</p>
         </div>
       )}
     </div>
   )
 }
 
-function WordCard({ word, isFavorite, onToggleFavorite }: { word: WordResult; isFavorite: boolean; onToggleFavorite: () => void }) {
-  const [tab, setTab] = useState<"definition" | "examples" | "etymology" | "related">("definition")
+function WordCard({
+  word,
+  isFavorite,
+  onToggleFavorite,
+}: {
+  word: PublicEntry
+  isFavorite: boolean
+  onToggleFavorite: () => void
+}) {
+  const [tab, setTab] = useState<"definition" | "media" | "forms" | "details">("definition")
+  const definitions = [word.firstDefinition, word.secondDefinition, word.thirdDefinition].filter(Boolean)
+  const mediaCount = [word.audioUrl, word.imageUrl, word.videoUrl].filter(Boolean).length
+  const badges = useMemo(
+    () => [
+      word.isVocabulary ? "VONALP" : null,
+      word.isVocabularyEP ? "VONALP EP" : null,
+      word.isForeignism ? "Estrangeirismo" : null,
+    ].filter(Boolean),
+    [word.isForeignism, word.isVocabulary, word.isVocabularyEP],
+  )
 
   return (
-    <div className="rounded-2xl border border-border bg-card overflow-hidden">
-      <div className="px-6 pt-6 pb-4 flex items-start justify-between gap-4">
+    <article className="overflow-hidden rounded-2xl border border-border bg-card">
+      <div className="grid gap-0 lg:grid-cols-[1fr_280px]">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <h3 className="text-2xl font-extrabold text-primary">{word.word}</h3>
-            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full text-muted-foreground hover:text-foreground">
-              <Volume2 className="h-3.5 w-3.5" />
+          <div className="px-6 pt-6 pb-4 flex items-start justify-between gap-4">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2 mb-1">
+                <h3 className="text-2xl font-extrabold text-primary">{word.entry}</h3>
+                {word.audioUrl && (
+                  <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full text-muted-foreground hover:text-foreground" asChild>
+                    <a href={word.audioUrl} aria-label={`Ouvir ${word.entry}`} target="_blank" rel="noreferrer">
+                      <Volume2 className="h-3.5 w-3.5" />
+                    </a>
+                  </Button>
+                )}
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                {word.pronunciation && <span className="font-mono text-sm text-muted-foreground">{word.pronunciation}</span>}
+                {word.syllabicDivision && <Badge variant="outline">{word.syllabicDivision}</Badge>}
+                {word.grammaticalCategory && (
+                  <Badge>{getGrammaticalCategoryLabel(word.grammaticalCategory)}</Badge>
+                )}
+                {word.grammaticalSubcategory && (
+                  <Badge variant="secondary">
+                    {getGrammaticalSubcategoryLabel(word.grammaticalCategory, word.grammaticalSubcategory)}
+                  </Badge>
+                )}
+                {badges.map((badge) => (
+                  <Badge key={badge} variant="outline">
+                    {badge}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onToggleFavorite}
+              className={`h-8 w-8 rounded-md shrink-0 ${isFavorite ? "text-primary" : "text-muted-foreground"}`}
+              aria-label={isFavorite ? "Remover dos favoritos" : "Adicionar aos favoritos"}
+            >
+              <Heart className={`h-4 w-4 ${isFavorite ? "fill-current" : ""}`} />
             </Button>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="font-mono text-sm text-muted-foreground">{word.pronunciation}</span>
-            <span className="text-xs font-medium bg-primary/10 text-primary px-2.5 py-0.5 rounded-full">{word.class}</span>
+
+          <div className="flex border-t border-border">
+            {(["definition", "media", "forms", "details"] as const).map((item) => (
+              <button
+                key={item}
+                onClick={() => setTab(item)}
+                className={`flex-1 text-xs font-semibold py-2.5 transition-colors ${
+                  tab === item ? "border-b-2 border-primary text-primary" : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {item === "definition" ? "Definição" : item === "media" ? `Mídias (${mediaCount})` : item === "forms" ? "Formas" : "Detalhes"}
+              </button>
+            ))}
+          </div>
+
+          <div className="px-6 py-5">
+            {tab === "definition" && (
+              <div className="space-y-4">
+                {definitions.length > 0 ? (
+                  <ol className="space-y-3">
+                    {definitions.map((definition, index) => (
+                      <li key={index} className="flex gap-3 text-base leading-relaxed text-muted-foreground">
+                        <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
+                          {index + 1}
+                        </span>
+                        <span>{definition}</span>
+                      </li>
+                    ))}
+                  </ol>
+                ) : (
+                  <p className="text-base leading-relaxed text-muted-foreground">Definição não disponível.</p>
+                )}
+                {word.usageExample && (
+                  <blockquote className="rounded-xl border-l-4 border-primary bg-muted/40 p-4 text-sm italic text-muted-foreground">
+                    {word.usageExample}
+                  </blockquote>
+                )}
+                {word.etymology && (
+                  <p className="text-sm text-muted-foreground">
+                    <span className="font-semibold text-foreground">Etimologia:</span> {word.etymology}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {tab === "media" && <MediaPanel word={word} />}
+
+            {tab === "forms" && (
+              <dl className="grid gap-3 sm:grid-cols-2">
+                <Detail label="Abreviatura" value={word.abbreviation} />
+                <Detail label="Acrónimo" value={word.acronym} />
+                <Detail label="Significado do acrónimo" value={word.acronymMeaning} />
+                <Detail label="Redução" value={word.reduction} />
+                <Detail label="Significado da redução" value={word.reductionMeaning} />
+                <Detail label="Forma curta" value={word.shortForm} />
+                <Detail label="Forma completa" value={word.fullForm} />
+              </dl>
+            )}
+
+            {tab === "details" && (
+              <dl className="grid gap-3 sm:grid-cols-2">
+                <Detail label="Língua" value={word.languageCode} />
+                {word.approvedAt && <Detail label="Publicado em" value={formatDateTime(word.approvedAt)} />}
+              </dl>
+            )}
           </div>
         </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onToggleFavorite}
-          className={`h-8 w-8 rounded-full shrink-0 ${isFavorite ? "text-rose-500" : "text-muted-foreground"}`}
-        >
-          <Heart className={`h-4 w-4 ${isFavorite ? "fill-current" : ""}`} />
-        </Button>
-      </div>
 
-      {/* Tab strip */}
-      <div className="flex border-t border-border">
-        {(["definition", "examples", "etymology", "related"] as const).map((t) => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
-            className={`flex-1 text-xs font-semibold py-2.5 transition-colors ${
-              tab === t
-                ? "border-b-2 border-primary text-primary"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {t === "definition" ? "Definição" : t === "examples" ? "Exemplos" : t === "etymology" ? "Etimologia" : "Relacionadas"}
-          </button>
-        ))}
-      </div>
-
-      <div className="px-6 py-5">
-        {tab === "definition" && (
-          <p className="text-base leading-relaxed text-muted-foreground">{word.definition}</p>
-        )}
-        {tab === "examples" && (
-          <ul className="space-y-2.5">
-            {word.examples.map((ex, i) => (
-              <li key={i} className="flex items-start gap-2.5 text-sm text-muted-foreground">
-                <span className="mt-2 h-1 w-1 rounded-full bg-primary/50 shrink-0" />
-                <span className="italic">{ex}</span>
-              </li>
-            ))}
-          </ul>
-        )}
-        {tab === "etymology" && (
-          <p className="text-sm text-muted-foreground">{word.etymology ?? "Etimologia não disponível"}</p>
-        )}
-        {tab === "related" && (
-          <div className="space-y-4">
-            {word.synonyms && (
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2">Sinónimos</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {word.synonyms.map((s, i) => <Badge key={i} variant="secondary" className="text-xs">{s}</Badge>)}
-                </div>
-              </div>
-            )}
-            {word.antonyms && (
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2">Antónimos</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {word.antonyms.map((a, i) => <Badge key={i} variant="outline" className="text-xs">{a}</Badge>)}
-                </div>
-              </div>
-            )}
+        <aside className="border-t border-border bg-muted/20 p-5 lg:border-l lg:border-t-0">
+          <div className="space-y-3">
+            <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+              <FileText className="h-3.5 w-3.5" />
+              Resumo
+            </p>
+            <dl className="space-y-3 text-sm">
+              <Detail label="Classe" value={getGrammaticalCategoryLabel(word.grammaticalCategory)} />
+              <Detail label="Subclasse" value={getGrammaticalSubcategoryLabel(word.grammaticalCategory, word.grammaticalSubcategory)} />
+              <Detail label="Divisão silábica" value={word.syllabicDivision} />
+              <Detail label="Pronúncia" value={word.pronunciation} />
+              <Detail label="Língua" value={word.languageCode} />
+            </dl>
           </div>
-        )}
+        </aside>
       </div>
+    </article>
+  )
+}
+
+function MediaPanel({ word }: { word: PublicEntry }) {
+  if (!word.audioUrl && !word.imageUrl && !word.videoUrl) {
+    return (
+      <div className="rounded-xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+        Nenhuma mídia associada a esta entrada.
+      </div>
+    )
+  }
+
+  return (
+    <div className="grid gap-4">
+      {word.audioUrl && (
+        <div className="rounded-xl border border-border p-4">
+          <p className="mb-3 flex items-center gap-2 text-sm font-semibold">
+            <Volume2 className="h-4 w-4" />
+            Áudio
+          </p>
+          <audio controls src={word.audioUrl} className="w-full" />
+        </div>
+      )}
+      {word.imageUrl && (
+        <div className="rounded-xl border border-border p-4">
+          <p className="mb-3 flex items-center gap-2 text-sm font-semibold">
+            <ImageIcon className="h-4 w-4" />
+            Imagem
+          </p>
+          <img src={word.imageUrl} alt={word.entry} className="max-h-80 w-full rounded-lg object-cover" />
+        </div>
+      )}
+      {word.videoUrl && (
+        <div className="rounded-xl border border-border p-4">
+          <p className="mb-3 flex items-center gap-2 text-sm font-semibold">
+            <Video className="h-4 w-4" />
+            Vídeo
+          </p>
+          {isYoutube(word.videoUrl) ? (
+            <iframe src={youtubeEmbed(word.videoUrl)} className="aspect-video w-full rounded-lg" allowFullScreen />
+          ) : (
+            <video src={word.videoUrl} controls className="aspect-video w-full rounded-lg object-cover" />
+          )}
+        </div>
+      )}
     </div>
   )
+}
+
+function Detail({ label, value }: { label: string; value?: string | null }) {
+  return (
+    <div>
+      <dt className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{label}</dt>
+      <dd className="mt-1 break-words text-foreground">{value || "-"}</dd>
+    </div>
+  )
+}
+
+function formatDateTime(value?: string | null) {
+  if (!value) {
+    return ""
+  }
+
+  return new Intl.DateTimeFormat("pt-PT", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(new Date(value))
+}
+
+function isYoutube(url: string) {
+  return url.includes("youtube.com") || url.includes("youtu.be")
+}
+
+function youtubeEmbed(url: string) {
+  return url.replace("watch?v=", "embed/").replace("youtu.be/", "youtube.com/embed/")
 }

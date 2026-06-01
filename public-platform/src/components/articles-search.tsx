@@ -1,97 +1,60 @@
 "use client"
 
 import { useState } from "react"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Search, BookOpen, Calendar, User, ExternalLink, Clock } from "lucide-react"
+import { publicApi, type PublicBlogPost } from "@/lib/public-api"
+import { getPostTypeLabel } from "@/lib/display-labels"
+import { BookOpen, Calendar, Clock, Search, User } from "lucide-react"
+import Link from "next/link"
 
-interface Article {
-  title: string
-  author: string
-  date: string
-  category: string
-  abstract: string
-  tags: string[]
-  readTime: string
-  downloadUrl?: string
-}
-
-export function ArticlesSearch() {
-  const [searchTerm, setSearchTerm] = useState("")
-  const [selectedCategory, setSelectedCategory] = useState("")
-  const [searchResults, setSearchResults] = useState<Article[]>([])
+export function ArticlesSearch({
+  initialResults = [],
+  initialQuery = "",
+  initialCategory = "",
+}: {
+  initialResults?: PublicBlogPost[]
+  initialQuery?: string
+  initialCategory?: string
+}) {
+  const [searchTerm, setSearchTerm] = useState(initialQuery)
+  const [selectedCategory, setSelectedCategory] = useState(initialCategory)
+  const [searchResults, setSearchResults] = useState<PublicBlogPost[]>(initialResults)
   const [isSearching, setIsSearching] = useState(false)
+  const [hasSearched, setHasSearched] = useState(initialResults.length > 0)
 
-  const mockArticles: Article[] = [
-    {
-      title: "Variações Linguísticas do Português Angolano: Um Estudo Sociolinguístico",
-      author: "Prof. Dr. João Silva",
-      date: "2024-02-15",
-      category: "Linguística",
-      abstract:
-        "Este estudo analisa as principais variações linguísticas do português falado em Angola, considerando fatores sociais, geográficos e culturais que influenciam a evolução da língua.",
-      tags: ["sociolinguística", "variações", "português angolano"],
-      readTime: "12 min",
-      downloadUrl: "#",
-    },
-    {
-      title: "O Ensino da Gramática no Contexto Angolano: Desafios e Oportunidades",
-      author: "Dra. Maria Santos",
-      date: "2024-01-20",
-      category: "Educação",
-      abstract:
-        "Análise dos métodos de ensino da gramática portuguesa nas escolas angolanas, identificando desafios e propondo estratégias pedagógicas adaptadas ao contexto local.",
-      tags: ["educação", "gramática", "pedagogia"],
-      readTime: "8 min",
-      downloadUrl: "#",
-    },
-    {
-      title: "Lexicografia Angolana: Construindo um Dicionário Nacional",
-      author: "Prof. Ana Costa",
-      date: "2023-12-10",
-      category: "Lexicografia",
-      abstract:
-        "Reflexões sobre o processo de construção de um dicionário que reflita as especificidades lexicais do português angolano, incluindo metodologias e desafios enfrentados.",
-      tags: ["lexicografia", "dicionário", "terminologia"],
-      readTime: "15 min",
-      downloadUrl: "#",
-    },
-  ]
+  const categories = ["Todas", ...Array.from(new Set(initialResults.map((article) => article.category).filter(Boolean) as string[]))]
 
-  const categories = ["Todas", "Linguística", "Educação", "Lexicografia", "Literatura", "História", "Cultura"]
-
-  const handleSearch = () => {
+  const handleSearch = async () => {
     setIsSearching(true)
-    setTimeout(() => {
-      let filtered = mockArticles
-      if (searchTerm.trim())
-        filtered = filtered.filter(
-          (a) =>
-            a.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            a.abstract.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            a.author.toLowerCase().includes(searchTerm.toLowerCase()),
-        )
-      if (selectedCategory && selectedCategory !== "Todas")
-        filtered = filtered.filter((a) => a.category === selectedCategory)
-      setSearchResults(filtered)
+    setHasSearched(true)
+
+    try {
+      const response = await publicApi.blogPosts({
+        q: searchTerm,
+        category: selectedCategory === "Todas" ? undefined : selectedCategory,
+        limit: 100,
+      })
+      setSearchResults(response.data)
+    } catch {
+      setSearchResults([])
+    } finally {
       setIsSearching(false)
-    }, 500)
+    }
   }
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
-
-      {/* Search bar */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 rounded-2xl border border-border bg-background p-2">
         <div className="flex items-center gap-2 flex-1 px-3">
           <Search className="h-4 w-4 text-muted-foreground shrink-0" />
           <Input
             placeholder="Pesquisar artigos, autores ou temas..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+            onChange={(event) => setSearchTerm(event.target.value)}
+            onKeyDown={(event) => event.key === "Enter" && handleSearch()}
             className="border-0 bg-transparent shadow-none focus-visible:ring-0 h-11 px-0 text-base"
           />
         </div>
@@ -102,31 +65,32 @@ export function ArticlesSearch() {
               <SelectValue placeholder="Categoria" />
             </SelectTrigger>
             <SelectContent>
-              {categories.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+              {categories.map((category) => (
+                <SelectItem key={category} value={category}>
+                  {category}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
-          <Button
-            onClick={handleSearch}
-            disabled={isSearching}
-            className="rounded-xl h-11 px-6 font-semibold shrink-0"
-          >
+          <Button onClick={handleSearch} disabled={isSearching} className="rounded-xl h-11 px-6 font-semibold shrink-0">
             {isSearching ? "A pesquisar..." : "Pesquisar"}
           </Button>
         </div>
       </div>
 
-      {/* Results */}
       {searchResults.length > 0 && (
         <div className="space-y-3">
           <p className="text-sm text-muted-foreground">
-            <span className="font-semibold text-foreground">{searchResults.length}</span> artigo{searchResults.length !== 1 ? "s" : ""} encontrado{searchResults.length !== 1 ? "s" : ""}
+            <span className="font-semibold text-foreground">{searchResults.length}</span> artigo
+            {searchResults.length !== 1 ? "s" : ""}
           </p>
-          {searchResults.map((article, i) => <ArticleCard key={i} article={article} />)}
+          {searchResults.map((article) => (
+            <ArticleCard key={article.id} article={article} />
+          ))}
         </div>
       )}
 
-      {/* No results */}
-      {(searchTerm || selectedCategory) && searchResults.length === 0 && !isSearching && (
+      {hasSearched && searchResults.length === 0 && !isSearching && (
         <div className="rounded-2xl border border-border bg-background p-10 text-center">
           <BookOpen className="h-10 w-10 text-muted-foreground/40 mx-auto mb-3" />
           <h3 className="font-semibold mb-1">Nenhum artigo encontrado</h3>
@@ -137,40 +101,45 @@ export function ArticlesSearch() {
   )
 }
 
-function ArticleCard({ article }: { article: Article }) {
+function ArticleCard({ article }: { article: PublicBlogPost }) {
+  const href = `/articles/${article.slug || article.id}`
+  const publishedDate = article.publishedAt || article.createdAt
+
   return (
     <div className="group rounded-xl border border-border bg-card p-5 hover:border-border/80 hover:-translate-y-0.5 transition-all duration-200">
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-3">
         <h3 className="font-semibold text-base leading-snug group-hover:text-primary transition-colors">
           {article.title}
         </h3>
-        <span className="text-xs font-semibold bg-primary/10 text-primary px-2.5 py-1 rounded-full shrink-0 self-start">
-          {article.category}
-        </span>
+        {article.category && (
+          <span className="text-xs font-semibold bg-primary/10 text-primary px-2.5 py-1 rounded-full shrink-0 self-start">
+            {article.category}
+          </span>
+        )}
       </div>
 
-      <p className="text-sm text-muted-foreground leading-relaxed mb-4">{article.abstract}</p>
+      <p className="text-sm text-muted-foreground leading-relaxed mb-4">{article.excerpt ?? "Sem resumo disponível."}</p>
 
-      <div className="flex flex-wrap gap-1.5 mb-4">
-        {article.tags.map((tag, i) => (
-          <span key={i} className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">#{tag}</span>
-        ))}
-      </div>
+      {article.tags && article.tags.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 mb-4">
+          {article.tags.map((tag) => (
+            <span key={tag} className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">#{tag}</span>
+          ))}
+        </div>
+      )}
 
       <div className="flex items-center justify-between gap-3 pt-3 border-t border-border/50">
         <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-          <span className="flex items-center gap-1"><User className="h-3 w-3" />{article.author}</span>
-          <span className="flex items-center gap-1"><Calendar className="h-3 w-3" />{new Date(article.date).toLocaleDateString("pt-PT")}</span>
-          <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{article.readTime}</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <Button variant="outline" size="sm" className="rounded-lg h-8 text-xs px-3">Ler artigo</Button>
-          {article.downloadUrl && (
-            <Button variant="ghost" size="sm" className="rounded-lg h-8 text-xs px-3 text-muted-foreground" asChild>
-              <a href={article.downloadUrl}><ExternalLink className="h-3 w-3" /></a>
-            </Button>
+          {article.author?.name && <span className="flex items-center gap-1"><User className="h-3 w-3" />{article.author.name}</span>}
+          {publishedDate && (
+            <span className="flex items-center gap-1"><Calendar className="h-3 w-3" />{new Date(publishedDate).toLocaleDateString("pt-PT")}</span>
           )}
+          {article.type && <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{getPostTypeLabel(article.type)}</span>}
+          {article.isFeatured && <Badge variant="secondary" className="h-5 text-[10px]">Destaque</Badge>}
         </div>
+        <Button variant="outline" size="sm" className="rounded-lg h-8 text-xs px-3" asChild>
+          <Link href={href}>Ler artigo</Link>
+        </Button>
       </div>
     </div>
   )

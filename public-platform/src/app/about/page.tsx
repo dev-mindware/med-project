@@ -13,19 +13,20 @@ export default function SobrePage() {
         <PageHero
           badge="Sobre"
           title="A Comissão Nacional de Língua Portuguesa"
-          subtitle="Conheça a história de Angola, a importância da língua portuguesa e a missão da nossa comissão"
+          subtitle="Conheça a história de Angola, a importância da língua portuguesa e a missão da comissão."
+          tone="paper"
         />
-        <section className="py-14">
+        <section className="section-paper py-14">
           <div className="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
             <AboutCommission />
           </div>
         </section>
-        <section className="py-14 bg-muted/20 border-t border-border/40">
+        <section className="section-ice py-14 border-t border-border/40" id="angola">
           <div className="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
             <AboutAngola />
           </div>
         </section>
-        <section className="py-14 border-t border-border/40">
+        <section className="section-paper py-14 border-t border-border/40" id="contacts">
           <div className="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
             <ContactInfo />
           </div>

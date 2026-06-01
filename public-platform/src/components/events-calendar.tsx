@@ -3,204 +3,152 @@
 import { useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Calendar, MapPin, Users, ExternalLink, Clock } from "lucide-react"
+import { EventRegistrationDialog } from "@/components/event-registration-dialog"
+import { publicApi, type PublicEvent } from "@/lib/public-api"
+import { Calendar, Clock, MapPin, Users } from "lucide-react"
+import Link from "next/link"
 
-interface Event {
-  id: string
-  title: string
-  date: string
-  time: string
-  location: string
-  type: string
-  status: "upcoming" | "ongoing" | "past"
-  description: string
-  capacity?: number
-  registered?: number
-  registrationUrl?: string
-}
-
-const events: Event[] = [
-  {
-    id: "1",
-    title: "Conferência Internacional de Língua Portuguesa",
-    date: "2024-04-15",
-    time: "09:00",
-    location: "Centro de Convenções de Luanda",
-    type: "Conferência",
-    status: "upcoming",
-    description: "Encontro anual com especialistas internacionais para discutir o futuro da língua portuguesa.",
-    capacity: 500,
-    registered: 342,
-    registrationUrl: "#",
-  },
-  {
-    id: "2",
-    title: "Workshop de Gramática para Professores",
-    date: "2024-03-28",
-    time: "14:00",
-    location: "Universidade Agostinho Neto",
-    type: "Workshop",
-    status: "upcoming",
-    description: "Formação prática sobre as novas diretrizes gramaticais para educadores.",
-    capacity: 100,
-    registered: 87,
-    registrationUrl: "#",
-  },
-  {
-    id: "3",
-    title: "Seminário CPLP sobre Cooperação Linguística",
-    date: "2024-02-20",
-    time: "10:00",
-    location: "Hotel Presidente, Luanda",
-    type: "Seminário",
-    status: "past",
-    description: "Discussão sobre estratégias de cooperação entre países lusófonos.",
-    capacity: 200,
-    registered: 200,
-  },
-  {
-    id: "4",
-    title: "Concurso Nacional de Ortografia",
-    date: "2024-05-10",
-    time: "15:00",
-    location: "Palácio da Cultura",
-    type: "Concurso",
-    status: "upcoming",
-    description: "Final nacional do concurso de ortografia para estudantes do ensino secundário.",
-    capacity: 300,
-    registered: 156,
-    registrationUrl: "#",
-  },
-]
-
-const typeAccent: Record<string, { color: string; bg: string }> = {
-  Conferência: { color: "text-purple-600 dark:text-purple-400", bg: "bg-purple-500/10" },
-  Workshop: { color: "text-orange-600 dark:text-orange-400", bg: "bg-orange-500/10" },
-  Seminário: { color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-500/10" },
-  Concurso: { color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-500/10" },
-  Colóquio: { color: "text-cyan-600 dark:text-cyan-400", bg: "bg-cyan-500/10" },
+const typeAccent: Record<string, { color: string; bg: string; line: string }> = {
+  Conferência: { color: "text-blue-700", bg: "bg-blue-500/10", line: "bg-blue-500" },
+  Workshop: { color: "text-cyan-700", bg: "bg-cyan-500/10", line: "bg-cyan-500" },
+  Seminário: { color: "text-indigo-700", bg: "bg-indigo-500/10", line: "bg-indigo-500" },
+  Concurso: { color: "text-violet-700", bg: "bg-violet-500/10", line: "bg-violet-500" },
+  Colóquio: { color: "text-cyan-700", bg: "bg-cyan-500/10", line: "bg-cyan-500" },
 }
 
 const tabs = [
   { key: "upcoming", label: "Próximos" },
-  { key: "ongoing", label: "Em Andamento" },
+  { key: "ongoing", label: "Em andamento" },
   { key: "past", label: "Passados" },
 ] as const
 
-export function EventsCalendar() {
-  const [active, setActive] = useState<"upcoming" | "ongoing" | "past">("upcoming")
+export function EventsCalendar({
+  initialEvents = [],
+  initialPeriod = "upcoming",
+}: {
+  initialEvents?: PublicEvent[]
+  initialPeriod?: "upcoming" | "ongoing" | "past"
+}) {
+  const [active, setActive] = useState<"upcoming" | "ongoing" | "past">(initialPeriod)
+  const [events, setEvents] = useState<PublicEvent[]>(initialEvents)
+  const [isLoading, setIsLoading] = useState(false)
 
-  const filtered = events.filter((e) => e.status === active)
+  const loadEvents = async (period: "upcoming" | "ongoing" | "past") => {
+    setActive(period)
+    setIsLoading(true)
+
+    try {
+      const response = await publicApi.events({ period, limit: 100 })
+      setEvents(response.data)
+    } catch {
+      setEvents([])
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   return (
-    <div className="max-w-6xl mx-auto">
-      {/* Pill tabs */}
-      <div className="flex items-center gap-1 p-1 rounded-xl bg-muted/60 border border-border/50 w-fit mx-auto mb-10">
-        {tabs.map((t) => (
+    <div className="mx-auto max-w-6xl">
+      <div className="mx-auto mb-10 flex w-fit items-center gap-1 rounded-lg border border-blue-100/80 bg-white/80 p-1 shadow-sm backdrop-blur">
+        {tabs.map((tab) => (
           <button
-            key={t.key}
-            onClick={() => setActive(t.key)}
-            className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${
-              active === t.key
-                ? "bg-background text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
+            key={tab.key}
+            onClick={() => loadEvents(tab.key)}
+            className={`rounded-md px-5 py-2 text-sm font-semibold transition-all duration-200 ${
+              active === tab.key ? "bg-primary text-white shadow-sm" : "text-muted-foreground hover:bg-primary/10 hover:text-primary"
             }`}
           >
-            {t.label}
+            {tab.label}
           </button>
         ))}
       </div>
 
-      {filtered.length > 0 ? (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-          {filtered.map((event) => {
-            const accent = typeAccent[event.type] ?? { color: "text-primary", bg: "bg-primary/10" }
-            const fillPct = event.capacity
-              ? Math.round(((event.registered ?? 0) / event.capacity) * 100)
-              : null
-
-            return (
-              <div
-                key={event.id}
-                className="group rounded-xl border border-border bg-card hover:-translate-y-0.5 transition-all duration-300 overflow-hidden flex flex-col"
-              >
-                {/* Colored top stripe */}
-                <div className={`h-1 w-full ${accent.bg} ${accent.color}`} style={{ opacity: 0.6 }} />
-
-                <div className="p-6 flex flex-col flex-1">
-                  {/* Type + status */}
-                  <div className="flex items-center gap-2 mb-4">
-                    <span className={`text-xs font-bold uppercase tracking-widest px-2.5 py-1 rounded-md ${accent.bg} ${accent.color}`}>
-                      {event.type}
-                    </span>
-                    {event.status === "past" && (
-                      <Badge variant="secondary" className="text-xs">Finalizado</Badge>
-                    )}
-                    {event.status === "ongoing" && (
-                      <Badge className="text-xs bg-blue-500">Em Andamento</Badge>
-                    )}
-                  </div>
-
-                  <h3 className="font-bold text-lg leading-snug mb-2 text-foreground">{event.title}</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed mb-5 flex-1">{event.description}</p>
-
-                  {/* Meta */}
-                  <div className="space-y-1.5 text-sm mb-5">
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <Calendar className="h-3.5 w-3.5 shrink-0" />
-                      <span>{new Date(event.date).toLocaleDateString("pt-PT")}</span>
-                      <Clock className="h-3.5 w-3.5 shrink-0 ml-1" />
-                      <span>{event.time}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <MapPin className="h-3.5 w-3.5 shrink-0" />
-                      <span>{event.location}</span>
-                    </div>
-                    {fillPct !== null && (
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                        <Users className="h-3.5 w-3.5 shrink-0" />
-                        <span>{event.registered}/{event.capacity} inscritos</span>
-                        <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden max-w-[80px]">
-                          <div
-                            className={`h-full rounded-full transition-all ${fillPct >= 90 ? "bg-orange-500" : "bg-primary"}`}
-                            style={{ width: `${fillPct}%` }}
-                          />
-                        </div>
-                        <span className="text-xs">{fillPct}%</span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* CTA */}
-                  {event.registrationUrl && event.status === "upcoming" && (
-                    <Button className="w-full rounded-lg font-semibold" asChild>
-                      <a href={event.registrationUrl}>
-                        <ExternalLink className="mr-2 h-4 w-4" />
-                        Inscrever-se no evento
-                      </a>
-                    </Button>
-                  )}
-                  {event.status === "past" && (
-                    <Button variant="outline" className="w-full rounded-lg font-semibold bg-transparent">
-                      Ver resumo do evento
-                    </Button>
-                  )}
-                </div>
-              </div>
-            )
-          })}
+      {events.length > 0 ? (
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+          {events.map((event) => (
+            <EventCard key={event.id} event={event} active={active} />
+          ))}
         </div>
       ) : (
-        <div className="rounded-xl border border-border bg-card p-12 text-center">
-          <Calendar className="h-12 w-12 text-muted-foreground/40 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold mb-2">Nenhum evento encontrado</h3>
-          <p className="text-muted-foreground text-sm">
-            {active === "upcoming" && "Não há eventos programados no momento."}
-            {active === "ongoing" && "Não há eventos em andamento."}
-            {active === "past" && "Não há eventos passados registados."}
-          </p>
+        <div className="rounded-lg border border-dashed border-primary/25 bg-white/72 p-12 text-center shadow-sm backdrop-blur">
+          <Calendar className="mx-auto mb-4 h-12 w-12 text-primary/35" />
+          <h3 className="mb-2 text-lg font-semibold">{isLoading ? "A carregar eventos..." : "Nenhum evento encontrado"}</h3>
+          {!isLoading && (
+            <p className="text-sm text-muted-foreground">
+              {active === "upcoming" && "Não há eventos programados no momento."}
+              {active === "ongoing" && "Não há eventos em andamento."}
+              {active === "past" && "Não há eventos passados registados."}
+            </p>
+          )}
         </div>
       )}
     </div>
+  )
+}
+
+function EventCard({ event, active }: { event: PublicEvent; active: "upcoming" | "ongoing" | "past" }) {
+  const type = event.category || "Evento"
+  const accent = typeAccent[type] ?? { color: "text-primary", bg: "bg-primary/10", line: "bg-primary" }
+  const fillPct = event.maxRegistrations
+    ? Math.round(((event.registrationCount ?? 0) / event.maxRegistrations) * 100)
+    : null
+  const startDate = new Date(event.startDate)
+  const detailsHref = `/events/${event.slug || event.id}`
+
+  return (
+    <article className="group overflow-hidden rounded-lg border border-blue-100/80 bg-white/88 shadow-sm backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:border-primary/35 hover:shadow-lg hover:shadow-blue-950/8">
+      <div className={`h-1 w-full ${accent.line}`} />
+
+      <div className="flex h-full flex-col p-6">
+        <div className="mb-4 flex flex-wrap items-center gap-2">
+          <span className={`rounded-md px-2.5 py-1 text-xs font-bold uppercase tracking-widest ${accent.bg} ${accent.color}`}>
+            {type}
+          </span>
+          {active === "past" && <Badge variant="secondary" className="rounded-md text-xs">Finalizado</Badge>}
+          {active === "ongoing" && <Badge className="rounded-md bg-blue-500 text-xs">Em andamento</Badge>}
+        </div>
+
+        <h3 className="mb-2 text-lg font-bold leading-snug text-foreground group-hover:text-primary">{event.title}</h3>
+        <p className="mb-5 line-clamp-3 flex-1 text-sm leading-relaxed text-muted-foreground">{event.description}</p>
+
+        <div className="mb-5 grid gap-2 text-sm">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-muted-foreground">
+            <span className="flex items-center gap-2">
+              <Calendar className="h-3.5 w-3.5 shrink-0 text-primary/65" />
+              {startDate.toLocaleDateString("pt-PT")}
+            </span>
+            <span className="flex items-center gap-2">
+              <Clock className="h-3.5 w-3.5 shrink-0 text-primary/65" />
+              {startDate.toLocaleTimeString("pt-PT", { hour: "2-digit", minute: "2-digit" })}
+            </span>
+          </div>
+          {event.location && (
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <MapPin className="h-3.5 w-3.5 shrink-0 text-primary/65" />
+              <span>{event.location}</span>
+            </div>
+          )}
+          {fillPct !== null && (
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Users className="h-3.5 w-3.5 shrink-0 text-primary/65" />
+              <span>{event.registrationCount ?? 0}/{event.maxRegistrations} inscritos</span>
+              <div className="h-1.5 max-w-[90px] flex-1 overflow-hidden rounded-full bg-muted">
+                <div className={`h-full rounded-full transition-all ${fillPct >= 90 ? "bg-cyan-500" : "bg-primary"}`} style={{ width: `${fillPct}%` }} />
+              </div>
+              <span className="text-xs">{fillPct}%</span>
+            </div>
+          )}
+        </div>
+
+        <div className="grid gap-2 sm:grid-cols-2">
+          <Button variant="outline" className="w-full rounded-md bg-transparent font-semibold" asChild>
+            <Link href={detailsHref}>Ver detalhes</Link>
+          </Button>
+          {active === "upcoming" && (
+            <EventRegistrationDialog event={event} className="w-full rounded-md font-semibold" />
+          )}
+        </div>
+      </div>
+    </article>
   )
 }

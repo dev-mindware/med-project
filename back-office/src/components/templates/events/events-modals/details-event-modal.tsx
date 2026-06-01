@@ -23,7 +23,7 @@ export function DetailsEventModal() {
 
           <div className="text-center space-y-1 mt-4">
             <h2 className="text-2xl font-bold">{currentEvent.title}</h2>
-            <ItemStatusBadge status={currentEvent.status} />
+            <ItemStatusBadge status={currentEvent.status ?? "DRAFT"} />
           </div>
         </>
       }

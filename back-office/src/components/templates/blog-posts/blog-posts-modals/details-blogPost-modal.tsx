@@ -23,7 +23,7 @@ export function DetailsBlogPostModal() {
 
           <div className="text-center space-y-1 mt-4">
             <h2 className="text-2xl font-bold">{currentBlogPost.title}</h2>
-            <ItemStatusBadge status={currentBlogPost.status} />
+            <ItemStatusBadge status={currentBlogPost.status ?? "DRAFT"} />
           </div>
         </>
       }

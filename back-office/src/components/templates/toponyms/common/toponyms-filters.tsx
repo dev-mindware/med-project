@@ -108,13 +108,15 @@ export function ToponymsFiltersTSX() {
             />
           )}
 
+          <div>
           <Input
             value={filters.languageCode || ""}
             onChange={(event) => setFilters({ languageCode: event.target.value || null })}
             placeholder="Código da língua"
             startIcon="Languages"
             className="h-10 w-[160px]"
-          />
+            />
+          </div>
 
           <div className="flex items-center gap-2">
             <DatePicker 

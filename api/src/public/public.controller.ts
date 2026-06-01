@@ -10,6 +10,12 @@ import { PublicService } from './public.service';
 export class PublicController {
   constructor(private readonly publicService: PublicService) {}
 
+  @Get('stats')
+  @ApiOperation({ summary: 'Estatísticas públicas calculadas a partir de conteúdos aprovados e publicados.' })
+  publicStats() {
+    return this.publicService.stats();
+  }
+
   @Get('search')
   @ApiOperation({ summary: 'Pesquisa global pública em conteúdos aprovados/publicados.' })
   globalSearch(@Query() filters: PublicContentFilterDto) {

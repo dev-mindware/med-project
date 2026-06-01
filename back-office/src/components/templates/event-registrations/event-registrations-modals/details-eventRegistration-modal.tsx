@@ -23,7 +23,7 @@ export function DetailsEventRegistrationModal() {
 
           <div className="text-center space-y-1 mt-4">
             <h2 className="text-2xl font-bold">Inscrição de {currentEventRegistration.name}</h2>
-            <ItemStatusBadge status={currentEventRegistration.status} />
+            <ItemStatusBadge status={currentEventRegistration.status ?? "PENDING"} />
           </div>
         </>
       }

@@ -16,16 +16,60 @@ export type PublicEntry = {
   id: string
   entry: string
   pronunciation?: string | null
+  syllabicDivision?: string | null
   etymology?: string | null
   firstDefinition?: string | null
   secondDefinition?: string | null
   thirdDefinition?: string | null
   usageExample?: string | null
+  abbreviation?: string | null
+  acronym?: string | null
+  acronymMeaning?: string | null
+  reduction?: string | null
+  reductionMeaning?: string | null
+  shortForm?: string | null
+  fullForm?: string | null
   grammaticalCategory?: string | null
   grammaticalSubcategory?: string | null
+  grammaticalStatus?: string | null
   languageCode?: string | null
   audioUrl?: string | null
   imageUrl?: string | null
+  videoUrl?: string | null
+  isVocabulary?: boolean
+  isVocabularyEP?: boolean
+  isForeignism?: boolean
+  approvedAt?: string | null
+  createdAt?: string
+  updatedAt?: string
+}
+
+export type PublicNeologism = PublicEntry
+
+export type PublicForeignism = {
+  id: string
+  term: string
+  pronunciation?: string | null
+  originalLanguage?: string | null
+  originCountry?: string | null
+  adaptedForm?: string | null
+  originalForm?: string | null
+  meaning?: string | null
+  definition?: string | null
+  usageExample?: string | null
+  context?: string | null
+  field?: string | null
+  abbreviation?: string | null
+  acronym?: string | null
+  reduction?: string | null
+  shortForm?: string | null
+  fullForm?: string | null
+  grammaticalCategory?: string | null
+  isVocabulary?: boolean
+  isVocabularyEP?: boolean
+  approvedAt?: string | null
+  createdAt?: string
+  updatedAt?: string
 }
 
 export type PublicVonalpTerm = {
@@ -40,6 +84,38 @@ export type PublicVonalpTerm = {
   secondDefinition?: string | null
   thirdDefinition?: string | null
   origin?: string | null
+}
+
+export type PublicToponym = {
+  id: string
+  toponym: string
+  pronunciation?: string | null
+  meaning?: string | null
+  province?: string | null
+  municipality?: string | null
+  location?: string | null
+  gentilic?: string | null
+  locationImage?: string | null
+  toponymHistory?: string | null
+  toponymProvenance?: string | null
+  commonUsage?: string | null
+  graphicVariation?: string | null
+  toponymClasses?: string | null
+  toponymSubclasses?: string | null
+  languageCode?: string | null
+}
+
+export type PublicAnthroponym = {
+  id: string
+  name: string
+  gender?: string | null
+  etymology?: string | null
+  meaning?: string | null
+  surname?: string | null
+  surnameMeaning?: string | null
+  historicalFigure?: string | null
+  historicalFigurePseudonym?: string | null
+  historicalFigureDomain?: string | null
 }
 
 export type PublicBlogPost = {
@@ -57,6 +133,7 @@ export type PublicBlogPost = {
   isFeatured?: boolean
   publishedAt?: string | null
   createdAt?: string
+  updatedAt?: string
   author?: {
     id: string
     name: string
@@ -77,6 +154,8 @@ export type PublicEvent = {
   registrationCount?: number
   maxRegistrations?: number | null
   publishedAt?: string | null
+  createdAt?: string
+  updatedAt?: string
 }
 
 export type PublicEventRegistrationPayload = {
@@ -87,10 +166,24 @@ export type PublicEventRegistrationPayload = {
   notes?: string
 }
 
+export type PublicStats = {
+  dictionaryEntries: number
+  toponyms: number
+  anthroponyms: number
+  publishedArticles: number
+  publishedEvents: number
+  upcomingEvents: number
+  vonalpTerms: number
+  vonalpEpTerms: number
+  lexicalTotal: number
+  updatedAt: string
+}
+
 type PublicFilters = {
   q?: string
   search?: string
   category?: string
+  grammaticalSubcategory?: string
   languageCode?: string
   province?: string
   municipality?: string
@@ -132,10 +225,23 @@ async function request<T>(path: string, init?: RequestInit & { filters?: PublicF
 }
 
 export const publicApi = {
+  stats: () => request<PublicStats>("/public/stats"),
   dictionary: (filters?: PublicFilters) =>
     request<PublicPaginated<PublicEntry>>("/public/dictionary", { filters }),
+  dictionaryDetails: (id: string) =>
+    request<PublicEntry>(`/public/dictionary/${encodeURIComponent(id)}`),
+  neologisms: (filters?: PublicFilters) =>
+    request<PublicPaginated<PublicNeologism>>("/public/neologisms", { filters }),
+  foreignisms: (filters?: PublicFilters) =>
+    request<PublicPaginated<PublicForeignism>>("/public/foreignisms", { filters }),
   vonalp: (filters?: PublicFilters) =>
     request<PublicPaginated<PublicVonalpTerm>>("/public/vocabularies/vonalp", { filters }),
+  vonalpEp: (filters?: PublicFilters) =>
+    request<PublicPaginated<PublicVonalpTerm>>("/public/vocabularies/vonalpep", { filters }),
+  toponyms: (filters?: PublicFilters) =>
+    request<PublicPaginated<PublicToponym>>("/public/toponyms", { filters }),
+  anthroponyms: (filters?: PublicFilters) =>
+    request<PublicPaginated<PublicAnthroponym>>("/public/anthroponyms", { filters }),
   events: (filters?: PublicFilters) =>
     request<PublicPaginated<PublicEvent>>("/public/events", { filters }),
   eventDetails: (idOrSlug: string) =>

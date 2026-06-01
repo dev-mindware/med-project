@@ -9,6 +9,7 @@ describe('PublicController', () => {
 
   beforeEach(async () => {
     publicService = {
+      stats: jest.fn().mockResolvedValue({ dictionaryEntries: 0, lexicalTotal: 0 }),
       search: jest.fn().mockResolvedValue({ query: 'casa', entries: [] }),
       dictionary: jest.fn().mockResolvedValue({ data: [], meta: { total: 0 } }),
       dictionaryDetails: jest.fn().mockResolvedValue({ id: 'entry-1' }),
@@ -38,6 +39,11 @@ describe('PublicController', () => {
     const filters = { q: 'casa' };
     await controller.globalSearch(filters);
     expect(publicService.search).toHaveBeenCalledWith(filters);
+  });
+
+  it('returns public stats from PublicService', async () => {
+    await controller.publicStats();
+    expect(publicService.stats).toHaveBeenCalled();
   });
 
   it('lists public VONALP terms', async () => {

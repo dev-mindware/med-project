@@ -2,10 +2,6 @@
 
 import * as React from "react"
 import { Label, Pie, PieChart, Sector } from "recharts"
-import type {
-  PieSectorDataItem,
-  PieSectorShapeProps,
-} from "recharts/types/polar/Pie"
 
 import {
   Card,
@@ -61,23 +57,19 @@ export function PieChartInteractiveCustom({
   const items = React.useMemo(() => data.map((item) => item[nameKey]), [data, nameKey]);
 
   const renderPieShape = React.useCallback(
-    ({ index, outerRadius = 0, ...props }: PieSectorShapeProps) => {
-      if (index === activeIndex) {
-        return (
-          <g>
-            <Sector {...props} outerRadius={outerRadius + 10} />
-            <Sector
-              {...props}
-              outerRadius={outerRadius + 25}
-              innerRadius={outerRadius + 12}
-            />
-          </g>
-        )
-      }
-
-      return <Sector {...props} outerRadius={outerRadius} />
+    ({ outerRadius = 0, ...props }: any) => {
+      return (
+        <g>
+          <Sector {...props} outerRadius={outerRadius + 10} />
+          <Sector
+            {...props}
+            outerRadius={outerRadius + 25}
+            innerRadius={outerRadius + 12}
+          />
+        </g>
+      )
     },
-    [activeIndex]
+    []
   )
 
   return (
@@ -141,7 +133,8 @@ export function PieChartInteractiveCustom({
               nameKey={nameKey}
               innerRadius={60}
               strokeWidth={5}
-              shape={renderPieShape}
+              activeIndex={activeIndex}
+              activeShape={renderPieShape}
             >
               <Label
                 content={({ viewBox }) => {

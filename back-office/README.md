@@ -21,7 +21,7 @@ cp .env.example .env
 Ajuste a URL da API:
 
 ```env
-NEXT_PUBLIC_API_URL="http://localhost:3000"
+NEXT_PUBLIC_API_URL="http://localhost:4000"
 ```
 
 ## Instalar

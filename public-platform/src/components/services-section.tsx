@@ -1,107 +1,131 @@
-"use client"
-
-import { Book, FileText, Globe, Calendar, Camera, BookOpen, ArrowRight } from "lucide-react"
+import { ArrowRight, Book, BookOpen, Calendar, Globe, Library, Users } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import type { PublicStats } from "@/lib/public-api"
 import Link from "next/link"
 
-const features = [
-  {
-    icon: Book,
-    title: "Dicionário",
-    description: "Consulte a língua portuguesa no contexto angolano — definições, etimologias e exemplos reais.",
-    bullets: ["15 000+ entradas lexicais", "Etimologias e variantes", "Exemplos em contexto real"],
-    href: "/dictionary",
-    accent: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
-  },
-  {
-    icon: FileText,
-    title: "Gramática",
-    description: "Regras gramaticais explicadas de forma clara e didática para todos os níveis de ensino.",
-    bullets: ["Morfologia e sintaxe", "Ortografia atualizada", "Exercícios e exemplos"],
-    href: "/grammar",
-    accent: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
-  },
-  {
-    icon: Globe,
-    title: "VONA",
-    description: "Vocabulário Ortográfico Nacional de Angola com termos e expressões específicos do país.",
-    bullets: ["8 900+ termos nacionais", "Terminologia técnica", "Expressões angolanas"],
-    href: "/vona",
-    accent: "bg-orange-500/10 text-orange-600 dark:text-orange-400",
-  },
-  {
-    icon: BookOpen,
-    title: "Documentos",
-    description: "Manuais, brochuras e materiais educativos elaborados pela Comissão.",
-    bullets: ["500+ documentos disponíveis", "Download gratuito", "Materiais pedagógicos"],
-    href: "/documents",
-    accent: "bg-purple-500/10 text-purple-600 dark:text-purple-400",
-  },
-  {
-    icon: Camera,
-    title: "Multimídia",
-    description: "Galeria de fotos e vídeos que documentam as atividades e eventos da Comissão.",
-    bullets: ["Conferências e workshops", "Vídeos e documentários", "Arquivo fotográfico"],
-    href: "/media",
-    accent: "bg-rose-500/10 text-rose-600 dark:text-rose-400",
-  },
-  {
-    icon: Calendar,
-    title: "Eventos",
-    description: "Acompanhe conferências, seminários e actividades da Comissão ao longo do ano.",
-    bullets: ["45+ eventos por ano", "Inscrições online", "Agenda atualizada"],
-    href: "/events",
-    accent: "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400",
-  },
-]
+function countLabel(value: number | undefined, singular: string, plural: string) {
+  if (typeof value !== "number") return "Dados publicados pela API"
+  return `${value.toLocaleString("pt-PT")} ${value === 1 ? singular : plural}`
+}
 
-export function ServicesSection() {
+export function ServicesSection({ stats }: { stats?: PublicStats | null }) {
+  const features = [
+    {
+      icon: Book,
+      title: "Dicionário",
+      description: "Consulte a língua portuguesa no contexto angolano com definições, etimologias e exemplos publicados.",
+      bullets: [
+        countLabel(stats?.dictionaryEntries, "entrada lexical", "entradas lexicais"),
+        "Etimologias e variantes quando disponíveis",
+        "Exemplos em contexto aprovados",
+      ],
+      href: "/dictionary",
+      accent: "bg-primary/10 text-primary",
+    },
+    {
+      icon: Globe,
+      title: "Topónimos",
+      description: "Consulte nomes de lugares de Angola, províncias, municípios, gentílicos e história toponímica.",
+      bullets: [
+        countLabel(stats?.toponyms, "topónimo publicado", "topónimos publicados"),
+        "Filtro por província",
+        "Geografia linguística",
+      ],
+      href: "/toponimos",
+      accent: "bg-cyan-500/10 text-cyan-600",
+    },
+    {
+      icon: Users,
+      title: "Antropónimos",
+      description: "Explore nomes próprios angolanos, sobrenomes, género, etimologia e figuras históricas identificadas.",
+      bullets: [
+        countLabel(stats?.anthroponyms, "antropónimo publicado", "antropónimos publicados"),
+        "Nomes e identidade",
+        "Etimologia e significado",
+      ],
+      href: "/antroponimos",
+      accent: "bg-blue-500/10 text-blue-700",
+    },
+    {
+      icon: Library,
+      title: "VONALP & VONALP EP",
+      description: "Vocabulário Ortográfico Nacional de Angola para a Língua Portuguesa e versão para o Ensino Primário.",
+      bullets: [
+        countLabel((stats?.vonalpTerms ?? 0) + (stats?.vonalpEpTerms ?? 0), "termo completo", "termos completos"),
+        "Norma nacional unificada",
+        "Pesquisa integrada",
+      ],
+      href: "/lexico",
+      accent: "bg-indigo-500/10 text-indigo-700",
+    },
+    {
+      icon: BookOpen,
+      title: "Artigos & Pesquisas",
+      description: "Leia artigos de reflexão e publicações produzidas ou aprovadas pela Comissão Nacional.",
+      bullets: [
+        countLabel(stats?.publishedArticles, "artigo publicado", "artigos publicados"),
+        "Conteúdos da API",
+        "Acesso livre",
+      ],
+      href: "/articles",
+      accent: "bg-sky-500/10 text-sky-700",
+    },
+    {
+      icon: Calendar,
+      title: "Eventos",
+      description: "Acompanhe conferências, seminários, workshops e atividades oficiais publicadas.",
+      bullets: [
+        countLabel(stats?.publishedEvents, "evento publicado", "eventos publicados"),
+        countLabel(stats?.upcomingEvents, "evento futuro", "eventos futuros"),
+        "Inscrições quando disponíveis",
+      ],
+      href: "/events",
+      accent: "bg-violet-500/10 text-violet-700",
+    },
+  ]
+
   return (
-    <section className="py-20 bg-background">
+    <section className="section-soft overflow-hidden py-20">
+      <div className="pointer-events-none absolute right-10 top-12 h-40 w-40 rounded-full bg-primary/10 blur-3xl" />
       <div className="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
-        <div className="text-center mb-14">
-          <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-3">Recursos disponíveis</p>
-          <h2 className="text-4xl font-extrabold mb-4 tracking-tight">O que encontra aqui</h2>
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Ferramentas e conteúdos para o estudo, ensino e valorização da língua portuguesa
+        <div className="mx-auto mb-14 max-w-2xl text-center animate-slide-up">
+          <p className="mb-3 text-xs font-bold uppercase tracking-widest text-primary">Recursos disponíveis</p>
+          <h2 className="mb-4 text-4xl font-extrabold tracking-tight">O que encontra aqui</h2>
+          <p className="text-lg text-muted-foreground">
+            Ferramentas e conteúdos reais para o estudo, ensino e valorização da língua portuguesa em Angola.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {features.map((f) => {
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {features.map((f, index) => {
             const Icon = f.icon
             return (
               <div
                 key={f.title}
-                className="group rounded-xl border border-border bg-card hover:-translate-y-0.5 transition-all duration-300 overflow-hidden flex flex-col"
+                className="group flex flex-col overflow-hidden rounded-lg border border-blue-100/80 bg-white/82 shadow-sm backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:border-primary/35 hover:shadow-lg hover:shadow-blue-950/8"
+                style={{ animationDelay: `${index * 70}ms` }}
               >
-                <div className="p-6 flex flex-col flex-1">
-                  {/* Icon */}
-                  <div className={`w-10 h-10 rounded-lg ${f.accent} flex items-center justify-center mb-5`}>
+                <div className="flex flex-1 flex-col p-6">
+                  <div className={`mb-5 flex h-10 w-10 items-center justify-center rounded-md ${f.accent}`}>
                     <Icon className="h-5 w-5" />
                   </div>
 
-                  {/* Title */}
-                  <h3 className="font-bold text-lg mb-2 text-foreground">{f.title}</h3>
+                  <h3 className="mb-2 text-lg font-bold text-foreground">{f.title}</h3>
+                  <p className="mb-5 text-sm leading-relaxed text-muted-foreground">{f.description}</p>
 
-                  {/* Description */}
-                  <p className="text-sm text-muted-foreground leading-relaxed mb-5">{f.description}</p>
-
-                  {/* Bullets */}
-                  <ul className="space-y-2 mb-6 flex-1">
+                  <ul className="mb-6 flex-1 space-y-2">
                     {f.bullets.map((b) => (
                       <li key={b} className="flex items-center gap-2.5 text-sm text-foreground/70">
-                        <span className="h-1 w-1 rounded-full bg-muted-foreground/40 shrink-0" />
+                        <span className="h-1 w-1 shrink-0 rounded-full bg-primary/45" />
                         {b}
                       </li>
                     ))}
                   </ul>
 
-                  {/* CTA */}
                   <Link href={f.href}>
-                    <Button variant="outline" className="w-full rounded-lg font-semibold group/btn bg-transparent">
+                    <Button variant="outline" className="w-full rounded-md bg-transparent font-semibold group/btn hover:border-primary/50 hover:bg-primary/5 hover:text-primary">
                       Ver {f.title}
-                      <ArrowRight className="ml-2 h-4 w-4 group-hover/btn:translate-x-1 transition-transform" />
+                      <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover/btn:translate-x-1" />
                     </Button>
                   </Link>
                 </div>

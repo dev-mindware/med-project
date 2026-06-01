@@ -50,6 +50,10 @@ export function useAuth() {
       })
       .catch(() => {
         if (mounted) {
+          if (typeof window !== "undefined") {
+            localStorage.removeItem("medproject.user");
+          }
+          setUser(null);
           setIsLoading(false);
           setIsFetchingProfile(false);
         }
