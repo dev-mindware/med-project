@@ -1,13 +1,17 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Resend } from 'resend';
+import { AppLogger } from '../logger/app-logger.service';
 
 @Injectable()
 export class MailService {
   private resend: Resend;
   private fromEmail: string;
 
-  constructor(private configService: ConfigService) {
+  constructor(
+    private configService: ConfigService,
+    private logger: AppLogger,
+  ) {
     this.resend = new Resend(this.configService.get<string>('RESEND_API_KEY'));
     this.fromEmail = this.configService.get<string>('RESEND_FROM_EMAIL') ?? 'noreply@localhost';
   }
@@ -21,7 +25,15 @@ export class MailService {
         html,
       });
     } catch (error) {
-      console.error('Email Send Error:', error);
+      this.logger.error('Failed to send email', {
+        context: 'MailService',
+        action: 'EMAIL_SEND_FAILED',
+        error,
+        meta: {
+          to,
+          subject,
+        },
+      });
       throw new InternalServerErrorException('Failed to send email');
     }
   }
@@ -115,4 +127,3 @@ export class MailService {
     return this.sendEmail(to, `Atualização sobre sua inscrição: ${eventTitle}`, html);
   }
 }
-

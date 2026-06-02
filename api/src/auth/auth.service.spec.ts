@@ -6,6 +6,7 @@ import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 import { UnauthorizedException } from '@nestjs/common';
 import * as argon2 from 'argon2';
+import { AppLogger } from '../common/logger/app-logger.service';
 
 jest.mock('argon2');
 
@@ -42,6 +43,10 @@ const mockPrismaService = {
   },
 };
 
+const mockLogger = {
+  warn: jest.fn(),
+};
+
 describe('AuthService', () => {
   let service: AuthService;
 
@@ -53,6 +58,7 @@ describe('AuthService', () => {
         { provide: JwtService, useValue: mockJwtService },
         { provide: ConfigService, useValue: mockConfigService },
         { provide: PrismaService, useValue: mockPrismaService },
+        { provide: AppLogger, useValue: mockLogger },
       ],
     }).compile();
 

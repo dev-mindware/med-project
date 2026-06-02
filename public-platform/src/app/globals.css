@@ -202,6 +202,128 @@
       linear-gradient(135deg, rgba(255,255,255,0.92), rgba(235,244,255,0.78));
   }
 
+  .texture-header {
+    background: rgba(255,255,255,0.94);
+  }
+
+  .texture-header::before,
+  .texture-header::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: min(24vw, 220px);
+    pointer-events: none;
+    background-image: url("/textura.png");
+    background-size: 360px auto;
+    background-repeat: no-repeat;
+    opacity: 0.14;
+    mix-blend-mode: multiply;
+  }
+
+  .texture-header::before {
+    left: 0;
+    background-position: left top;
+    mask-image: linear-gradient(90deg, black, transparent);
+  }
+
+  .texture-header::after {
+    right: 0;
+    background-position: right top;
+    mask-image: linear-gradient(270deg, black, transparent);
+  }
+
+  .texture-footer {
+    background-image:
+      linear-gradient(rgba(6,31,74,0.94), rgba(6,31,74,0.94)),
+      url("/textura.png");
+    background-size: auto, 520px auto;
+  }
+
+  .texture-hero-corner {
+    background-image: url("/textura.png");
+    background-size: 520px auto;
+    background-repeat: no-repeat;
+    opacity: 0.12;
+    mix-blend-mode: multiply;
+    mask-image: radial-gradient(circle at center, black 35%, transparent 72%);
+  }
+
+  .word-parallax-section {
+    overflow: hidden;
+    background-image:
+      linear-gradient(180deg, rgba(4,18,43,0.74), rgba(0,47,118,0.64)),
+      url("/angolan-traditional-music.jpg");
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+  }
+
+  .word-parallax-section::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(circle at 18% 16%, rgba(255,255,255,0.22), transparent 22rem),
+      linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0));
+  }
+
+  .reveal-on-scroll {
+    opacity: 0;
+    transform: translateY(28px);
+    filter: blur(8px);
+    transition:
+      opacity 0.75s ease,
+      transform 0.75s ease,
+      filter 0.75s ease;
+    will-change: opacity, transform, filter;
+  }
+
+  .reveal-on-scroll.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+
+  .particle-field {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 0;
+  }
+
+  .particle-field::before,
+  .particle-field::after {
+    content: "";
+    position: absolute;
+    inset: -12%;
+    background-image:
+      radial-gradient(circle at 12% 20%, rgba(0, 94, 234, 0.14) 0 1.5px, transparent 2px),
+      radial-gradient(circle at 36% 72%, rgba(6, 182, 212, 0.12) 0 1px, transparent 1.5px),
+      radial-gradient(circle at 70% 28%, rgba(0, 94, 234, 0.1) 0 1.5px, transparent 2px),
+      radial-gradient(circle at 86% 82%, rgba(15, 91, 178, 0.12) 0 1px, transparent 1.5px);
+    background-size: 180px 180px, 220px 220px, 260px 260px, 200px 200px;
+    opacity: 0.5;
+    animation: particleDrift 18s ease-in-out infinite;
+  }
+
+  .particle-field::after {
+    opacity: 0.34;
+    filter: blur(1px);
+    animation-duration: 24s;
+    animation-direction: reverse;
+  }
+
+  .particle-dot {
+    position: absolute;
+    border-radius: 999px;
+    background: color-mix(in oklch, var(--primary) 62%, white);
+    box-shadow: 0 0 22px rgba(0, 94, 234, 0.22);
+    animation: particleFloat 8s ease-in-out infinite;
+  }
+
   .animate-fade-in {
     animation: fadeIn 0.8s ease-out both;
   }
@@ -322,6 +444,24 @@
   50% { transform: translate3d(18px, -10px, 0) rotate(1.2deg); }
 }
 
+@keyframes particleDrift {
+  0%, 100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(18px, -16px, 0);
+  }
+}
+
+@keyframes particleFloat {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(10px, -14px, 0) scale(1.35);
+  }
+}
+
 @keyframes carouselFade {
   0%, 25% { opacity: 1; }
   33%, 92% { opacity: 0; }
@@ -348,5 +488,21 @@
 @media print {
   .no-screenshot {
     display: none !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .word-parallax-section {
+    background-attachment: scroll;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal-on-scroll,
+  .particle-field::before,
+  .particle-field::after,
+  .particle-dot {
+    animation: none;
+    transition: none;
   }
 }

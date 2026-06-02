@@ -183,7 +183,7 @@ export function DictionarySearch({
           <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
             <p>
               <span className="font-semibold text-foreground">{meta.total}</span> resultado
-              {meta.total === 1 ? "" : "s"} na API
+              {meta.total === 1 ? "" : "s"} encontrados
             </p>
             <p>
               Página {meta.page} de {Math.max(meta.totalPages, 1)}

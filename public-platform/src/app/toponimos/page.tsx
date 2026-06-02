@@ -8,7 +8,7 @@ export default async function ToponimosPage() {
   const data = await getLexicalData()
 
   return (
-    <div className="min-h-screen flex flex-col pt-[4.75rem]">
+    <div className="flex min-h-screen flex-col pt-[4.75rem]">
       <Header />
       <main className="flex-1">
         <PageHero
@@ -24,7 +24,7 @@ export default async function ToponimosPage() {
         />
         <section className="section-paper py-14">
           <div className="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
-            <LexicalExplorer initialData={data} initialActive="toponyms" />
+            <LexicalExplorer initialData={data} initialActive="toponyms" visibleCollections={["toponyms"]} />
           </div>
         </section>
       </main>

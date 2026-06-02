@@ -1,6 +1,7 @@
 import { ArrowRight, BookOpen, Globe2, Sparkles } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import { ParticleBackground } from "@/components/particle-background"
 
 const highlights = [
   {
@@ -16,14 +17,15 @@ const highlights = [
   {
     icon: Sparkles,
     title: "Publicações vivas",
-    text: "Acompanhe artigos, eventos e novidades institucionais a partir da API pública.",
+    text: "Acompanhe artigos, eventos e novidades institucionais em atualização contínua.",
   },
 ]
 
 export function HomeVisualSection() {
   return (
     <section className="section-ice overflow-hidden py-20">
-      <div className="mx-auto grid max-w-7xl items-center gap-12 px-6 sm:px-8 lg:grid-cols-[0.95fr_1.05fr] lg:px-12">
+      <ParticleBackground />
+      <div className="relative mx-auto grid max-w-7xl items-center gap-12 px-6 sm:px-8 lg:grid-cols-[0.95fr_1.05fr] lg:px-12">
         <div className="animate-slide-in-left">
           <p className="mb-3 text-xs font-bold uppercase tracking-widest text-primary">Língua em movimento</p>
           <h2 className="text-4xl font-extrabold leading-tight md:text-5xl">
@@ -51,7 +53,7 @@ export function HomeVisualSection() {
           </div>
 
           <Button className="mt-8 rounded-md px-7 font-semibold" asChild>
-            <Link href="/lexico">
+            <Link href="/estrangeirismos">
               Explorar base lexical
               <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
@@ -73,7 +75,7 @@ export function HomeVisualSection() {
             <p className="text-3xl font-extrabold text-primary">+26k</p>
             <p className="mt-1 text-sm font-semibold text-foreground">registos e conteúdos consultáveis</p>
             <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-              Dados em atualização contínua para consulta pública.
+              Acervo em atualização contínua para consulta pública.
             </p>
           </div>
         </div>

@@ -8,7 +8,7 @@ type HeroStat = {
 }
 
 const trust = [
-  "Dados publicados pela API",
+  "Conteúdos aprovados pela Comissão",
   "Topónimos e Antropónimos",
   "Vocabulários ortográficos nacionais",
 ]
@@ -63,7 +63,7 @@ export function HeroSection({ stats = [] }: { stats?: HeroStat[] }) {
 
         <p className="max-w-xl text-lg text-white/78 leading-relaxed text-balance">
           Portal oficial para preservação, ensino e desenvolvimento da língua portuguesa em Angola.
-          Consulte conteúdos aprovados e publicados pela API institucional.
+          Consulte conteúdos institucionais aprovados para acesso público.
         </p>
 
         <div className="flex flex-col sm:flex-row items-center gap-3 pt-1">
@@ -83,8 +83,8 @@ export function HeroSection({ stats = [] }: { stats?: HeroStat[] }) {
             className="rounded-md px-8 h-12 font-semibold border-white/35 bg-white/10 text-white min-w-[160px] backdrop-blur-sm hover:bg-white hover:text-primary"
             asChild
           >
-            <Link href="/lexico">
-              Explorar Léxico
+            <Link href="/neologismos">
+              Explorar Neologismos
               <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
           </Button>

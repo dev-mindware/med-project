@@ -1,9 +1,13 @@
 import { BadGatewayException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { AppLogger } from '../common/logger/app-logger.service';
 
 @Injectable()
 export class PdfOcrService {
-  constructor(private readonly configService: ConfigService) {}
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly logger: AppLogger,
+  ) {}
 
   async extractText(file: Express.Multer.File) {
     const apiKey = this.configService.get<string>('MISTRAL_API_KEY');
@@ -30,6 +34,16 @@ export class PdfOcrService {
 
       return this.cleanText(result.pages.map((page) => page.markdown).join('\n\n'));
     } catch (error) {
+      this.logger.error('Failed to extract text from PDF', {
+        context: 'PdfOcrService',
+        action: 'PDF_OCR_FAILED',
+        error,
+        meta: {
+          filename: file.originalname,
+          size: file.size,
+          model,
+        },
+      });
       throw new BadGatewayException(`Falha ao extrair texto do PDF: ${this.errorMessage(error)}`);
     }
   }

@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { MailService } from './mail.service';
 import { ConfigService } from '@nestjs/config';
+import { AppLogger } from '../logger/app-logger.service';
 
 // Mock Resend at module level
 jest.mock('resend', () => ({
@@ -24,12 +25,16 @@ const mockConfigService = {
 
 describe('MailService', () => {
   let service: MailService;
+  const mockLogger = {
+    error: jest.fn(),
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         MailService,
         { provide: ConfigService, useValue: mockConfigService },
+        { provide: AppLogger, useValue: mockLogger },
       ],
     }).compile();
 

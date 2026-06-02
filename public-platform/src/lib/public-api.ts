@@ -179,14 +179,19 @@ export type PublicStats = {
   updatedAt: string
 }
 
-type PublicFilters = {
+export type PublicFilters = {
   q?: string
   search?: string
   category?: string
+  grammaticalCategory?: string
   grammaticalSubcategory?: string
   languageCode?: string
   province?: string
   municipality?: string
+  gender?: string
+  originalLanguage?: string
+  originCountry?: string
+  field?: string
   period?: "upcoming" | "ongoing" | "past"
   page?: number
   limit?: number
@@ -218,7 +223,7 @@ async function request<T>(path: string, init?: RequestInit & { filters?: PublicF
   })
 
   if (!response.ok) {
-    throw new Error(`Public API request failed: ${response.status} ${response.statusText}`)
+    throw new Error(`Public content request failed: ${response.status} ${response.statusText}`)
   }
 
   return response.json() as Promise<T>

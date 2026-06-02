@@ -16,7 +16,7 @@ export function FeaturedWords({ entries = [] }: { entries?: PublicEntry[] }) {
         <BookOpen className="mx-auto mb-3 h-8 w-8 text-primary/55" />
         <h2 className="text-2xl font-extrabold">Sem palavras em destaque</h2>
         <p className="mx-auto mt-2 max-w-xl text-sm text-muted-foreground">
-          Esta área só mostra entradas reais aprovadas pela API.
+          Esta área só mostra entradas reais aprovadas para consulta pública.
         </p>
       </div>
     )
@@ -30,7 +30,7 @@ export function FeaturedWords({ entries = [] }: { entries?: PublicEntry[] }) {
           <h2 className="text-3xl font-extrabold">Entradas publicadas</h2>
         </div>
         <p className="max-w-xl text-sm leading-relaxed text-muted-foreground">
-          Uma seleção direta das entradas aprovadas que a API devolveu para esta página.
+          Uma seleção direta das entradas aprovadas disponíveis nesta página.
         </p>
       </div>
 

@@ -4,6 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 import { v4 as uuidv4 } from 'uuid';
 import * as path from 'path';
+import { AppLogger } from '../common/logger/app-logger.service';
 
 @Injectable()
 export class MediaService {
@@ -14,6 +15,7 @@ export class MediaService {
   constructor(
     private configService: ConfigService,
     private prisma: PrismaService,
+    private logger: AppLogger,
   ) {
     this.s3Client = new S3Client({
       region: 'auto',
@@ -69,7 +71,20 @@ export class MediaService {
 
       return mediaAsset;
     } catch (error) {
-      console.error('R2 Upload Error:', error);
+      this.logger.error('Failed to upload media file', {
+        context: 'MediaService',
+        action: 'MEDIA_UPLOAD_FAILED',
+        userId,
+        error,
+        meta: {
+          entity,
+          entityId,
+          filename: file.originalname,
+          mimeType: file.mimetype,
+          size: file.size,
+          storageProvider: 'cloudflare_r2',
+        },
+      });
       throw new InternalServerErrorException('Failed to upload file to R2');
     }
   }

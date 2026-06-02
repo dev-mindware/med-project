@@ -2,6 +2,7 @@ import { BadGatewayException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import OpenAI from 'openai';
 import { ManualVocabularyRawItem } from './manual-vocabulary.types';
+import { AppLogger } from '../common/logger/app-logger.service';
 
 const SYSTEM_PROMPT = `
 Es um linguista especializado em portugues europeu, portugues angolano e linguas nacionais de Angola.
@@ -32,7 +33,10 @@ Regras:
 
 @Injectable()
 export class VocabularyAiService {
-  constructor(private readonly configService: ConfigService) {}
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly logger: AppLogger,
+  ) {}
 
   async extractVocabulary(text: string): Promise<ManualVocabularyRawItem[]> {
     const apiKey = this.configService.get<string>('OPENAI_API_KEY');
@@ -59,6 +63,15 @@ export class VocabularyAiService {
         const content = response.choices[0]?.message?.content || '[]';
         allItems.push(...this.parseItems(content));
       } catch (error) {
+        this.logger.error('Failed to extract vocabulary with AI', {
+          context: 'VocabularyAiService',
+          action: 'VOCABULARY_AI_FAILED',
+          error,
+          meta: {
+            model,
+            chunkLength: chunk.length,
+          },
+        });
         throw new BadGatewayException(`Falha ao analisar vocabulario com IA: ${this.errorMessage(error)}`);
       }
     }

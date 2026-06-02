@@ -9,7 +9,7 @@ export function VonalpReferenceSection() {
             <BookMarked className="h-5 w-5" />
           </div>
           <p className="text-xs font-bold uppercase tracking-widest text-primary">VONALP</p>
-          <h2 className="mt-2 text-xl font-extrabold">Vocabulário Ortográfico Nacional de Angola para a Língua Portuguesa</h2>
+          <h2 className="mt-2 text-xl font-bold">Vocabulário Ortográfico Nacional de Angola para a Língua Portuguesa</h2>
           <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
             Reúne termos completos e publicados para consulta normativa, editorial e institucional.
           </p>
@@ -20,7 +20,7 @@ export function VonalpReferenceSection() {
             <GraduationCap className="h-5 w-5" />
           </div>
           <p className="text-xs font-bold uppercase tracking-widest text-cyan-700">VONALP EP</p>
-          <h2 className="mt-2 text-xl font-extrabold">Vocabulário Ortográfico Nacional de Angola para a Língua Portuguesa — para o Ensino Primário</h2>
+          <h2 className="mt-2 text-xl font-bold">Vocabulário Ortográfico Nacional de Angola para a Língua Portuguesa para o Ensino Primário</h2>
           <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
             Destaca termos validados para uso pedagógico, editorial e institucional no contexto do Ensino Primário.
           </p>

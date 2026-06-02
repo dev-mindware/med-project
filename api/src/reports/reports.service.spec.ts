@@ -8,6 +8,7 @@ const mockPrismaService = {
   user: { findMany: jest.fn().mockResolvedValue([]), count: jest.fn().mockResolvedValue(0) },
   auditLog: { findMany: jest.fn().mockResolvedValue([]), count: jest.fn().mockResolvedValue(0) },
   entry: { count: jest.fn().mockResolvedValue(0) },
+  neologism: { count: jest.fn().mockResolvedValue(0) },
   toponym: { count: jest.fn().mockResolvedValue(0) },
   anthroponym: { count: jest.fn().mockResolvedValue(0) },
   foreignism: { count: jest.fn().mockResolvedValue(0) },

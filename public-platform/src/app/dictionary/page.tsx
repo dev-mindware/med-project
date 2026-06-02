@@ -41,7 +41,7 @@ export default async function DicionarioPage({
         <PageHero
           badge="Recurso"
           title="Dicionário de Língua Portuguesa"
-          subtitle="Consulte definições, etimologias, exemplos de uso e informações gramaticais publicadas pela API."
+          subtitle="Consulte definições, etimologias, exemplos de uso e informações gramaticais aprovadas para consulta pública."
           tone="ice"
           stats={[
             { value: (stats?.dictionaryEntries ?? entries.meta.total).toLocaleString("pt-PT"), label: "Entradas aprovadas" },

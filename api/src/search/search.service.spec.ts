@@ -8,6 +8,9 @@ const mockPrismaService = {
       { id: 'e1', entry: 'Mukanda', firstDefinition: 'Carta', createdAt: new Date() },
     ]),
   },
+  neologism: {
+    findMany: jest.fn().mockResolvedValue([]),
+  },
   toponym: {
     findMany: jest.fn().mockResolvedValue([
       { id: 't1', toponym: 'Luanda', meaning: 'Capital', province: 'Luanda' },
@@ -42,14 +45,16 @@ describe('SearchService', () => {
     it('should return results grouped by resource type', async () => {
       const result = await service.globalSearch('angola');
       expect(result).toHaveProperty('results.entries');
+      expect(result).toHaveProperty('results.neologisms');
       expect(result).toHaveProperty('results.toponyms');
       expect(result).toHaveProperty('results.anthroponyms');
       expect(result).toHaveProperty('results.foreignisms');
     });
 
-    it('should execute 4 parallel queries (one per resource type)', async () => {
+    it('should execute 5 parallel queries (one per resource type)', async () => {
       await service.globalSearch('angola');
       expect(prisma.entry.findMany).toHaveBeenCalledTimes(1);
+      expect(prisma.neologism.findMany).toHaveBeenCalledTimes(1);
       expect(prisma.toponym.findMany).toHaveBeenCalledTimes(1);
       expect(prisma.anthroponym.findMany).toHaveBeenCalledTimes(1);
       expect(prisma.foreignism.findMany).toHaveBeenCalledTimes(1);
@@ -78,6 +83,9 @@ describe('SearchService', () => {
       expect(prisma.entry.findMany).toHaveBeenCalledWith(
         expect.objectContaining({ take: 5 }),
       );
+      expect(prisma.neologism.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ take: 5 }),
+      );
     });
 
     it('should only query APPROVED content', async () => {
@@ -88,6 +96,7 @@ describe('SearchService', () => {
 
     it('should return totalHits: 0 when nothing is found', async () => {
       prisma.entry.findMany.mockResolvedValueOnce([]);
+      prisma.neologism.findMany.mockResolvedValueOnce([]);
       prisma.toponym.findMany.mockResolvedValueOnce([]);
       prisma.anthroponym.findMany.mockResolvedValueOnce([]);
       prisma.foreignism.findMany.mockResolvedValueOnce([]);

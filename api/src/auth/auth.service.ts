@@ -4,6 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import * as argon2 from 'argon2';
 import { UsersService } from '../users/users.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { AppLogger } from '../common/logger/app-logger.service';
 
 @Injectable()
 export class AuthService {
@@ -12,6 +13,7 @@ export class AuthService {
     private jwtService: JwtService,
     private configService: ConfigService,
     private prisma: PrismaService,
+    private logger: AppLogger,
   ) {}
 
   async validateUser(email: string, pass: string): Promise<any> {
@@ -130,7 +132,12 @@ export class AuthService {
         secret: this.configService.get('JWT_REFRESH_SECRET'),
       });
       userId = payload.sub;
-    } catch (e) {
+    } catch (error) {
+      this.logger.warn('Refresh token verification failed', {
+        context: 'AuthService',
+        action: 'REFRESH_TOKEN_VERIFICATION_FAILED',
+        error,
+      });
       throw new UnauthorizedException('Invalid or expired refresh token');
     }
 

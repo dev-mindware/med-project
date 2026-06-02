@@ -9,6 +9,8 @@ import { catchError, tap } from 'rxjs/operators';
 import { throwError } from 'rxjs';
 import { ApprovalStatus, UserRole } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
+import { AppLogger } from '../logger/app-logger.service';
+import { maskSensitive } from '../logger/log-sanitizer';
 
 type ContentEntityConfig = {
   delegateName: string;
@@ -107,12 +109,15 @@ const CONTENT_ENTITIES: Record<string, ContentEntityConfig> = {
 
 @Injectable()
 export class AuditInterceptor implements NestInterceptor {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private logger: AppLogger,
+  ) {}
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     const request = context.switchToHttp().getRequest();
     const response = context.switchToHttp().getResponse();
-    const { method, url, user, body, ip, params, query, route } = request;
+    const { method, url, user, body, ip, params, query, route, requestId } = request;
     const userAgent = request.get('user-agent');
     const path = url.split('?')[0];
     const shouldAudit = method !== 'GET';
@@ -150,6 +155,7 @@ export class AuditInterceptor implements NestInterceptor {
             route: route?.path,
             params,
             query,
+            requestId,
             requestBody: sanitizedBody,
             statusCode: response?.statusCode,
             changedFields: this.getChangedFields(oldValues, sanitizedBody),
@@ -171,32 +177,49 @@ export class AuditInterceptor implements NestInterceptor {
       catchError((error) => {
         if (!shouldAudit) return throwError(() => error);
 
-        void oldValuesPromise.then((oldValues) =>
-          this.createAuditLog({
-            actorId: user?.id,
-            actorRole: user?.role,
-            action: actionName,
-            entity: entityName,
-            entityId,
-            oldValues,
-            newValues: method === 'DELETE' ? null : sanitizedBody,
-            ipAddress: ip,
-            userAgent,
-            status: 'FAILED',
-            failureReason: error?.response?.message || error?.message || 'Erro desconhecido',
-            metadata: {
+        void oldValuesPromise
+          .then((oldValues) =>
+            this.createAuditLog({
+              actorId: user?.id,
+              actorRole: user?.role,
+              action: actionName,
+              entity: entityName,
+              entityId,
+              oldValues,
+              newValues: method === 'DELETE' ? null : sanitizedBody,
+              ipAddress: ip,
+              userAgent,
+              status: 'FAILED',
+              failureReason: error?.response?.message || error?.message || 'Erro desconhecido',
+              metadata: {
+                method,
+                url,
+                path,
+                route: route?.path,
+                params,
+                query,
+                requestId,
+                requestBody: sanitizedBody,
+                statusCode: error?.status || error?.response?.statusCode,
+                changedFields: this.getChangedFields(oldValues, sanitizedBody),
+              },
+            }),
+          )
+          .catch((auditError) => {
+            this.logger.error('Failed to create failure audit log', {
+              context: 'AuditInterceptor',
+              action: 'AUDIT_FAILURE_LOG_FAILED',
+              requestId,
+              userId: user?.id,
               method,
-              url,
               path,
-              route: route?.path,
-              params,
-              query,
-              requestBody: sanitizedBody,
-              statusCode: error?.status || error?.response?.statusCode,
-              changedFields: this.getChangedFields(oldValues, sanitizedBody),
-            },
-          }),
-        );
+              error: auditError,
+              meta: {
+                entity: entityName,
+                entityId,
+              },
+            });
+          });
 
         return throwError(() => error);
       }),
@@ -240,26 +263,19 @@ export class AuditInterceptor implements NestInterceptor {
 
     try {
       return this.sanitize(await delegate.findUnique({ where: { id: entityId } }));
-    } catch {
+    } catch (error) {
+      this.logger.warn('Failed to load old values for audit', {
+        context: 'AuditInterceptor',
+        action: 'AUDIT_OLD_VALUES_FAILED',
+        error,
+        meta: { delegateName, entityId, method },
+      });
       return null;
     }
   }
 
   private sanitize(value: any): any {
-    if (!value || typeof value !== 'object') return value ?? null;
-    if (value instanceof Date) return value.toISOString();
-    const sensitiveFields = new Set(['password', 'confirmPassword', 'token', 'accessToken', 'refreshToken', 'hash', 'tokenHash']);
-
-    if (Array.isArray(value)) {
-      return value.map((item) => this.sanitize(item));
-    }
-
-    return Object.fromEntries(
-      Object.entries(value).map(([key, val]) => [
-        key,
-        sensitiveFields.has(key) ? '[REDACTED]' : this.sanitize(val),
-      ]),
-    );
+    return maskSensitive(value) ?? null;
   }
 
   private getChangedFields(oldValues: any, newValues: any) {
@@ -271,7 +287,21 @@ export class AuditInterceptor implements NestInterceptor {
     try {
       await this.prisma.auditLog.create({ data });
     } catch (error) {
-      console.error('Audit log error:', error);
+      this.logger.error('Failed to persist audit log', {
+        context: 'AuditInterceptor',
+        action: 'AUDIT_LOG_WRITE_FAILED',
+        userId: data?.actorId,
+        method: data?.metadata?.method,
+        path: data?.metadata?.path,
+        requestId: data?.metadata?.requestId,
+        error,
+        meta: {
+          entity: data?.entity,
+          entityId: data?.entityId,
+          auditAction: data?.action,
+          status: data?.status,
+        },
+      });
     }
   }
 
@@ -302,7 +332,18 @@ export class AuditInterceptor implements NestInterceptor {
 
       await this.notifyNonDraftEdit(data, config, actor);
     } catch (error) {
-      console.error('Notification error:', error);
+      this.logger.error('Failed to create audit notifications', {
+        context: 'AuditInterceptor',
+        action: 'AUDIT_NOTIFICATION_FAILED',
+        userId: data.actorId,
+        path: data.path,
+        error,
+        meta: {
+          entity: data.entity,
+          entityId: data.entityId,
+          auditAction: data.action,
+        },
+      });
     }
   }
 

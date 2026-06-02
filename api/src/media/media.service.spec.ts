@@ -3,6 +3,7 @@ import { MediaService } from './media.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { ConfigService } from '@nestjs/config';
 import { S3Client } from '@aws-sdk/client-s3';
+import { AppLogger } from '../common/logger/app-logger.service';
 
 // Mock S3Client
 jest.mock('@aws-sdk/client-s3', () => {
@@ -50,6 +51,9 @@ const mockConfigService = {
 describe('MediaService', () => {
   let service: MediaService;
   let prisma: typeof mockPrismaService;
+  const mockLogger = {
+    error: jest.fn(),
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -57,6 +61,7 @@ describe('MediaService', () => {
         MediaService,
         { provide: PrismaService, useValue: mockPrismaService },
         { provide: ConfigService, useValue: mockConfigService },
+        { provide: AppLogger, useValue: mockLogger },
       ],
     }).compile();
 

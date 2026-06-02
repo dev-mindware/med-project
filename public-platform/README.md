@@ -22,7 +22,7 @@ Copie o ficheiro de exemplo:
 cp .env.example .env
 ```
 
-Ajuste a URL da API, se necessário:
+Ajuste a origem dos conteúdos institucionais, se necessário:
 
 ```env
 NEXT_PUBLIC_API_URL="http://localhost:4000"

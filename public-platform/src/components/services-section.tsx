@@ -2,9 +2,10 @@ import { ArrowRight, Book, BookOpen, Calendar, Globe, Library, Users } from "luc
 import { Button } from "@/components/ui/button"
 import type { PublicStats } from "@/lib/public-api"
 import Link from "next/link"
+import { RevealOnScroll } from "@/components/reveal-on-scroll"
 
 function countLabel(value: number | undefined, singular: string, plural: string) {
-  if (typeof value !== "number") return "Dados publicados pela API"
+  if (typeof value !== "number") return "Dados em atualização"
   return `${value.toLocaleString("pt-PT")} ${value === 1 ? singular : plural}`
 }
 
@@ -55,7 +56,7 @@ export function ServicesSection({ stats }: { stats?: PublicStats | null }) {
         "Norma nacional unificada",
         "Pesquisa integrada",
       ],
-      href: "/lexico",
+      href: "/vonalp",
       accent: "bg-indigo-500/10 text-indigo-700",
     },
     {
@@ -64,7 +65,7 @@ export function ServicesSection({ stats }: { stats?: PublicStats | null }) {
       description: "Leia artigos de reflexão e publicações produzidas ou aprovadas pela Comissão Nacional.",
       bullets: [
         countLabel(stats?.publishedArticles, "artigo publicado", "artigos publicados"),
-        "Conteúdos da API",
+        "Conteúdos institucionais",
         "Acesso livre",
       ],
       href: "/articles",
@@ -100,10 +101,10 @@ export function ServicesSection({ stats }: { stats?: PublicStats | null }) {
           {features.map((f, index) => {
             const Icon = f.icon
             return (
-              <div
+              <RevealOnScroll
                 key={f.title}
+                delay={index * 80}
                 className="group flex flex-col overflow-hidden rounded-lg border border-blue-100/80 bg-white/82 shadow-sm backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:border-primary/35 hover:shadow-lg hover:shadow-blue-950/8"
-                style={{ animationDelay: `${index * 70}ms` }}
               >
                 <div className="flex flex-1 flex-col p-6">
                   <div className={`mb-5 flex h-10 w-10 items-center justify-center rounded-md ${f.accent}`}>
@@ -129,7 +130,7 @@ export function ServicesSection({ stats }: { stats?: PublicStats | null }) {
                     </Button>
                   </Link>
                 </div>
-              </div>
+              </RevealOnScroll>
             )
           })}
         </div>

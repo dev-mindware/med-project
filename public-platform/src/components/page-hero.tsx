@@ -15,8 +15,9 @@ const toneClass = {
 export function PageHero({ badge, title, subtitle, stats = [], tone = "ice" }: PageHeroProps) {
   return (
     <section className={`relative overflow-hidden border-b border-border/50 ${toneClass[tone]}`}>
-      <div className="pointer-events-none absolute -left-16 top-8 h-56 w-56 rounded-full bg-primary/10 blur-3xl" />
-      <div className="pointer-events-none absolute -right-20 bottom-0 h-64 w-64 rounded-full bg-cyan-500/10 blur-3xl" />
+      <div className="texture-hero-corner pointer-events-none absolute -left-20 -top-20 h-72 w-80" />
+      <div className="texture-hero-corner pointer-events-none absolute -bottom-24 -right-20 h-80 w-88 rotate-180" />
+      <div className="pointer-events-none absolute inset-y-0 right-0 w-1/2 bg-[linear-gradient(115deg,transparent,rgba(0,94,234,0.08))]" />
       <div
         className="pointer-events-none absolute inset-0 opacity-[0.045]"
         style={{
@@ -48,7 +49,7 @@ export function PageHero({ badge, title, subtitle, stats = [], tone = "ice" }: P
               {stats.map((s, index) => (
                 <div
                   key={s.label}
-                  className="rounded-lg border border-blue-100/80 bg-white/78 p-4 text-left shadow-sm backdrop-blur animate-slide-up"
+                  className="animate-slide-up rounded-md border border-blue-100/80 bg-white/78 p-4 text-left shadow-sm backdrop-blur"
                   style={{ animationDelay: `${index * 80}ms` }}
                 >
                   <p className="text-2xl font-extrabold text-primary tabular-nums">{s.value}</p>
@@ -57,7 +58,7 @@ export function PageHero({ badge, title, subtitle, stats = [], tone = "ice" }: P
               ))}
             </div>
           ) : (
-            <div className="hidden h-36 w-full max-w-md rounded-lg border border-dashed border-primary/20 bg-white/45 backdrop-blur lg:block" />
+            <div className="hidden h-36 w-full max-w-md rounded-md border border-dashed border-primary/20 bg-white/45 backdrop-blur lg:block" />
           )}
         </div>
       </div>

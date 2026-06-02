@@ -9,13 +9,13 @@ export default async function VonalpEpPage() {
   const data = await getLexicalData()
 
   return (
-    <div className="min-h-screen flex flex-col pt-[4.75rem]">
+    <div className="flex min-h-screen flex-col pt-[4.75rem]">
       <Header />
       <main className="flex-1">
         <PageHero
           badge="Ensino e publicação"
           title="VONALP EP"
-          subtitle="Vocabulário Ortográfico Nacional de Angola para a Língua Portuguesa — para o Ensino Primário."
+          subtitle="Vocabulário Ortográfico Nacional de Angola para a Língua Portuguesa para o Ensino Primário."
           tone="soft"
           stats={[
             { value: data.vonalpEp.meta.total.toLocaleString("pt-PT"), label: "Termos publicados" },
@@ -26,7 +26,7 @@ export default async function VonalpEpPage() {
         <VonalpReferenceSection />
         <section className="section-paper py-14">
           <div className="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
-            <LexicalExplorer initialData={data} initialActive="vonalpEp" />
+            <LexicalExplorer initialData={data} initialActive="vonalpEp" visibleCollections={["vonalpEp"]} />
           </div>
         </section>
       </main>

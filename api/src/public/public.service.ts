@@ -286,7 +286,7 @@ export class PublicService {
     const where: Prisma.EntryWhereInput = {
       approvalStatus: ApprovalStatus.APPROVED,
       ...(query ? this.entrySearchWhere(query) : {}),
-      ...(filters.category ? { grammaticalCategory: filters.category } : {}),
+      ...(this.grammaticalCategory(filters) ? { grammaticalCategory: this.grammaticalCategory(filters) } : {}),
       ...(filters.grammaticalSubcategory ? { grammaticalSubcategory: filters.grammaticalSubcategory } : {}),
       ...(filters.languageCode ? { languageCode: { equals: filters.languageCode, mode: 'insensitive' } } : {}),
     };
@@ -303,7 +303,8 @@ export class PublicService {
     const where: Prisma.NeologismWhereInput = {
       approvalStatus: ApprovalStatus.APPROVED,
       ...(query ? this.neologismSearchWhere(query) : {}),
-      ...(filters.category ? { grammaticalCategory: filters.category } : {}),
+      ...(this.grammaticalCategory(filters) ? { grammaticalCategory: this.grammaticalCategory(filters) } : {}),
+      ...(filters.grammaticalSubcategory ? { grammaticalSubcategory: filters.grammaticalSubcategory } : {}),
       ...(filters.languageCode ? { languageCode: { equals: filters.languageCode, mode: 'insensitive' } } : {}),
     };
 
@@ -336,6 +337,7 @@ export class PublicService {
     const where: Prisma.AnthroponymWhereInput = {
       approvalStatus: ApprovalStatus.APPROVED,
       ...(query ? this.anthroponymSearchWhere(query) : {}),
+      ...(filters.gender ? { gender: { equals: filters.gender, mode: 'insensitive' } } : {}),
     };
 
     return this.paginate('anthroponym', where, anthroponymSelect, { name: 'asc' }, filters);
@@ -350,7 +352,10 @@ export class PublicService {
     const where: Prisma.ForeignismWhereInput = {
       approvalStatus: ApprovalStatus.APPROVED,
       ...(query ? this.foreignismSearchWhere(query) : {}),
-      ...(filters.category ? { field: { equals: filters.category, mode: 'insensitive' } } : {}),
+      ...(this.grammaticalCategory(filters) ? { grammaticalCategory: this.grammaticalCategory(filters) } : {}),
+      ...(filters.field ? { field: { equals: filters.field, mode: 'insensitive' } } : {}),
+      ...(filters.originalLanguage ? { originalLanguage: { equals: filters.originalLanguage, mode: 'insensitive' } } : {}),
+      ...(filters.originCountry ? { originCountry: { equals: filters.originCountry, mode: 'insensitive' } } : {}),
     };
 
     return this.paginate('foreignism', where, foreignismSelect, { term: 'asc' }, filters);
@@ -363,9 +368,10 @@ export class PublicService {
   async vocabulary(vocabularyType: VonalpVocabularyType, filters: PublicContentFilterDto) {
     const query = this.searchTerm(filters).toLowerCase();
     const allTerms = await this.vonalpService.findPublic(vocabularyType);
-    const filtered = query
-      ? allTerms.filter((term) =>
-          [
+    const grammaticalCategory = this.grammaticalCategory(filters);
+    const filtered = allTerms.filter((term) => {
+      const matchesQuery = query
+        ? [
             term.term,
             term.pronunciation,
             term.grammaticalCategory,
@@ -377,9 +383,15 @@ export class PublicService {
             term.origin,
           ]
             .filter(Boolean)
-            .some((value) => String(value).toLowerCase().includes(query)),
-        )
-      : allTerms;
+            .some((value) => String(value).toLowerCase().includes(query))
+        : true;
+      const matchesCategory = grammaticalCategory ? term.grammaticalCategory === grammaticalCategory : true;
+      const matchesSubcategory = filters.grammaticalSubcategory
+        ? term.grammaticalSubcategory === filters.grammaticalSubcategory
+        : true;
+
+      return matchesQuery && matchesCategory && matchesSubcategory;
+    });
 
     return this.paginateArray(filtered, filters);
   }
@@ -575,6 +587,10 @@ export class PublicService {
 
   private searchTerm(filters: PublicContentFilterDto) {
     return (filters.q || filters.search || '').trim();
+  }
+
+  private grammaticalCategory(filters: PublicContentFilterDto) {
+    return filters.grammaticalCategory || filters.category;
   }
 
   private entrySearchWhere(query: string): Prisma.EntryWhereInput {

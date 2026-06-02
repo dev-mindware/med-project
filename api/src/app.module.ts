@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
@@ -27,11 +27,14 @@ import { AuditInterceptor } from './common/interceptors/audit.interceptor';
 import { NotificationsModule } from './notifications/notifications.module';
 import { VonalpModule } from './vonalp/vonalp.module';
 import { ManualVocabularyModule } from './manual-vocabulary/manual-vocabulary.module';
-
+import { AllExceptionsFilter } from './common/filters/http-exception.filter';
+import { LoggerModule } from './common/logger/logger.module';
+import { RequestContextMiddleware } from './common/middleware/request-context.middleware';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    LoggerModule,
     ThrottlerModule.forRoot([{ ttl: 60000, limit: 300 }]),
     PrismaModule,
     UsersModule,
@@ -58,10 +61,15 @@ import { ManualVocabularyModule } from './manual-vocabulary/manual-vocabulary.mo
   ],
   providers: [
     AppService,
+    AllExceptionsFilter,
     { provide: APP_GUARD, useClass: ThrottlerGuard },
     { provide: APP_INTERCEPTOR, useClass: AuditInterceptor },
   ],
   controllers: [AppController],
 
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(RequestContextMiddleware).forRoutes('*');
+  }
+}

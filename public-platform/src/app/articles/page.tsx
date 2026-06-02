@@ -24,12 +24,12 @@ export default async function ArtigosPage({
         <PageHero
           badge="Conteúdos"
           title="Artigos e Publicações"
-          subtitle="Explore publicações reais devolvidas pela API: artigos académicos, materiais educativos e pesquisas sobre a língua portuguesa em Angola."
+          subtitle="Explore artigos académicos, materiais educativos e pesquisas sobre a língua portuguesa em Angola."
           tone="soft"
           stats={[
             { value: articles.meta.total.toLocaleString("pt-PT"), label: "Publicações encontradas" },
             { value: articles.data.filter((article) => article.isFeatured).length.toLocaleString("pt-PT"), label: "Destaques nesta lista" },
-            { value: articles.data.length.toLocaleString("pt-PT"), label: "Carregadas nesta página" },
+            { value: articles.data.length.toLocaleString("pt-PT"), label: "Disponíveis nesta página" },
           ]}
         />
         <section className="section-paper py-14">

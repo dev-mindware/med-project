@@ -39,6 +39,11 @@ export class PublicContentFilterDto {
   @IsString()
   category?: string;
 
+  @ApiPropertyOptional({ description: 'Categoria gramatical, usada em entradas, neologismos, estrangeirismos e VONALP.' })
+  @IsOptional()
+  @IsString()
+  grammaticalCategory?: string;
+
   @ApiPropertyOptional({ description: 'Subcategoria gramatical, usada em entradas e neologismos.' })
   @IsOptional()
   @IsString()
@@ -58,6 +63,26 @@ export class PublicContentFilterDto {
   @IsOptional()
   @IsString()
   municipality?: string;
+
+  @ApiPropertyOptional({ description: 'Genero, usado em antroponimos.' })
+  @IsOptional()
+  @IsString()
+  gender?: string;
+
+  @ApiPropertyOptional({ description: 'Lingua original, usada em estrangeirismos.' })
+  @IsOptional()
+  @IsString()
+  originalLanguage?: string;
+
+  @ApiPropertyOptional({ description: 'Pais de origem, usado em estrangeirismos.' })
+  @IsOptional()
+  @IsString()
+  originCountry?: string;
+
+  @ApiPropertyOptional({ description: 'Area ou dominio, usado em estrangeirismos.' })
+  @IsOptional()
+  @IsString()
+  field?: string;
 
   @ApiPropertyOptional({ enum: PublicEventPeriod, description: 'Filtro temporal para eventos.' })
   @IsOptional()

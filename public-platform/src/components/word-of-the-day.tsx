@@ -47,7 +47,7 @@ export function WordOfTheDay({ word }: { word?: PublicEntry }) {
           <p className="text-xs font-bold uppercase tracking-widest text-primary">Palavra do Dia</p>
           <h3 className="mt-3 text-2xl font-extrabold">Sem entrada publicada para destacar</h3>
           <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground">
-            Assim que a API devolver entradas aprovadas, esta área passa a escolher uma palavra real do acervo.
+            Assim que houver entradas aprovadas, esta área passa a escolher uma palavra real do acervo.
           </p>
         </div>
       </div>
