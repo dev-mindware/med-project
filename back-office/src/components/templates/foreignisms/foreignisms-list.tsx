@@ -46,7 +46,7 @@ export function ForeignismsList() {
   const { user } = useAuth();
 
   const columns: Column<ForeignismResponse>[] = [
-    { key: "term", header: "Termo" },
+    { key: "term", header: "Vocábulo" },
     { key: "originalLanguage", header: "Língua de Origem" },
     { 
       key: "grammaticalCategory", 
@@ -175,7 +175,7 @@ export function ForeignismsList() {
       <div className="flex flex-col sm:flex-row gap-4 justify-between items-center">
         <TitleList 
           title="Estrangeirismos" 
-          suTitle="Faça a gestão dos termos estrangeiros e da sua influência" 
+          suTitle="Faça a gestão dos vocábulos estrangeiros e da sua influência" 
         />
         <div className="flex flex-wrap items-center gap-2">
           <ButtonAddForeignism />

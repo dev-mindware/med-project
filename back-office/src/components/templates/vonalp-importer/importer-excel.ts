@@ -106,7 +106,7 @@ export async function downloadImportReport(config: VonalpImportConfig, report: I
   imported.columns = [
     { header: "Linha", key: "rowNumber", width: 12 },
     { header: "ID", key: "id", width: 42 },
-    { header: "Termo", key: "label", width: 38 },
+    { header: "Vocábulo", key: "label", width: 38 },
   ];
   styleHeader(imported);
   report.created.forEach((row) => imported.addRow(row));

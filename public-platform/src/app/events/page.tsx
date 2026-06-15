@@ -14,8 +14,8 @@ export default async function EventosPage({
   const params = await searchParams
   const period = params?.period ?? "upcoming"
   const events = await safePublicApi(
-    () => publicApi.events({ period, q: params?.q, category: params?.category, limit: 100 }),
-    { data: [], meta: { total: 0, page: 1, limit: 100, totalPages: 0, hasNextPage: false, hasPreviousPage: false } },
+    () => publicApi.events({ period, q: params?.q, category: params?.category, limit: 6 }),
+    { data: [], meta: { total: 0, page: 1, limit: 6, totalPages: 0, hasNextPage: false, hasPreviousPage: false } },
   )
 
   return (
@@ -24,8 +24,8 @@ export default async function EventosPage({
       <main className="flex-1">
         <PageHero
           badge="Agenda"
-          title="Eventos e Atividades"
-          subtitle="Acompanhe conferências, workshops, seminários e atividades publicadas pela Comissão Nacional de Língua Portuguesa."
+          title="Eventos e Actividades"
+          subtitle="Acompanhe conferências, workshops, seminários e actividades publicadas pela Comissão Nacional de Língua Portuguesa."
           tone="ice"
           stats={[
             { value: events.meta.total.toLocaleString("pt-PT"), label: "Eventos encontrados" },

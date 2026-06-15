@@ -110,7 +110,7 @@ export function NeologismsList() {
       <div className="flex flex-col sm:flex-row gap-4 justify-between items-center">
         <TitleList
           title="Neologismos"
-          suTitle="Faça a gestão dos termos recentes e das novas unidades lexicais"
+          suTitle="Faça a gestão dos vocábulos recentes e das novas unidades lexicais"
         />
         <ButtonAddNeologism />
       </div>

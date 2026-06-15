@@ -82,7 +82,7 @@ export const vonalpImportConfigs: Record<string, VonalpImportConfig> = {
     primaryField: "entry",
     schema: entrySchema,
     columns: [
-      text("entry", "Entrada", { required: true, aliases: ["entry", "Entrada (Palavra/Termo)"], example: "Casa" }),
+      text("entry", "Entrada", { required: true, aliases: ["entry", "Entrada (Palavra/Vocábulo)"], example: "Casa" }),
       text("firstDefinition", "Primeira definição", { required: true, aliases: ["firstDefinition", "Primeira Definição (Principal)", "Primeira definicao"], example: "Lugar de habitação." }),
       text("grammaticalCategory", "Categoria gramatical", { recommended: true, aliases: ["grammaticalCategory", "Categoria Gramatical"], options: categoryOptions }),
       text("languageCode", "Código da língua", { recommended: true, aliases: ["languageCode", "Codigo da Lingua", "Código da Língua", "Codigo da Língua"], example: "pt" }),
@@ -185,7 +185,7 @@ export const vonalpImportConfigs: Record<string, VonalpImportConfig> = {
     primaryField: "term",
     schema: foreignismSchema,
     columns: [
-      text("term", "Termo estrangeiro", { required: true, aliases: ["term", "Termo Estrangeiro"], example: "software" }),
+      text("term", "Vocábulo estrangeiro", { required: true, aliases: ["term", "Vocábulo Estrangeiro"], example: "software" }),
       text("originalLanguage", "Idioma original", { recommended: true, aliases: ["originalLanguage", "Idioma Original"] }),
       text("originCountry", "País de origem", { recommended: true, aliases: ["originCountry", "Pais de origem", "País de Origem"] }),
       text("field", "Área de conhecimento", { recommended: true, aliases: ["field", "Area de conhecimento", "Área de Conhecimento"] }),

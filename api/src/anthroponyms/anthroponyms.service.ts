@@ -60,7 +60,7 @@ export class AnthroponymsService {
           rowNumber: row.rowNumber,
           field: 'name',
           value: data.name,
-          message: 'Termo duplicado no ficheiro',
+          message: 'Vocábulo duplicado no ficheiro',
         });
         continue;
       }
@@ -158,7 +158,7 @@ export class AnthroponymsService {
     });
 
     if (existing) {
-      throw new ConflictException('Já existe um antropónimo com este termo');
+      throw new ConflictException('Já existe um antropónimo com este vocábulo');
     }
   }
 }

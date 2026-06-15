@@ -8,7 +8,7 @@ import { useModal } from "@/stores";
 import { UpdateVonalpPayload, VonalpFieldKey, VonalpTermResponse } from "@/types";
 
 const fieldLabels: Record<VonalpFieldKey, string> = {
-  term: "Termo",
+  term: "Vocábulo",
   pronunciation: "Pronúncia",
   grammaticalCategory: "Categoria gramatical",
   grammaticalSubcategory: "Subcategoria gramatical",

@@ -18,28 +18,28 @@ export class VonalpController {
 
   @Get()
   @Roles(UserRole.ADMIN, UserRole.SUPERVISOR, UserRole.OPERATOR)
-  @ApiOperation({ summary: 'Listar termos VONALP/VONALP EP internos' })
+  @ApiOperation({ summary: 'Listar vocábulos VONALP/VONALP-EP internos' })
   findAll(@Request() req: any, @Query() filters: VonalpFilterDto) {
     return this.vonalpService.findAll(filters, req.user);
   }
 
   @Post('mark')
   @Roles(UserRole.ADMIN, UserRole.SUPERVISOR, UserRole.OPERATOR)
-  @ApiOperation({ summary: 'Marcar um termo como VONALP ou VONALP EP' })
+  @ApiOperation({ summary: 'Marcar um vocábulo como VONALP ou VONALP-EP' })
   mark(@Request() req: any, @Body() dto: MarkVonalpDto) {
     return this.vonalpService.mark(dto, req.user);
   }
 
   @Post('unmark')
   @Roles(UserRole.ADMIN, UserRole.SUPERVISOR, UserRole.OPERATOR)
-  @ApiOperation({ summary: 'Desmarcar um termo como VONALP ou VONALP EP' })
+  @ApiOperation({ summary: 'Desmarcar um vocábulo como VONALP ou VONALP-EP' })
   unmark(@Request() req: any, @Body() dto: MarkVonalpDto) {
     return this.vonalpService.unmark(dto, req.user);
   }
 
   @Patch(':id')
   @Roles(UserRole.ADMIN, UserRole.SUPERVISOR, UserRole.OPERATOR)
-  @ApiOperation({ summary: 'Atualizar campos obrigatórios de um termo VONALP' })
+  @ApiOperation({ summary: 'Actualizar campos obrigatórios de um vocábulo VONALP' })
   update(@Request() req: any, @Param('id') id: string, @Body() dto: UpdateVonalpTermDto) {
     return this.vonalpService.update(id, dto, req.user);
   }

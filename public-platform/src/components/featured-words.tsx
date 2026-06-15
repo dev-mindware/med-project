@@ -61,7 +61,7 @@ export function FeaturedWords({ entries = [] }: { entries?: PublicEntry[] }) {
 
       <div className="text-center">
         <Button variant="outline" className="rounded-md bg-transparent font-semibold" asChild>
-          <Link href="/dictionary">
+          <Link href="/dictionary/flip">
             Ver dicionário completo
             <ArrowRight className="ml-2 h-4 w-4" />
           </Link>

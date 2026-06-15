@@ -17,7 +17,7 @@ const highlights = [
   {
     icon: Sparkles,
     title: "Publicações vivas",
-    text: "Acompanhe artigos, eventos e novidades institucionais em atualização contínua.",
+    text: "Acompanhe artigos, eventos e novidades institucionais em actualização contínua.",
   },
 ]
 
@@ -75,7 +75,7 @@ export function HomeVisualSection() {
             <p className="text-3xl font-extrabold text-primary">+26k</p>
             <p className="mt-1 text-sm font-semibold text-foreground">registos e conteúdos consultáveis</p>
             <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-              Acervo em atualização contínua para consulta pública.
+              Acervo em actualização contínua para consulta pública.
             </p>
           </div>
         </div>

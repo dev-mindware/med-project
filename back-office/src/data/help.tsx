@@ -7,7 +7,7 @@ export const helpFaqs = [
   },
   {
     question: "O que significam os estados Rascunho, Aguarda Aprovação ou Necessita Correção?",
-    answer: "Rascunho é a fase inicial de criação. Aguarda Aprovação significa que o termo submetido aguarda revisão de um superior. Necessita Correção indica que um Supervisor analisou o termo e o devolveu com um motivo (justificação) exigindo ajustes antes de uma nova submissão."
+    answer: "Rascunho é a fase inicial de criação. Aguarda Aprovação significa que o vocábulo submetido aguarda revisão de um superior. Necessita Correção indica que um Supervisor analisou o vocábulo e o devolveu com um motivo (justificação) exigindo ajustes antes de uma nova submissão."
   },
   {
     question: "Porque estou a receber erros ao pesquisar muito rápido?",
@@ -18,8 +18,8 @@ export const helpFaqs = [
     answer: "A plataforma permite gerar relatórios globais de produtividade e manter um histórico, podendo exportar os dados tanto em formato de Documento PDF como em folha de cálculo Excel (XLSX) através da secção de relatórios nativa."
   },
   {
-    question: "Porque não consigo cadastrar um termo repetido?",
-    answer: "Entradas, topónimos, antropónimos e estrangeirismos exigem um termo principal único dentro do mesmo módulo para garantir a integridade da base de dados e não gerar duplicações."
+    question: "Porque não consigo cadastrar um vocábulo repetido?",
+    answer: "Entradas, topónimos, antropónimos e estrangeirismos exigem um vocábulo principal único dentro do mesmo módulo para garantir a integridade da base de dados e não gerar duplicações."
   },
   {
     question: "Posso criar um artigo no Blog e um Evento com o mesmo nome?",
@@ -129,18 +129,18 @@ export const helpCardsData: HelpCardItem[] = [
     dialogBody: (
       <>
         <p className="mb-4">
-          Cada módulo possui regras próprias de preenchimento. Por exemplo, ao criar uma <strong>Entrada</strong>, o termo principal e a primeira definição são estritamente obrigatórios. Em <strong>Topónimos</strong>, exige-se o termo e a província. Em <strong>Antropónimos</strong> o nome, e em <strong>Estrangeirismos</strong> o termo original.
+          Cada módulo possui regras próprias de preenchimento. Por exemplo, ao criar uma <strong>Entrada</strong>, o vocábulo principal e a primeira definição são estritamente obrigatórios. Em <strong>Topónimos</strong>, exige-se o vocábulo e a província. Em <strong>Antropónimos</strong> o nome, e em <strong>Estrangeirismos</strong> o vocábulo original.
         </p>
         <p>
-          Todas as pesquisas linguísticas podem ser filtradas através de parâmetros avançados, permitindo procurar por termos textuais, estado de aprovação atual e autor (quem criou).
+          Todas as pesquisas linguísticas podem ser filtradas através de parâmetros avançados, permitindo procurar por vocábulos textuais, estado de aprovação atual e autor (quem criou).
         </p>
       </>
     ),
     roleIcon: "FileText",
     roleContent: {
-      ADMIN: <p>Tem o poder de forçar edições ou arquivar permanentemente qualquer termo em qualquer módulo linguístico, independentemente do autor e do estado de aprovação em que este se encontre.</p>,
-      SUPERVISOR: <p>Utilize as rotas de revisão para transitar os termos da sua equipa do estado "Aguarda Aprovação" para "Aprovado". Se necessitar rejeitar ou enviar para correção, o preenchimento do motivo (justificação) é sempre obrigatório.</p>,
-      OPERATOR: <p>Lembre-se: os campos assinalados com asterisco no documento de referência são obrigatórios na submissão. Se um termo submetido voltar para o estado "Necessita Correcção", verifique o motivo deixado pelo seu Supervisor e submeta as alterações solicitadas.</p>
+      ADMIN: <p>Tem o poder de forçar edições ou arquivar permanentemente qualquer vocábulo em qualquer módulo linguístico, independentemente do autor e do estado de aprovação em que este se encontre.</p>,
+      SUPERVISOR: <p>Utilize as rotas de revisão para transitar os vocábulos da sua equipa do estado "Aguarda Aprovação" para "Aprovado". Se necessitar rejeitar ou enviar para correção, o preenchimento do motivo (justificação) é sempre obrigatório.</p>,
+      OPERATOR: <p>Lembre-se: os campos assinalados com asterisco no documento de referência são obrigatórios na submissão. Se um vocábulo submetido voltar para o estado "Necessita Correcção", verifique o motivo deixado pelo seu Supervisor e submeta as alterações solicitadas.</p>
     }
   },
   {

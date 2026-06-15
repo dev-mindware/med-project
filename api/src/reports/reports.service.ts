@@ -135,7 +135,7 @@ export class ReportsService {
 
     return {
       type: 'activity',
-      title: 'Relatório de Atividade',
+      title: 'Relatório de Actividade',
       subtitle: 'Últimas ações registadas no módulo de auditoria',
       columns: [
         { header: 'Data', key: 'createdAt', width: 24 },

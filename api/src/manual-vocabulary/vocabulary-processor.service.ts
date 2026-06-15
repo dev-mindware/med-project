@@ -48,7 +48,7 @@ export class VocabularyProcessorService {
       const dedupeKey = `${sourceModel}:${term.toLowerCase()}`;
 
       if (!term || !this.isValidTerm(sourceModel, term)) {
-        warnings.push({ sourceModel, rowNumber, term, message: 'Termo ausente ou fora das regras de tamanho' });
+        warnings.push({ sourceModel, rowNumber, term, message: 'Vocábulo ausente ou fora das regras de tamanho' });
         continue;
       }
 

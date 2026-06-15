@@ -114,7 +114,7 @@ describe('VonalpService', () => {
         sourceCreatedById: operator.id,
         term: 'Casa',
         firstDefinition: 'Habitacao',
-        origin: 'Entrada',
+        origin: 'Dicionário',
       }),
     });
     expect(prisma.entry.update).toHaveBeenCalledWith({
@@ -228,7 +228,9 @@ describe('VonalpService', () => {
         secondDefinition: 'Residencia',
       }),
     ]);
-    prisma.entry.findMany.mockResolvedValueOnce([{ id: 'entry-approved' }]);
+    prisma.entry.findMany
+      .mockResolvedValueOnce([{ id: 'entry-approved' }])
+      .mockResolvedValueOnce([]);
 
     const result = await service.findPublic(VonalpVocabularyType.VONALP);
 

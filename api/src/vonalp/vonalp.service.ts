@@ -62,7 +62,7 @@ const REQUIRED_FIELDS: Array<keyof VonalpFields> = [
 ];
 
 const SOURCE_CONFIG: Record<VonalpSourceType, Omit<SourceConfig, 'vocabularyFlag'>> = {
-  ENTRY: { delegateName: 'entry', origin: 'Entrada' },
+  ENTRY: { delegateName: 'entry', origin: 'Dicionário' },
   TOPONYM: { delegateName: 'toponym', origin: 'Topónimo' },
   ANTHROPONYM: { delegateName: 'anthroponym', origin: 'Antropónimo' },
   FOREIGNISM: { delegateName: 'foreignism', origin: 'Estrangeirismo' },
@@ -141,7 +141,7 @@ export class VonalpService {
   async update(id: string, dto: UpdateVonalpTermDto, user: AuthUser) {
     const term = await this.prisma.vonalpTerm.findUnique({ where: { id } });
     if (!term || term.completionStatus === VonalpCompletionStatus.ARCHIVED) {
-      throw new NotFoundException('Termo VONALP não encontrado');
+      throw new NotFoundException('Vocábulo VONALP não encontrado');
     }
 
     const source = await this.getSource(term.sourceType, term.sourceId);
@@ -276,13 +276,14 @@ export class VonalpService {
 
     const approvedIds = await this.getApprovedSourceIds(terms);
 
-    return terms
+    const termItems = terms
       .filter((term) => approvedIds[term.sourceType].has(term.sourceId))
       .map((term) => ({
         id: term.id,
         vocabularyType: term.vocabularyType,
         sourceType: term.sourceType,
         sourceId: term.sourceId,
+        sourceLabel: this.publicSourceLabel(term.sourceType),
         term: term.term,
         pronunciation: term.pronunciation,
         grammaticalCategory: term.grammaticalCategory,
@@ -293,6 +294,98 @@ export class VonalpService {
         secondDefinition: term.secondDefinition,
         origin: term.origin,
       }));
+
+    const existingKeys = new Set(termItems.map((term) => this.sourceKey(term.sourceType, term.sourceId)));
+    const markedItems = await this.findPublicMarkedSources(vocabularyType, existingKeys);
+
+    return [...termItems, ...markedItems].sort((a, b) => String(a.term || '').localeCompare(String(b.term || ''), 'pt'));
+  }
+
+  private async findPublicMarkedSources(vocabularyType: VonalpVocabularyType, existingKeys: Set<string>) {
+    const flag = vocabularyType === VonalpVocabularyType.VONALP ? 'isVocabulary' : 'isVocabularyEP';
+
+    const [entries, toponyms, anthroponyms, foreignisms] = await Promise.all([
+      this.prisma.entry.findMany({
+        where: { approvalStatus: ApprovalStatus.APPROVED, [flag]: true },
+        orderBy: { entry: 'asc' },
+        select: {
+          id: true,
+          entry: true,
+          pronunciation: true,
+          grammaticalCategory: true,
+          grammaticalSubcategory: true,
+          syllabicDivision: true,
+          etymology: true,
+          firstDefinition: true,
+          secondDefinition: true,
+        },
+      }),
+      this.prisma.toponym.findMany({
+        where: { approvalStatus: ApprovalStatus.APPROVED, [flag]: true },
+        orderBy: { toponym: 'asc' },
+        select: {
+          id: true,
+          toponym: true,
+          pronunciation: true,
+          meaning: true,
+          toponymProvenance: true,
+          toponymHistory: true,
+        },
+      }),
+      this.prisma.anthroponym.findMany({
+        where: { approvalStatus: ApprovalStatus.APPROVED, [flag]: true },
+        orderBy: { name: 'asc' },
+        select: {
+          id: true,
+          name: true,
+          gender: true,
+          etymology: true,
+          meaning: true,
+        },
+      }),
+      this.prisma.foreignism.findMany({
+        where: { approvalStatus: ApprovalStatus.APPROVED, [flag]: true },
+        orderBy: { term: 'asc' },
+        select: {
+          id: true,
+          term: true,
+          pronunciation: true,
+          grammaticalCategory: true,
+          originalLanguage: true,
+          originCountry: true,
+          definition: true,
+          meaning: true,
+        },
+      }),
+    ]);
+
+    return [
+      ...entries.map((source) => this.publicSourceTerm(vocabularyType, VonalpSourceType.ENTRY, source)),
+      ...toponyms.map((source) => this.publicSourceTerm(vocabularyType, VonalpSourceType.TOPONYM, source)),
+      ...anthroponyms.map((source) => this.publicSourceTerm(vocabularyType, VonalpSourceType.ANTHROPONYM, source)),
+      ...foreignisms.map((source) => this.publicSourceTerm(vocabularyType, VonalpSourceType.FOREIGNISM, source)),
+    ].filter((term) => !existingKeys.has(this.sourceKey(term.sourceType, term.sourceId)));
+  }
+
+  private publicSourceTerm(vocabularyType: VonalpVocabularyType, sourceType: VonalpSourceType, source: SourceRecord) {
+    const fields = this.mapSourceToVonalpFields(sourceType, source);
+
+    return {
+      id: `${vocabularyType}:${sourceType}:${source.id}`,
+      vocabularyType,
+      sourceType,
+      sourceId: source.id,
+      sourceLabel: this.publicSourceLabel(sourceType),
+      ...fields,
+    };
+  }
+
+  private publicSourceLabel(sourceType: VonalpSourceType) {
+    return SOURCE_CONFIG[sourceType].origin;
+  }
+
+  private sourceKey(sourceType: VonalpSourceType, sourceId: string) {
+    return `${sourceType}:${sourceId}`;
   }
 
   private async getSource(sourceType: VonalpSourceType, sourceId: string): Promise<SourceRecord> {

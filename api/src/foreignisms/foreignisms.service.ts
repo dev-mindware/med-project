@@ -60,7 +60,7 @@ export class ForeignismsService {
           rowNumber: row.rowNumber,
           field: 'term',
           value: data.term,
-          message: 'Termo duplicado no ficheiro',
+          message: 'Vocábulo duplicado no ficheiro',
         });
         continue;
       }
@@ -160,7 +160,7 @@ export class ForeignismsService {
     });
 
     if (existing) {
-      throw new ConflictException('Já existe um estrangeirismo com este termo');
+      throw new ConflictException('Já existe um estrangeirismo com este vocábulo');
     }
   }
 }

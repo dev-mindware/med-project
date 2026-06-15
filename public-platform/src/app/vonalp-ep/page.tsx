@@ -1,4 +1,4 @@
-import { Footer } from "@/components/footer"
+﻿import { Footer } from "@/components/footer"
 import { Header } from "@/components/header"
 import { LexicalExplorer } from "@/components/lexical-explorer"
 import { PageHero } from "@/components/page-hero"
@@ -14,12 +14,12 @@ export default async function VonalpEpPage() {
       <main className="flex-1">
         <PageHero
           badge="Ensino e publicação"
-          title="VONALP EP"
-          subtitle="Vocabulário Ortográfico Nacional de Angola para a Língua Portuguesa para o Ensino Primário."
+          title="VONALP-EP"
+          subtitle="Vocabulário Ortográfico Nacional de Angola da Língua Portuguesa para o Ensino Primário."
           tone="soft"
           stats={[
-            { value: data.vonalpEp.meta.total.toLocaleString("pt-PT"), label: "Termos publicados" },
-            { value: data.vonalpEp.data.filter((item) => item.grammaticalCategory).length.toLocaleString("pt-PT"), label: "Com categoria nesta página" },
+            { value: data.vonalpEp.meta.total.toLocaleString("pt-PT"), label: "Vocábulos publicados" },
+            { value: data.vonalpEp.data.filter((item) => item.grammaticalCategory).length.toLocaleString("pt-PT"), label: "Natureza das fontes" },
             { value: data.vonalpEp.meta.totalPages.toLocaleString("pt-PT"), label: "Páginas disponíveis" },
           ]}
         />

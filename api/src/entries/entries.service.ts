@@ -46,7 +46,7 @@ export class EntriesService {
           rowNumber: row.rowNumber,
           field: 'entry',
           value: data.entry,
-          message: 'Termo duplicado no ficheiro',
+          message: 'Vocábulo duplicado no ficheiro',
         });
         continue;
       }
@@ -174,7 +174,7 @@ export class EntriesService {
     });
 
     if (existing) {
-      throw new ConflictException('Já existe uma entrada com este termo');
+      throw new ConflictException('Já existe uma entrada com este vocábulo');
     }
   }
 }

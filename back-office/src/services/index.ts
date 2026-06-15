@@ -14,5 +14,6 @@ export * from "./media-service";
 export * from "./reports-service";
 export * from "./vonalp-import-service";
 export * from "./vonalp-service";
+export * from "./volna-service";
 export * from "./manual-vocabulary-service";
 export * from "./notifications-service";

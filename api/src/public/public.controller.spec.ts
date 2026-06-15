@@ -54,7 +54,7 @@ describe('PublicController', () => {
     expect(publicService.vocabulary).toHaveBeenCalledWith(VonalpVocabularyType.VONALP, filters);
   });
 
-  it('lists public VONALP EP terms', async () => {
+  it('lists public VONALP-EP terms', async () => {
     const filters = { page: 1, limit: 10 };
     await controller.publicVonalpEp(filters);
 

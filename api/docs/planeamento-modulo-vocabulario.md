@@ -723,7 +723,7 @@ Total:        ~$0,53 por manual de 100 páginas
 
 ## 13. Capacidade de Vocábulos na Base de Dados
 
-### Quantos termos se extraem por manual?
+### Quantos vocábulos se extraem por manual?
 
 | Tipo de manual             | Páginas | Vocábulos únicos estimados |
 |----------------------------|---------|---------------------------|
@@ -732,9 +732,9 @@ Total:        ~$0,53 por manual de 100 páginas
 | Enciclopédia (1 volume)    | 400–600 | 5 000 – 10 000            |
 
 **Distribuição típica por tipo:**
-- Termos de 1 palavra: ~65% do total
-- Termos de 2 palavras: ~25% do total
-- Termos de 3 palavras: ~10% do total
+- Vocábulos de 1 palavra: ~65% do total
+- Vocábulos de 2 palavras: ~25% do total
+- Vocábulos de 3 palavras: ~10% do total
 
 ---
 
@@ -742,11 +742,11 @@ Total:        ~$0,53 por manual de 100 páginas
 
 | Manuais processados | Vocábulos brutos  | Após deduplicação | BD pronta           |
 |---------------------|------------------|-------------------|---------------------|
-| 5 manuais           | ~6 250           | ~4 000 – 5 000    | **~4 500 termos**   |
-| 10 manuais          | ~12 500          | ~7 000 – 9 000    | **~8 000 termos**   |
-| 25 manuais          | ~31 250          | ~15 000 – 20 000  | **~17 000 termos**  |
-| 50 manuais          | ~62 500          | ~25 000 – 35 000  | **~30 000 termos**  |
-| 100 manuais         | ~125 000         | ~40 000 – 55 000  | **~47 000 termos**  |
+| 5 manuais           | ~6 250           | ~4 000 – 5 000    | **~4 500 vocábulos**   |
+| 10 manuais          | ~12 500          | ~7 000 – 9 000    | **~8 000 vocábulos**   |
+| 25 manuais          | ~31 250          | ~15 000 – 20 000  | **~17 000 vocábulos**  |
+| 50 manuais          | ~62 500          | ~25 000 – 35 000  | **~30 000 vocábulos**  |
+| 100 manuais         | ~125 000         | ~40 000 – 55 000  | **~47 000 vocábulos**  |
 
 > A deduplicação reduz significativamente os totais porque os manuais partilham vocabulário comum (artigos, verbos comuns, preposições).
 

@@ -142,7 +142,7 @@ export function ContactInfo() {
                 })}
               </div>
               <p className="text-sm text-muted-foreground mt-3">
-                Siga-nos nas redes sociais para atualizações e conteúdos exclusivos
+                Siga-nos nas redes sociais para actualizações e conteúdos exclusivos
               </p>
             </CardContent>
           </Card>
@@ -195,7 +195,7 @@ export function ContactInfo() {
                     <SelectItem value="geral">Informação Geral</SelectItem>
                     <SelectItem value="colaboracao">Proposta de Colaboração</SelectItem>
                     <SelectItem value="recursos">Recursos Educativos</SelectItem>
-                    <SelectItem value="eventos">Eventos e Atividades</SelectItem>
+                    <SelectItem value="eventos">Eventos e Actividades</SelectItem>
                     <SelectItem value="sugestao">Sugestões</SelectItem>
                     <SelectItem value="outro">Outro</SelectItem>
                   </SelectContent>

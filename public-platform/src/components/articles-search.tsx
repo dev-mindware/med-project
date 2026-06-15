@@ -1,6 +1,6 @@
-"use client"
+﻿"use client"
 
-import { useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -24,10 +24,11 @@ export function ArticlesSearch({
   const [searchResults, setSearchResults] = useState<PublicBlogPost[]>(initialResults)
   const [isSearching, setIsSearching] = useState(false)
   const [hasSearched, setHasSearched] = useState(initialResults.length > 0)
+  const didMount = useRef(false)
 
   const categories = ["Todas", ...Array.from(new Set(initialResults.map((article) => article.category).filter(Boolean) as string[]))]
 
-  const handleSearch = async () => {
+  const handleSearch = useCallback(async () => {
     setIsSearching(true)
     setHasSearched(true)
 
@@ -35,7 +36,7 @@ export function ArticlesSearch({
       const response = await publicApi.blogPosts({
         q: searchTerm,
         category: selectedCategory === "Todas" ? undefined : selectedCategory,
-        limit: 100,
+        limit: 6,
       })
       setSearchResults(response.data)
     } catch {
@@ -43,7 +44,20 @@ export function ArticlesSearch({
     } finally {
       setIsSearching(false)
     }
-  }
+  }, [searchTerm, selectedCategory])
+
+  useEffect(() => {
+    if (!didMount.current) {
+      didMount.current = true
+      return
+    }
+
+    const timeout = window.setTimeout(() => {
+      void handleSearch()
+    }, 320)
+
+    return () => window.clearTimeout(timeout)
+  }, [handleSearch])
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
@@ -54,7 +68,6 @@ export function ArticlesSearch({
             placeholder="Pesquisar artigos, autores ou temas..."
             value={searchTerm}
             onChange={(event) => setSearchTerm(event.target.value)}
-            onKeyDown={(event) => event.key === "Enter" && handleSearch()}
             className="border-0 bg-transparent shadow-none focus-visible:ring-0 h-11 px-0 text-base"
           />
         </div>
@@ -72,11 +85,9 @@ export function ArticlesSearch({
               ))}
             </SelectContent>
           </Select>
-          <Button onClick={handleSearch} disabled={isSearching} className="rounded-xl h-11 px-6 font-semibold shrink-0">
-            {isSearching ? "A pesquisar..." : "Pesquisar"}
-          </Button>
         </div>
       </div>
+      {isSearching && <p className="px-2 text-xs font-medium text-muted-foreground">A actualizar artigos...</p>}
 
       {searchResults.length > 0 && (
         <div className="space-y-3">
@@ -94,7 +105,7 @@ export function ArticlesSearch({
         <div className="rounded-2xl border border-border bg-background p-10 text-center">
           <BookOpen className="h-10 w-10 text-muted-foreground/40 mx-auto mb-3" />
           <h3 className="font-semibold mb-1">Nenhum artigo encontrado</h3>
-          <p className="text-sm text-muted-foreground">Tente pesquisar com termos diferentes ou explore as categorias em destaque.</p>
+          <p className="text-sm text-muted-foreground">Tente pesquisar com vocábulos diferentes ou explore as categorias em destaque.</p>
         </div>
       )}
     </div>

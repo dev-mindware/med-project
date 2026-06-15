@@ -54,6 +54,11 @@ export class PublicContentFilterDto {
   @IsString()
   languageCode?: string;
 
+  @ApiPropertyOptional({ description: 'Língua nacional, usada na VOLNA.' })
+  @IsOptional()
+  @IsString()
+  language?: string;
+
   @ApiPropertyOptional({ description: 'Província, usado em topónimos.' })
   @IsOptional()
   @IsString()

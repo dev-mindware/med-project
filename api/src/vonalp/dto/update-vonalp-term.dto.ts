@@ -47,7 +47,7 @@ export class UpdateVonalpTermDto {
   @IsOptional()
   origin?: string;
 
-  @ApiProperty({ required: false, description: 'Permite ADMIN/SUPERVISOR guardar o termo como incompleto.' })
+  @ApiProperty({ required: false, description: 'Permite ADMIN/SUPERVISOR guardar o vocábulo como incompleto.' })
   @IsBoolean()
   @IsOptional()
   saveIncomplete?: boolean;

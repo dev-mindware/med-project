@@ -22,8 +22,8 @@ const CARD_DESCRIPTIONS: Record<string, string> = {
   "Total de Antropónimos": "Nomes próprios e patronímicos registados",
 
   // Foreignisms / Estrangeirismos
-  "Estrangeirismos":          "Termos de origem estrangeira documentados",
-  "Total de Estrangeirismos": "Termos de origem estrangeira documentados",
+  "Estrangeirismos":          "Vocábulos de origem estrangeira documentados",
+  "Total de Estrangeirismos": "Vocábulos de origem estrangeira documentados",
 
   // Users
   "Utilizadores":          "Utilizadores registados na plataforma",

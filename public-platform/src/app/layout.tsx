@@ -23,7 +23,7 @@ export const metadata: Metadata = {
     template: "%s | CNLP Angola",
   },
   description:
-    "Portal oficial da Comissão Nacional de Língua Portuguesa de Angola - Dicionário, Gramática, Topónimos, Antropónimos, Vocabulário Ortográfico Nacional de Angola para a Língua Portuguesa e recursos educativos.",
+    "Portal oficial da Comissão Nacional de Língua Portuguesa de Angola - Dicionário, Gramática, Topónimos, Antropónimos, Vocabulário Ortográfico Nacional de Angola da Língua Portuguesa e recursos educativos.",
   keywords: ["língua portuguesa", "Angola", "dicionário", "gramática", "topónimos", "antropónimos", "VONALP", "educação"],
   openGraph: {
     type: "website",

@@ -83,15 +83,21 @@ export class PublicController {
   }
 
   @Get('vocabularies/vonalp')
-  @ApiOperation({ summary: 'Listar termos VONALP completos e publicados.' })
+  @ApiOperation({ summary: 'Listar vocábulos VONALP completos e publicados.' })
   publicVonalp(@Query() filters: PublicContentFilterDto) {
     return this.publicService.vocabulary(VonalpVocabularyType.VONALP, filters);
   }
 
   @Get('vocabularies/vonalpep')
-  @ApiOperation({ summary: 'Listar termos VONALP EP completos e publicados.' })
+  @ApiOperation({ summary: 'Listar vocábulos VONALP-EP completos e publicados.' })
   publicVonalpEp(@Query() filters: PublicContentFilterDto) {
     return this.publicService.vocabulary(VonalpVocabularyType.VONALP_EP, filters);
+  }
+
+  @Get('vocabularies/volna')
+  @ApiOperation({ summary: 'Listar vocábulos VOLNA publicados.' })
+  publicVolna(@Query() filters: PublicContentFilterDto) {
+    return this.publicService.volna(filters);
   }
 
   @Get('events')

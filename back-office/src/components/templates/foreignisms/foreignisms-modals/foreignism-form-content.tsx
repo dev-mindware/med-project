@@ -74,7 +74,7 @@ export function ForeignismFormContent({ action, currentForeignism }: ForeignismF
     <form id="foreignism-form" onSubmit={handleSubmit(onSubmit)} className="space-y-6 py-4 px-1">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Input
-          label="Termo Estrangeiro"
+          label="Vocábulo Estrangeiro"
           startIcon="Globe"
           {...register("term")}
           error={errors.term?.message}
@@ -157,7 +157,7 @@ export function ForeignismFormContent({ action, currentForeignism }: ForeignismF
           label="Contexto"
           {...register("context")}
           error={errors.context?.message}
-          placeholder="Contexto em que o termo é utilizado..."
+          placeholder="Contexto em que o vocábulo é utilizado..."
           rows={3}
         />
       </div>

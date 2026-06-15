@@ -43,7 +43,7 @@ export class NeologismsService {
           rowNumber: row.rowNumber,
           field: 'entry',
           value: data.entry,
-          message: 'Termo duplicado no ficheiro',
+          message: 'Vocábulo duplicado no ficheiro',
         });
         continue;
       }
@@ -162,7 +162,7 @@ export class NeologismsService {
     });
 
     if (existing) {
-      throw new ConflictException('Já existe um neologismo com este termo');
+      throw new ConflictException('Já existe um neologismo com este vocábulo');
     }
   }
 }

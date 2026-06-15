@@ -21,7 +21,7 @@ export function ForeignismModal({ action }: ForeignismModalProps) {
     <GlobalModal
       id={modalId}
       title={title}
-      description={action === "add" ? "Adicione um novo termo estrangeiro" : "Actualize os dados do termo"}
+      description={action === "add" ? "Adicione um novo vocábulo estrangeiro" : "Actualize os dados do vocábulo"}
       canClose
       className="!w-max"
       footer={

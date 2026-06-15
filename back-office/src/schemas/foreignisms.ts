@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const foreignismSchema = z.object({
-  term: z.string().trim().min(1, "O termo é obrigatório"),
+  term: z.string().trim().min(1, "O vocábulo é obrigatório"),
   pronunciation: z.string().trim().optional(),
   originalLanguage: z.string().trim().optional(),
   originCountry: z.string().trim().optional(),

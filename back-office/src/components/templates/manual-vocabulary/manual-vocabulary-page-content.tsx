@@ -162,7 +162,7 @@ export function ManualVocabularyPageContent() {
                 <CardDescription>{lastResult.filename}</CardDescription>
               </CardHeader>
               <CardContent className="grid grid-cols-2 gap-3">
-                <Metric label="Termos" value={lastResult.stats.totalTerms} />
+                <Metric label="Vocábulos" value={lastResult.stats.totalTerms} />
                 <Metric label="Válidos" value={lastResult.stats.validRows} />
                 <Metric label="Avisos" value={lastResult.stats.warnings} />
                 <Metric label="Duplicados" value={lastResult.stats.duplicatesRemoved} />

@@ -42,7 +42,7 @@ export function useMarkVonalpTerm() {
         return;
       }
 
-      SucessMessage(`Termo marcado como ${vocabularyLabel(term.vocabularyType)}.`);
+      SucessMessage(`Vocábulo marcado como ${vocabularyLabel(term.vocabularyType)}.`);
     },
     onError: (error) => {
       ErrorMessage(getErrorMessage(error));
@@ -58,7 +58,7 @@ export function useUnmarkVonalpTerm() {
     onSuccess: (_, payload) => {
       queryClient.invalidateQueries({ queryKey: [queryKeyBySource[payload.sourceType]] });
       queryClient.invalidateQueries({ queryKey: ["vonalp"] });
-      SucessMessage(`Termo removido de ${vocabularyLabel(payload.vocabularyType)}.`);
+      SucessMessage(`Vocábulo removido de ${vocabularyLabel(payload.vocabularyType)}.`);
     },
     onError: (error) => {
       ErrorMessage(getErrorMessage(error));
@@ -77,8 +77,8 @@ export function useUpdateVonalpTerm() {
       queryClient.invalidateQueries({ queryKey: ["vonalp"] });
       SucessMessage(
         term.completionStatus === "COMPLETE"
-          ? "Termo VONALP completo e guardado."
-          : "Termo VONALP guardado como incompleto.",
+          ? "Vocábulo VONALP completo e guardado."
+          : "Vocábulo VONALP guardado como incompleto.",
       );
     },
     onError: (error) => {

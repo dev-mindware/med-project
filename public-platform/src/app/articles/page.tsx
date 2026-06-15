@@ -13,8 +13,8 @@ export default async function ArtigosPage({
 }) {
   const params = await searchParams
   const articles = await safePublicApi(
-    () => publicApi.blogPosts({ q: params?.q, category: params?.category, limit: 100 }),
-    { data: [], meta: { total: 0, page: 1, limit: 100, totalPages: 0, hasNextPage: false, hasPreviousPage: false } },
+    () => publicApi.blogPosts({ q: params?.q, category: params?.category, limit: 6 }),
+    { data: [], meta: { total: 0, page: 1, limit: 6, totalPages: 0, hasNextPage: false, hasPreviousPage: false } },
   )
 
   return (

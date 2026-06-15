@@ -12,6 +12,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { PublicContentFilterDto, PublicEventPeriod } from './dto/public-content-filter.dto';
 import { PublicEventRegistrationDto } from './dto/public-event-registration.dto';
 import { VonalpService } from '../vonalp/vonalp.service';
+import { VolnaService } from '../volna/volna.service';
 
 const entrySelect = {
   id: true,
@@ -189,6 +190,7 @@ export class PublicService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly vonalpService: VonalpService,
+    private readonly volnaService: VolnaService,
   ) {}
 
   async stats() {
@@ -203,6 +205,7 @@ export class PublicService {
       upcomingEvents,
       vonalpTerms,
       vonalpEpTerms,
+      volnaTerms,
     ] = await Promise.all([
       this.prisma.entry.count({ where: { approvalStatus: ApprovalStatus.APPROVED } }),
       this.prisma.toponym.count({ where: { approvalStatus: ApprovalStatus.APPROVED } }),
@@ -222,6 +225,7 @@ export class PublicService {
           completionStatus: VonalpCompletionStatus.COMPLETE,
         },
       }),
+      this.prisma.volnaTerm.count({ where: { approvalStatus: ApprovalStatus.APPROVED } }),
     ]);
 
     return {
@@ -233,7 +237,8 @@ export class PublicService {
       upcomingEvents,
       vonalpTerms,
       vonalpEpTerms,
-      lexicalTotal: dictionaryEntries + toponyms + anthroponyms + vonalpTerms + vonalpEpTerms,
+      volnaTerms,
+      lexicalTotal: dictionaryEntries + toponyms + anthroponyms + vonalpTerms + vonalpEpTerms + volnaTerms,
       updatedAt: new Date().toISOString(),
     };
   }
@@ -394,6 +399,14 @@ export class PublicService {
     });
 
     return this.paginateArray(filtered, filters);
+  }
+
+  async volna(filters: PublicContentFilterDto) {
+    return this.volnaService.findPublic({
+      ...filters,
+      search: this.searchTerm(filters),
+      language: filters.language || filters.languageCode,
+    });
   }
 
   async events(filters: PublicContentFilterDto) {

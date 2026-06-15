@@ -1,4 +1,4 @@
-import { Footer } from "@/components/footer"
+﻿import { Footer } from "@/components/footer"
 import { Header } from "@/components/header"
 import { LexicalExplorer } from "@/components/lexical-explorer"
 import { PageHero } from "@/components/page-hero"
@@ -15,11 +15,11 @@ export default async function VonalpPage() {
         <PageHero
           badge="Norma nacional"
           title="VONALP"
-          subtitle="Vocabulário Ortográfico Nacional de Angola para a Língua Portuguesa, com termos completos e publicados."
+          subtitle="Vocabulário Ortográfico Nacional de Angola da Língua Portuguesa"
           tone="ice"
           stats={[
-            { value: data.vonalp.meta.total.toLocaleString("pt-PT"), label: "Termos publicados" },
-            { value: data.vonalp.data.filter((item) => item.grammaticalCategory).length.toLocaleString("pt-PT"), label: "Com categoria nesta página" },
+            { value: data.vonalp.meta.total.toLocaleString("pt-PT"), label: "Vocábulos publicados" },
+            { value: data.vonalp.data.filter((item) => item.grammaticalCategory).length.toLocaleString("pt-PT"), label: "Natureza das fontes" },
             { value: data.vonalp.meta.totalPages.toLocaleString("pt-PT"), label: "Páginas disponíveis" },
           ]}
         />

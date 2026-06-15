@@ -27,7 +27,7 @@ const ENTRY_COLUMNS: ColumnConfig[] = [
   { label: 'Subcategoria gramatical', key: 'grammaticalSubcategory', width: 28 },
   { label: 'Código da língua', key: 'languageCode', width: 18 },
   { label: 'É VONALP?', key: 'isVocabulary', width: 16 },
-  { label: 'É VONALP EP?', key: 'isVocabularyEP', width: 16 },
+  { label: 'É VONALP-EP?', key: 'isVocabularyEP', width: 16 },
   { label: 'É estrangeirismo?', key: 'isForeignism', width: 18 },
 ];
 
@@ -47,7 +47,7 @@ const TOPONYM_COLUMNS: ColumnConfig[] = [
   { label: 'Subclasses', key: 'toponymSubclasses', width: 28 },
   { label: 'Código da língua', key: 'languageCode', width: 18 },
   { label: 'É VONALP?', key: 'isVocabulary', width: 16 },
-  { label: 'É VONALP EP?', key: 'isVocabularyEP', width: 16 },
+  { label: 'É VONALP-EP?', key: 'isVocabularyEP', width: 16 },
   { label: 'É estrangeirismo?', key: 'isForeignism', width: 18 },
 ];
 
@@ -62,12 +62,12 @@ const ANTHROPONYM_COLUMNS: ColumnConfig[] = [
   { label: 'Pseudónimo', key: 'historicalFigurePseudonym', width: 24 },
   { label: 'Domínio de atuação', key: 'historicalFigureDomain', width: 28 },
   { label: 'É VONALP?', key: 'isVocabulary', width: 16 },
-  { label: 'É VONALP EP?', key: 'isVocabularyEP', width: 16 },
+  { label: 'É VONALP-EP?', key: 'isVocabularyEP', width: 16 },
   { label: 'É estrangeirismo?', key: 'isForeignism', width: 18 },
 ];
 
 const FOREIGNISM_COLUMNS: ColumnConfig[] = [
-  { label: 'Termo estrangeiro*', key: 'term', width: 28 },
+  { label: 'Vocábulo estrangeiro*', key: 'term', width: 28 },
   { label: 'Definição', key: 'definition', width: 44 },
   { label: 'Significado', key: 'meaning', width: 38 },
   { label: 'Pronúncia', key: 'pronunciation', width: 18 },
@@ -80,7 +80,7 @@ const FOREIGNISM_COLUMNS: ColumnConfig[] = [
   { label: 'Área de conhecimento', key: 'field', width: 26 },
   { label: 'Categoria gramatical', key: 'grammaticalCategory', width: 24 },
   { label: 'É VONALP?', key: 'isVocabulary', width: 16 },
-  { label: 'É VONALP EP?', key: 'isVocabularyEP', width: 16 },
+  { label: 'É VONALP-EP?', key: 'isVocabularyEP', width: 16 },
 ];
 
 @Injectable()
@@ -145,7 +145,7 @@ export class VocabularyExcelService {
       { header: 'Modelo', key: 'sourceModel', width: 18 },
       { header: 'Linha', key: 'rowNumber', width: 12 },
       { header: 'Campo', key: 'field', width: 24 },
-      { header: 'Termo', key: 'term', width: 30 },
+      { header: 'Vocábulo', key: 'term', width: 30 },
       { header: 'Mensagem', key: 'message', width: 52 },
     ];
     this.styleHeader(sheet);

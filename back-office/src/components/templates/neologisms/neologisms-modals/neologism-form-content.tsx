@@ -66,7 +66,7 @@ export function NeologismFormContent({ action, currentNeologism }: NeologismForm
     <form id="neologism-form" onSubmit={handleSubmit(onSubmit)} className="space-y-8 py-4 px-1 max-h-[70vh] scrollbar-thin">
       <FormSection title="Informação Geral" icon="BookOpen">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Input label="Neologismo" startIcon="BookOpen" {...register("entry")} error={errors.entry?.message} placeholder="Ex: termo novo" />
+          <Input label="Neologismo" startIcon="BookOpen" {...register("entry")} error={errors.entry?.message} placeholder="Ex: vocábulo novo" />
           <Input label="Código da Língua" startIcon="Languages" {...register("languageCode")} error={errors.languageCode?.message} placeholder="Ex: pt-AO" />
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">

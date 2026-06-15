@@ -293,7 +293,7 @@ export class StatsService {
       ],
       vocabularyStats: [
         { name: 'VONALP', value: contentStats.vocabulary },
-        { name: 'VONALP EP', value: contentStats.vocabularyEP },
+        { name: 'VONALP-EP', value: contentStats.vocabularyEP },
         { name: 'Outros', value: contentStats.total - contentStats.vocabulary - contentStats.vocabularyEP },
       ],
     };
@@ -344,7 +344,7 @@ export class StatsService {
           value: contentStats.needsCorrection,
           icon: 'AlertCircle',
           color: 'red',
-          description: contentStats.needsCorrection === 0 ? 'Sem pedidos de correção' : 'Requerem atualização',
+          description: contentStats.needsCorrection === 0 ? 'Sem pedidos de correção' : 'Requerem actualização',
         },
       ],
       charts: this.buildCharts(contentStats),

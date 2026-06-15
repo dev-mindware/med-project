@@ -42,6 +42,12 @@ export const menuItems: MenuStructure = {
       ]
     },
     {
+      name: "VOLNA",
+      url: "/volna",
+      icon: <Icon name="Languages" className="w-5 h-5" />,
+      roles: ["ADMIN", "SUPERVISOR", "OPERATOR"],
+    },
+    {
       name: "Gestão de Conteúdos",
       url: "#",
       icon: <Icon name="UsersRound" className="w-5 h-5" />,

@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
@@ -12,6 +12,7 @@ import {
   FileText,
   Globe,
   Info,
+  Languages,
   Library,
   Menu,
   Phone,
@@ -26,11 +27,12 @@ const navGroups = [
     items: [
       { name: "Dicionário", href: "/dictionary", icon: Book, desc: "Definições, etimologias e exemplos de uso" },
       { name: "Neologismos", href: "/neologismos", icon: Sparkles, desc: "Novas palavras aprovadas no acervo público" },
-      { name: "Estrangeirismos", href: "/estrangeirismos", icon: Globe, desc: "Termos de origem estrangeira e respetivas adaptações" },
+      { name: "Estrangeirismos", href: "/estrangeirismos", icon: Globe, desc: "Vocábulos de origem estrangeira e respetivas adaptações" },
       { name: "Topónimos", href: "/toponimos", icon: Globe, desc: "Nomes de lugares e história toponímica" },
       { name: "Antropónimos", href: "/antroponimos", icon: Users, desc: "Nomes próprios, etimologia e identidade" },
-      { name: "VONALP", href: "/vonalp", icon: Library, desc: "Vocabulário Ortográfico Nacional de Angola para a Língua Portuguesa" },
-      { name: "VONALP EP", href: "/vonalp-ep", icon: FileText, desc: "Vocabulário Ortográfico Nacional de Angola para a Língua Portuguesa para o Ensino Primário" },
+      { name: "VONALP", href: "/vonalp", icon: Library, desc: "Vocabulário Ortográfico Nacional de Angola da Língua Portuguesa" },
+      { name: "VONALP-EP", href: "/vonalp-ep", icon: FileText, desc: "Vocabulário Ortográfico Nacional de Angola da Língua Portuguesa para o Ensino Primário" },
+      { name: "VOLNA", href: "/volna", icon: Languages, desc: "Vocabulário das Línguas Nacionais de Angola" },
     ],
   },
   {
@@ -92,7 +94,7 @@ export function Header() {
     <header className="texture-header fixed left-0 right-0 top-0 z-[9999] w-full border-b border-border/50 bg-background/94 backdrop-blur-md no-screenshot">
       <div className="mx-auto flex h-[4.75rem] max-w-7xl items-center justify-between px-6 sm:px-8 lg:px-12">
         <Link href="/" className="flex shrink-0 items-center">
-          <img src="/cn_illp.png" className="h-9 w-auto" alt="CNLP Angola" />
+          <img src="/med.gov.png" className="h-12 w-auto" alt="CNLP Angola" />
         </Link>
 
         <nav className="hidden items-center gap-1 lg:flex">
@@ -113,9 +115,9 @@ export function Header() {
         </nav>
 
         <div className="flex shrink-0 items-center gap-3">
-          <Link href="/dictionary" className="hidden lg:block">
+          <Link href="/vonalp" className="hidden lg:block">
             <Button className="h-11 rounded-md px-7 text-sm font-semibold shadow-none">
-              Consultar Dicionário
+              Consultar Vocabulário
             </Button>
           </Link>
 
@@ -173,8 +175,8 @@ export function Header() {
             ))}
 
             <div className="mt-2 border-t border-border/60 pb-1 pt-3">
-              <Link href="/dictionary" onClick={() => setIsOpen(false)}>
-                <Button className="h-11 w-full rounded-md font-semibold">Consultar Dicionário</Button>
+              <Link href="/vonalp" onClick={() => setIsOpen(false)}>
+                <Button className="h-11 w-full rounded-md font-semibold">Consultar Vocabulário</Button>
               </Link>
             </div>
           </div>

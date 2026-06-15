@@ -26,6 +26,7 @@ import { EventRegistrationsModule } from './event-registrations/event-registrati
 import { AuditInterceptor } from './common/interceptors/audit.interceptor';
 import { NotificationsModule } from './notifications/notifications.module';
 import { VonalpModule } from './vonalp/vonalp.module';
+import { VolnaModule } from './volna/volna.module';
 import { ManualVocabularyModule } from './manual-vocabulary/manual-vocabulary.module';
 import { AllExceptionsFilter } from './common/filters/http-exception.filter';
 import { LoggerModule } from './common/logger/logger.module';
@@ -56,6 +57,7 @@ import { RequestContextMiddleware } from './common/middleware/request-context.mi
     EventRegistrationsModule,
     NotificationsModule,
     VonalpModule,
+    VolnaModule,
     ManualVocabularyModule,
 
   ],

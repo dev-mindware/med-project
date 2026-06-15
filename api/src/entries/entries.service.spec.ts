@@ -181,7 +181,7 @@ describe('EntriesService', () => {
         expect.objectContaining({
           rowNumber: 3,
           field: 'entry',
-          message: 'Termo duplicado no ficheiro',
+          message: 'Vocábulo duplicado no ficheiro',
         }),
       );
     });

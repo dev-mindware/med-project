@@ -109,7 +109,7 @@ export async function parseVonalpWorkbook(file: File, config: VonalpImportConfig
           rowNumber,
           field: fieldLabel(config, config.primaryField),
           value: primaryValue,
-          message: "Termo duplicado no ficheiro.",
+          message: "Vocábulo duplicado no ficheiro.",
         });
       }
       seen.add(key);

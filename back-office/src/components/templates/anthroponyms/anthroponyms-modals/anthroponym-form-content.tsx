@@ -184,7 +184,7 @@ export function AnthroponymFormContent({ action, currentAnthroponym }: Anthropon
         <div className="flex items-center justify-between space-x-4">
           <div className="flex flex-col space-y-0.5">
             <span className="text-sm font-semibold">Estrangeirismo</span>
-            <span className="text-xs text-muted-foreground">O termo é de origem estrangeira?</span>
+            <span className="text-xs text-muted-foreground">O vocábulo é de origem estrangeira?</span>
           </div>
           <Controller
             control={control}

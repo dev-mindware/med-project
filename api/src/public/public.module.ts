@@ -6,6 +6,7 @@ import { AnthroponymsModule } from '../anthroponyms/anthroponyms.module';
 import { ForeignismsModule } from '../foreignisms/foreignisms.module';
 import { EventsModule } from '../events/events.module';
 import { VonalpModule } from '../vonalp/vonalp.module';
+import { VolnaModule } from '../volna/volna.module';
 import { PublicService } from './public.service';
 
 
@@ -17,6 +18,7 @@ import { PublicService } from './public.service';
     ForeignismsModule,
     EventsModule,
     VonalpModule,
+    VolnaModule,
 
   ],
   controllers: [PublicController],

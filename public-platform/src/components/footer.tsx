@@ -1,4 +1,4 @@
-import Link from "next/link"
+﻿import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { ArrowRight } from "lucide-react"
 
@@ -51,7 +51,8 @@ const cols = [
       { label: "Topónimos", href: "/toponimos" },
       { label: "Antropónimos", href: "/antroponimos" },
       { label: "VONALP", href: "/vonalp" },
-      { label: "VONALP EP", href: "/vonalp-ep" },
+      { label: "VONALP-EP", href: "/vonalp-ep" },
+      { label: "VOLNA", href: "/volna" },
     ],
   },
   {
@@ -66,7 +67,7 @@ const cols = [
     links: [
       { label: "Sobre a Comissão", href: "/about" },
       { label: "Política de Privacidade", href: "/privacidade" },
-      { label: "Termos de Uso", href: "/termos" },
+      { label: "Vocábulos de Uso", href: "/vocabulos-de-uso" },
       { label: "Acessibilidade", href: "/acessibilidade" },
     ],
   },
@@ -86,13 +87,13 @@ export function Footer() {
                 Explore o português<br />de Angola, hoje.
               </h2>
               <p className="mt-4 text-blue-100/75 text-base leading-relaxed max-w-md">
-                Dicionário, topónimos, antropónimos, Vocabulário Ortográfico Nacional de Angola e publicações relevantes. Tudo no mesmo portal, totalmente gratuito.
+                Dicionário, Topónimos, Antropónimos, Vocabulário Ortográfico Nacional de Angola e publicações relevantes. Tudo no mesmo portal, totalmente gratuito.
               </p>
             </div>
             <div className="flex flex-col sm:flex-row gap-3 shrink-0">
-              <Link href="/dictionary">
+              <Link href="/vonalp">
                 <Button className="rounded-md px-7 h-11 font-semibold bg-white text-primary hover:bg-blue-50 shadow-none">
-                  Consultar Dicionário
+                  Consultar Vocabulário
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </Link>
@@ -110,8 +111,8 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-12">
           <div className="space-y-5">
             <img
-              src="/cn_illp.png"
-              className="h-9 w-auto brightness-0 invert opacity-90"
+              src="/med.gov.png"
+              className="h-11 w-auto brightness-0 invert opacity-90"
               alt="CNLP Angola"
             />
             <p className="text-sm text-blue-100/75 leading-relaxed">

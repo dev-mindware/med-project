@@ -40,7 +40,7 @@ export function DetailsForeignismModal() {
         <section className="space-y-4">
           <h3 className="font-semibold text-foreground border-b pb-2">Informações do Estrangeirismo</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2">
-            <DetailRow label="Termo" value={currentForeignism.term} />
+            <DetailRow label="Vocábulo" value={currentForeignism.term} />
             <DetailRow label="Pronúncia" value={currentForeignism.pronunciation || "—"} />
             <DetailRow label="Língua Original" value={currentForeignism.originalLanguage || "—"} />
             <DetailRow label="País de Origem" value={currentForeignism.originCountry || "—"} />

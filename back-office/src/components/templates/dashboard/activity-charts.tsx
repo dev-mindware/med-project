@@ -98,7 +98,7 @@ export function ActivityCharts() {
 
   // ChartConfig: vocab horizontal bar chart
   const vocabConfig: ChartConfig = {
-    value: { label: "Termos" },
+    value: { label: "Vocábulos" },
     ...Object.fromEntries(
       vocabData.map((item) => [
         item.name,
@@ -242,11 +242,11 @@ export function ActivityCharts() {
                 Vocabulário VONALP
               </h3>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Distribuição de termos por tipo de vocábulo
+                Distribuição de vocábulos por tipo de vocábulo
               </p>
             </div>
             <span className="text-xs font-semibold text-primary bg-primary/10 px-2.5 py-1 rounded-full">
-              {totalVocab.toLocaleString("pt-PT")} termos
+              {totalVocab.toLocaleString("pt-PT")} vocábulos
             </span>
           </div>
 
@@ -262,7 +262,7 @@ export function ActivityCharts() {
                     </span>
                     <div className="flex items-center gap-2">
                       <span className="text-xs text-muted-foreground">
-                        {item.value.toLocaleString("pt-PT")} termos
+                        {item.value.toLocaleString("pt-PT")} vocábulos
                       </span>
                       <span
                         className="text-xs font-semibold px-1.5 py-0.5 rounded"

@@ -12,5 +12,6 @@ export * from "./audit-logs";
 export * from "./stats";
 export * from "./reports";
 export * from "./vonalp";
+export * from "./volna";
 export * from "./manual-vocabulary";
 export * from "./notifications";

@@ -16,6 +16,7 @@ export * from "./audit-logs";
 export * from "./reports";
 export * from "./vonalp-importer";
 export * from "./vonalp";
+export * from "./volna";
 export * from "./settings";
 export * from "./manual-vocabulary";
 export * from "./help";

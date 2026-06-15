@@ -82,8 +82,8 @@ export function ForeignismsFiltersTSX() {
             options={[
               { label: "Mais recentes", value: "createdAt-desc" },
               { label: "Mais antigos", value: "createdAt-asc" },
-              { label: "Termo (A-Z)", value: "term-asc" },
-              { label: "Termo (Z-A)", value: "term-desc" },
+              { label: "Vocábulo (A-Z)", value: "term-asc" },
+              { label: "Vocábulo (Z-A)", value: "term-desc" },
             ]}
             value={filters.orderBy ? `${filters.orderBy}-${filters.orderDirection}` : null}
             onChange={(val) => {

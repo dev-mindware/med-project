@@ -20,8 +20,8 @@ export default async function HomePage() {
       { data: [], meta: { total: 0, page: 1, limit: 3, totalPages: 0, hasNextPage: false, hasPreviousPage: false } },
     ),
     safePublicApi(
-      () => publicApi.dictionary({ limit: 100 }),
-      { data: [], meta: { total: 0, page: 1, limit: 100, totalPages: 0, hasNextPage: false, hasPreviousPage: false } },
+      () => publicApi.dictionary({ limit: 6 }),
+      { data: [], meta: { total: 0, page: 1, limit: 6, totalPages: 0, hasNextPage: false, hasPreviousPage: false } },
     ),
   ])
 
@@ -41,7 +41,8 @@ export default async function HomePage() {
         <HeroSection
           stats={stats ? [
             { value: stats.dictionaryEntries.toLocaleString("pt-PT"), label: "Entradas aprovadas" },
-            { value: (stats.vonalpTerms + stats.vonalpEpTerms).toLocaleString("pt-PT"), label: "Termos VONALP completos" },
+            { value: (stats.vonalpTerms + stats.vonalpEpTerms).toLocaleString("pt-PT"), label: "Vocábulos VONALP publicados" },
+            { value: (stats.volnaTerms ?? 0).toLocaleString("pt-PT"), label: "Vocábulos VOLNA publicados" },
             { value: stats.toponyms.toLocaleString("pt-PT"), label: "Topónimos publicados" },
           ] : []}
         />

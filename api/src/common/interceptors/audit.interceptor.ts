@@ -66,7 +66,7 @@ const CONTENT_ENTITIES: Record<string, ContentEntityConfig> = {
     pluralLabel: 'entradas',
     itemKey: 'entry',
     createTitle: 'Nova entrada criada',
-    statusTitle: 'Estado da entrada atualizado',
+    statusTitle: 'Estado da entrada actualizado',
     articlePhrase: 'da entrada',
   },
   Neologism: {
@@ -75,7 +75,7 @@ const CONTENT_ENTITIES: Record<string, ContentEntityConfig> = {
     pluralLabel: 'neologismos',
     itemKey: 'entry',
     createTitle: 'Novo neologismo criado',
-    statusTitle: 'Estado do neologismo atualizado',
+    statusTitle: 'Estado do neologismo actualizado',
     articlePhrase: 'do neologismo',
   },
   Toponym: {
@@ -84,7 +84,7 @@ const CONTENT_ENTITIES: Record<string, ContentEntityConfig> = {
     pluralLabel: 'topónimos',
     itemKey: 'toponym',
     createTitle: 'Novo topónimo criado',
-    statusTitle: 'Estado do topónimo atualizado',
+    statusTitle: 'Estado do topónimo actualizado',
     articlePhrase: 'do topónimo',
   },
   Anthroponym: {
@@ -93,7 +93,7 @@ const CONTENT_ENTITIES: Record<string, ContentEntityConfig> = {
     pluralLabel: 'antropónimos',
     itemKey: 'name',
     createTitle: 'Novo antropónimo criado',
-    statusTitle: 'Estado do antropónimo atualizado',
+    statusTitle: 'Estado do antropónimo actualizado',
     articlePhrase: 'do antropónimo',
   },
   Foreignism: {
@@ -102,7 +102,7 @@ const CONTENT_ENTITIES: Record<string, ContentEntityConfig> = {
     pluralLabel: 'estrangeirismos',
     itemKey: 'term',
     createTitle: 'Novo estrangeirismo criado',
-    statusTitle: 'Estado do estrangeirismo atualizado',
+    statusTitle: 'Estado do estrangeirismo actualizado',
     articlePhrase: 'do estrangeirismo',
   },
 };
@@ -607,7 +607,7 @@ export class AuditInterceptor implements NestInterceptor {
       toponym: 'topónimo',
       province: 'província',
       name: 'nome próprio',
-      term: 'termo estrangeiro',
+      term: 'vocábulo estrangeiro',
       approvalStatus: 'estado',
       rejectionReason: 'motivo de rejeição',
       correctionNotes: 'notas de correção',

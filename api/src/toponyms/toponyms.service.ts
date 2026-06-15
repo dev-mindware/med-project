@@ -46,7 +46,7 @@ export class ToponymsService {
           rowNumber: row.rowNumber,
           field: 'toponym',
           value: data.toponym,
-          message: 'Termo duplicado no ficheiro',
+          message: 'Vocábulo duplicado no ficheiro',
         });
         continue;
       }
@@ -164,7 +164,7 @@ export class ToponymsService {
     });
 
     if (existing) {
-      throw new ConflictException('Já existe um topónimo com este termo');
+      throw new ConflictException('Já existe um topónimo com este vocábulo');
     }
   }
 }

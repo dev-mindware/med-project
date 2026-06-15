@@ -38,7 +38,7 @@ export function EventsCalendar({
     setIsLoading(true)
 
     try {
-      const response = await publicApi.events({ period, limit: 100 })
+      const response = await publicApi.events({ period, limit: 6 })
       setEvents(response.data)
     } catch {
       setEvents([])

@@ -107,7 +107,7 @@ export function EntryFormContent({ action, currentEntry }: EntryFormContentProps
       <FormSection title="Informação Geral" icon="BookOpen">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Input
-            label="Entrada (Palavra/Termo)"
+            label="Entrada (Palavra/Vocábulo)"
             startIcon="BookOpen"
             {...register("entry")}
             error={errors.entry?.message}
@@ -349,7 +349,7 @@ export function EntryFormContent({ action, currentEntry }: EntryFormContentProps
         <div className="flex items-center justify-between space-x-4">
           <div className="flex flex-col space-y-0.5">
             <span className="text-sm font-semibold">Estrangeirismo</span>
-            <span className="text-xs text-muted-foreground leading-tight">O termo é de origem estrangeira?</span>
+            <span className="text-xs text-muted-foreground leading-tight">O vocábulo é de origem estrangeira?</span>
           </div>
           <Controller
             control={control}

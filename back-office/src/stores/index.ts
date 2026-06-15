@@ -8,3 +8,4 @@ export * from "./current-user-store";
 export * from "./current-blog-post-store";
 export * from "./current-event-store";
 export * from "./current-event-registration-store";
+export * from "./current-volna-store";

@@ -1,4 +1,4 @@
-import { Footer } from "@/components/footer"
+﻿import { Footer } from "@/components/footer"
 import { Header } from "@/components/header"
 import { LexicalExplorer } from "@/components/lexical-explorer"
 import { PageHero } from "@/components/page-hero"
@@ -14,7 +14,7 @@ export default async function EstrangeirismosPage() {
         <PageHero
           badge="Empréstimos linguísticos"
           title="Estrangeirismos"
-          subtitle="Explore termos de origem estrangeira aprovados, com língua original, país de origem, campo de uso, forma adaptada e classificação gramatical."
+          subtitle="Explore vocábulos de origem estrangeira aprovados, com língua original, país de origem, campo de uso, forma adaptada e classificação gramatical."
           tone="ice"
           stats={[
             { value: data.foreignisms.meta.total.toLocaleString("pt-PT"), label: "Estrangeirismos publicados" },

@@ -96,7 +96,7 @@ export const fieldLabels: Record<string, string> = {
   historicalFigure: "Figura histórica",
   historicalFigurePseudonym: "Pseudónimo da figura histórica",
   historicalFigureDomain: "Domínio de atuação",
-  term: "Termo estrangeiro",
+  term: "Vocábulo estrangeiro",
   originalLanguage: "Idioma original",
   originCountry: "País de origem",
   adaptedForm: "Forma adaptada",

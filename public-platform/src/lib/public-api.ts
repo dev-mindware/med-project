@@ -74,6 +74,10 @@ export type PublicForeignism = {
 
 export type PublicVonalpTerm = {
   id: string
+  vocabularyType?: "VONALP" | "VONALP_EP"
+  sourceType?: "ENTRY" | "TOPONYM" | "ANTHROPONYM" | "FOREIGNISM"
+  sourceId?: string
+  sourceLabel?: string | null
   term: string
   pronunciation?: string | null
   grammaticalCategory?: string | null
@@ -84,6 +88,20 @@ export type PublicVonalpTerm = {
   secondDefinition?: string | null
   thirdDefinition?: string | null
   origin?: string | null
+}
+
+export type PublicVolnaTerm = {
+  id: string
+  term: string
+  language: string
+  grammaticalCategory?: string | null
+  grammaticalSubcategory?: string | null
+  definition?: string | null
+  usageExample?: string | null
+  notes?: string | null
+  approvedAt?: string | null
+  createdAt?: string
+  updatedAt?: string
 }
 
 export type PublicToponym = {
@@ -175,6 +193,7 @@ export type PublicStats = {
   upcomingEvents: number
   vonalpTerms: number
   vonalpEpTerms: number
+  volnaTerms: number
   lexicalTotal: number
   updatedAt: string
 }
@@ -186,6 +205,7 @@ export type PublicFilters = {
   grammaticalCategory?: string
   grammaticalSubcategory?: string
   languageCode?: string
+  language?: string
   province?: string
   municipality?: string
   gender?: string
@@ -243,6 +263,8 @@ export const publicApi = {
     request<PublicPaginated<PublicVonalpTerm>>("/public/vocabularies/vonalp", { filters }),
   vonalpEp: (filters?: PublicFilters) =>
     request<PublicPaginated<PublicVonalpTerm>>("/public/vocabularies/vonalpep", { filters }),
+  volna: (filters?: PublicFilters) =>
+    request<PublicPaginated<PublicVolnaTerm>>("/public/vocabularies/volna", { filters }),
   toponyms: (filters?: PublicFilters) =>
     request<PublicPaginated<PublicToponym>>("/public/toponyms", { filters }),
   anthroponyms: (filters?: PublicFilters) =>

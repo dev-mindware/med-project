@@ -18,13 +18,13 @@ const roleGuides = {
   SUPERVISOR: {
     title: "Supervisor",
     description: "Revisao de conteudos, acompanhamento dos operadores atribuidos e controlo de qualidade linguistica.",
-    focus: ["Aprovar ou solicitar correcao", "Acompanhar operadores", "Completar termos VONALP pendentes"],
+    focus: ["Aprovar ou solicitar correcao", "Acompanhar operadores", "Completar vocábulos VONALP pendentes"],
     nextSteps: ["Abrir itens aguardando revisao", "Ler historico de alteracoes", "Notificar operadores quando houver correcao"],
   },
   OPERATOR: {
     title: "Operador",
     description: "Criacao, importacao e correcao de dados linguisticos antes da revisao superior.",
-    focus: ["Criar termos completos", "Corrigir dados devolvidos", "Preparar ficheiros e multimédia"],
+    focus: ["Criar vocábulos completos", "Corrigir dados devolvidos", "Preparar ficheiros e multimédia"],
     nextSteps: ["Criar registos como rascunho", "Submeter para aprovacao", "Consultar notificacoes de estado"],
   },
 };

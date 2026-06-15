@@ -26,7 +26,7 @@ Usa as keys tecnicas abaixo em data:
 
 Regras:
 - Nao inventes dados quando o texto nao oferecer contexto suficiente; deixa o campo vazio.
-- Para termos comuns, privilegia vocabulos de 1, 2 ou 3 palavras.
+- Para vocábulos comuns, privilegia vocábulos de 1, 2 ou 3 palavras.
 - Nomes proprios, topónimos e antropónimos podem ser compostos quando fizer sentido.
 - toponymClasses e toponymSubclasses devem ser arrays de strings.
 `;

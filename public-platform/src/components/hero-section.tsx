@@ -8,9 +8,9 @@ type HeroStat = {
 }
 
 const trust = [
-  "Conteúdos aprovados pela Comissão",
+  "Conteúdos aprovados pela CN-IILP",
   "Topónimos e Antropónimos",
-  "Vocabulários ortográficos nacionais",
+  "Vocabulários Ortográficos Nacionais",
 ]
 
 const heroImages = [
@@ -22,7 +22,7 @@ const heroImages = [
 
 export function HeroSection({ stats = [] }: { stats?: HeroStat[] }) {
   return (
-    <section className="relative flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center overflow-hidden bg-slate-950 text-center px-4 py-24">
+    <section className="relative flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center overflow-hidden bg-slate-950 px-4 py-24 text-center">
       <div className="absolute inset-0">
         {heroImages.map((image, index) => (
           <img
@@ -49,38 +49,38 @@ export function HeroSection({ stats = [] }: { stats?: HeroStat[] }) {
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(5,25,63,0.9),rgba(0,94,234,0.48),rgba(4,18,43,0.78))]" />
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_55%_at_50%_20%,rgba(255,255,255,0.22),transparent_70%)]" />
 
-      <div className="relative z-10 flex flex-col items-center gap-7 max-w-4xl mx-auto w-full px-6 sm:px-8">
-        <div className="flex items-center gap-2 rounded-lg border border-white/25 bg-white/12 backdrop-blur-md px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-white/80 shadow-sm">
+      <div className="relative z-10 mx-auto flex w-full max-w-5xl flex-col items-center gap-7 px-6 sm:px-8">
+        <div className="flex items-center gap-2 rounded-lg border border-white/25 bg-white/12 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-white/80 shadow-sm backdrop-blur-md">
           <span className="h-2 w-2 rounded-sm bg-white" />
-          Comissão Nacional - CN-IILP Angola
+          Comissão Nacional para o Instituto Internacional da Língua Portuguesa
         </div>
 
-        <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold leading-[1.05] tracking-tight text-balance">
-          <span className="text-white">Português Angolano,</span>
+        <h1 className="max-w-5xl text-balance text-4xl font-extrabold leading-[1.08] tracking-tight text-white md:text-5xl lg:text-6xl">
+          Língua Portuguesa:
           <br />
-          <span className="text-blue-100">da Palavra à Cultura</span>
+          <span className="text-blue-100">da palavra à cultura, da cultura à palavra</span>
         </h1>
 
-        <p className="max-w-xl text-lg text-white/78 leading-relaxed text-balance">
-          Portal oficial para preservação, ensino e desenvolvimento da língua portuguesa em Angola.
-          Consulte conteúdos institucionais aprovados para acesso público.
+        <p className="max-w-xl text-balance text-md leading-relaxed text-white/78">
+          Portal oficial para a preservação, o ensino e o desenvolvimento da Língua Portuguesa em Angola.
+          Consulte conteúdos institucionais aprovados para o acesso público.
         </p>
 
-        <div className="flex flex-col sm:flex-row items-center gap-3 pt-1">
+        <div className="flex flex-col items-center gap-3 pt-1 sm:flex-row">
           <Button
             size="lg"
-            className="rounded-md px-8 h-12 font-semibold bg-white text-primary shadow-lg shadow-black/20 min-w-[200px] hover:bg-blue-50"
+            className="h-12 min-w-[200px] rounded-md bg-white px-8 font-semibold text-primary shadow-lg shadow-black/20 hover:bg-blue-50"
             asChild
           >
             <Link href="/dictionary">
               <Search className="mr-2 h-4 w-4" />
-              Consultar Dicionário
+              Consultar Vocabulário
             </Link>
           </Button>
           <Button
             variant="outline"
             size="lg"
-            className="rounded-md px-8 h-12 font-semibold border-white/35 bg-white/10 text-white min-w-[160px] backdrop-blur-sm hover:bg-white hover:text-primary"
+            className="h-12 min-w-[160px] rounded-md border-white/35 bg-white/10 px-8 font-semibold text-white backdrop-blur-sm hover:bg-white hover:text-primary"
             asChild
           >
             <Link href="/neologismos">
@@ -91,20 +91,20 @@ export function HeroSection({ stats = [] }: { stats?: HeroStat[] }) {
         </div>
 
         <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-white/80">
-          {trust.map((t) => (
-            <span key={t} className="flex items-center gap-1.5">
-              <CheckCircle2 className="h-4 w-4 text-blue-100 shrink-0" />
-              {t}
+          {trust.map((item) => (
+            <span key={item} className="flex items-center gap-1.5">
+              <CheckCircle2 className="h-4 w-4 shrink-0 text-blue-100" />
+              {item}
             </span>
           ))}
         </div>
 
         {stats.length > 0 && (
           <div className="mt-4 flex flex-wrap items-center justify-center gap-y-4 divide-x divide-white/20">
-            {stats.map((s) => (
-              <div key={s.label} className="px-8 first:pl-0 last:pr-0 text-center">
-                <p className="text-3xl font-extrabold text-white tabular-nums">{s.value}</p>
-                <p className="text-xs text-white/65 mt-0.5">{s.label}</p>
+            {stats.map((stat) => (
+              <div key={stat.label} className="px-8 text-center first:pl-0 last:pr-0">
+                <p className="text-3xl font-extrabold tabular-nums text-white">{stat.value}</p>
+                <p className="mt-0.5 text-xs text-white/65">{stat.label}</p>
               </div>
             ))}
           </div>

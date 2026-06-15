@@ -19,7 +19,7 @@ Base path:
 - Conteúdos linguísticos aparecem apenas quando `approvalStatus = APPROVED`.
 - Eventos aparecem apenas quando `status = PUBLISHED`.
 - Publicações de blog aparecem apenas quando `status = PUBLISHED`.
-- Vocabulários VONALP e VONALP EP aparecem apenas quando o termo dedicado está completo e a origem está aprovada.
+- Vocabulários VONALP e VONALP-EP aparecem apenas quando o vocábulo dedicado está completo e a origem está aprovada.
 - O portal público não deve consumir endpoints administrativos.
 - IDs internos de auditoria, autores internos, notas de correcção, motivos de rejeição e estados editoriais internos não são expostos.
 - Listagens usam paginação padrão `page=1` e `limit=20`.
@@ -140,7 +140,7 @@ Params:
 |---|---|---:|---|
 | `page` | `number` | Não | Página actual. |
 | `limit` | `number` | Não | Itens por página, máximo `100`. |
-| `q` / `search` | `string` | Não | Pesquisa em termo, definições, etimologia e exemplo de uso. |
+| `q` / `search` | `string` | Não | Pesquisa em vocábulo, definições, etimologia e exemplo de uso. |
 | `category` | `string` | Não | Filtra por `grammaticalCategory`. |
 | `languageCode` | `string` | Não | Filtra pelo código da língua, por exemplo `pt-AO`, `kmb`, `umb`. |
 
@@ -166,7 +166,7 @@ Resposta:
 PublicEntry
 ```
 
-Contexto no portal: página de verbete, dicionário pesquisável e cartões de termo.
+Contexto no portal: página de verbete, dicionário pesquisável e cartões de vocábulo.
 
 ## Neologismos
 
@@ -186,7 +186,7 @@ Params:
 |---|---|---:|---|
 | `page` | `number` | Não | Página actual. |
 | `limit` | `number` | Não | Itens por página, máximo `100`. |
-| `q` / `search` | `string` | Não | Pesquisa em termo, definições, etimologia e exemplo de uso. |
+| `q` / `search` | `string` | Não | Pesquisa em vocábulo, definições, etimologia e exemplo de uso. |
 | `category` | `string` | Não | Filtra por `grammaticalCategory`. |
 | `languageCode` | `string` | Não | Filtra pelo código da língua. |
 
@@ -206,7 +206,7 @@ Resposta:
 PublicNeologism
 ```
 
-Contexto no portal: secção de termos recentes, novas unidades lexicais e actualizações do acervo.
+Contexto no portal: secção de vocábulos recentes, novas unidades lexicais e actualizações do acervo.
 
 ## Topónimos
 
@@ -370,7 +370,7 @@ Params:
 |---|---|---:|---|
 | `page` | `number` | Não | Página actual. |
 | `limit` | `number` | Não | Itens por página, máximo `100`. |
-| `q` / `search` | `string` | Não | Pesquisa em termo, significado, definição, idioma, país e área. |
+| `q` / `search` | `string` | Não | Pesquisa em vocábulo, significado, definição, idioma, país e área. |
 | `category` | `string` | Não | Filtra por `field`, isto é, área de conhecimento. |
 
 Resposta:
@@ -389,9 +389,9 @@ Resposta:
 PublicForeignism
 ```
 
-Contexto no portal: glossário de estrangeirismos, termos técnicos e origem de palavras.
+Contexto no portal: glossário de estrangeirismos, vocábulos técnicos e origem de palavras.
 
-## Vocabulários VONALP e VONALP EP
+## Vocabulários VONALP e VONALP-EP
 
 ### Tipo
 
@@ -418,11 +418,11 @@ export type PublicVonalpTerm = {
 
 ### `GET /public/vocabularies/vonalp`
 
-Lista termos VONALP completos e públicos.
+Lista vocábulos VONALP completos e públicos.
 
 ### `GET /public/vocabularies/vonalpep`
 
-Lista termos VONALP EP completos e públicos.
+Lista vocábulos VONALP-EP completos e públicos.
 
 Params:
 
@@ -430,7 +430,7 @@ Params:
 |---|---|---:|---|
 | `page` | `number` | Não | Página actual. |
 | `limit` | `number` | Não | Itens por página, máximo `100`. |
-| `q` / `search` | `string` | Não | Pesquisa nos campos do termo VONALP. |
+| `q` / `search` | `string` | Não | Pesquisa nos campos do vocábulo VONALP. |
 
 Resposta:
 
@@ -438,7 +438,7 @@ Resposta:
 PaginatedResponse<PublicVonalpTerm>
 ```
 
-Contexto no portal: páginas normativas VONALP/VONALP EP, listagens oficiais, pesquisa por origem e detalhe de termo.
+Contexto no portal: páginas normativas VONALP/VONALP-EP, listagens oficiais, pesquisa por origem e detalhe de vocábulo.
 
 ## Eventos
 
@@ -684,7 +684,7 @@ Erros comuns:
 | Estrangeirismos | `GET /public/foreignisms` |
 | Detalhe de estrangeirismo | `GET /public/foreignisms/:id` |
 | VONALP | `GET /public/vocabularies/vonalp` |
-| VONALP EP | `GET /public/vocabularies/vonalpep` |
+| VONALP-EP | `GET /public/vocabularies/vonalpep` |
 | Eventos | `GET /public/events` |
 | Detalhe de evento | `GET /public/events/:idOrSlug` |
 | Inscrição em evento | `POST /public/events/:idOrSlug/registrations` |

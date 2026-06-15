@@ -18,7 +18,7 @@ export function FeaturedActivities({ events = [] }: { events?: PublicEvent[] }) 
       <div className="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
         <div className="mb-14 text-center">
           <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-primary">Agenda</p>
-          <h2 className="mb-4 text-4xl font-extrabold tracking-tight">Atividades em Destaque</h2>
+          <h2 className="mb-4 text-4xl font-extrabold tracking-tight">Actividades em Destaque</h2>
           <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
             Acompanhe conferências, workshops e eventos promovidos pela Comissão.
           </p>

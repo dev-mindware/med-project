@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState, useTransition } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react"
 import { usePathname, useRouter } from "next/navigation"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -27,7 +27,7 @@ type DictionarySearchProps = {
 const defaultMeta: PublicMeta = {
   total: 0,
   page: 1,
-  limit: 20,
+  limit: 6,
   totalPages: 0,
   hasNextPage: false,
   hasPreviousPage: false,
@@ -63,6 +63,8 @@ export function DictionarySearch({
   const [meta, setMeta] = useState<PublicMeta>(initialMeta)
   const [hasSearched, setHasSearched] = useState(initialResults.length > 0 || Boolean(initialQuery || initialCategory))
   const [favorites, setFavorites] = useState<string[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+  const didMount = useRef(false)
 
   const selectedCategory = grammaticalCategoryOptions.find((item) => item.value === wordClass)
   const subcategoryOptions = selectedCategory?.subcategories ?? []
@@ -82,13 +84,14 @@ export function DictionarySearch({
     })
   }
 
-  const loadResults = async (page = 1) => {
+  const loadResults = useCallback(async (page = 1) => {
     const category = wordClass === "all" ? undefined : wordClass
     const grammaticalSubcategory = subcategory === "all" ? undefined : subcategory
     const language = languageCode === "all" ? undefined : languageCode
     const q = searchTerm.trim() || undefined
 
     setHasSearched(true)
+    setIsLoading(true)
     updateUrl({ q, category, grammaticalSubcategory, languageCode: language, page: page > 1 ? page : undefined })
 
     try {
@@ -98,15 +101,30 @@ export function DictionarySearch({
         grammaticalSubcategory,
         languageCode: language,
         page,
-        limit: meta.limit || 20,
+        limit: 6,
       })
       setSearchResults(response.data)
       setMeta(response.meta)
     } catch {
       setSearchResults([])
       setMeta(defaultMeta)
+    } finally {
+      setIsLoading(false)
     }
-  }
+  }, [languageCode, searchTerm, subcategory, wordClass])
+
+  useEffect(() => {
+    if (!didMount.current) {
+      didMount.current = true
+      return
+    }
+
+    const timeout = window.setTimeout(() => {
+      void loadResults(1)
+    }, 320)
+
+    return () => window.clearTimeout(timeout)
+  }, [loadResults])
 
   const handleCategoryChange = (value: string) => {
     setWordClass(value)
@@ -119,14 +137,13 @@ export function DictionarySearch({
   return (
     <div className="mx-auto max-w-6xl space-y-6">
       <div className="rounded-2xl border border-border bg-background p-3 shadow-sm">
-        <div className="grid gap-2 lg:grid-cols-[1fr_190px_190px_170px_auto]">
+        <div className="grid gap-2 lg:grid-cols-[1fr_190px_190px_170px]">
           <div className="flex items-center gap-2 rounded-xl border border-border/70 px-3">
             <Search className="h-4 w-4 text-muted-foreground shrink-0" />
             <Input
               placeholder="Pesquisar entrada, definição, etimologia ou exemplo..."
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.target.value)}
-              onKeyDown={(event) => event.key === "Enter" && loadResults(1)}
               className="border-0 bg-transparent shadow-none focus-visible:ring-0 h-11 px-0 text-base"
             />
           </div>
@@ -172,10 +189,10 @@ export function DictionarySearch({
             </SelectContent>
           </Select>
 
-          <Button onClick={() => loadResults(1)} disabled={isPending} className="h-11 rounded-xl px-6 font-semibold">
-            {isPending ? "A pesquisar..." : "Pesquisar"}
-          </Button>
         </div>
+        {(isLoading || isPending) && (
+          <p className="px-2 pt-3 text-xs font-medium text-muted-foreground">A actualizar resultados...</p>
+        )}
       </div>
 
       {searchResults.length > 0 ? (
@@ -240,7 +257,7 @@ function WordCard({
   const badges = useMemo(
     () => [
       word.isVocabulary ? "VONALP" : null,
-      word.isVocabularyEP ? "VONALP EP" : null,
+      word.isVocabularyEP ? "VONALP-EP" : null,
       word.isForeignism ? "Estrangeirismo" : null,
     ].filter(Boolean),
     [word.isForeignism, word.isVocabulary, word.isVocabularyEP],
