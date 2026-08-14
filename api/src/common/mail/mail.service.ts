@@ -5,18 +5,39 @@ import { AppLogger } from '../logger/app-logger.service';
 
 @Injectable()
 export class MailService {
-  private resend: Resend;
+  private resend: Resend | null = null;
   private fromEmail: string;
+  private readonly enabled: boolean;
 
   constructor(
     private configService: ConfigService,
     private logger: AppLogger,
   ) {
-    this.resend = new Resend(this.configService.get<string>('RESEND_API_KEY'));
+    const apiKey = this.configService.get<string>('RESEND_API_KEY')?.trim();
+    this.enabled = Boolean(apiKey);
     this.fromEmail = this.configService.get<string>('RESEND_FROM_EMAIL') ?? 'noreply@localhost';
+
+    if (this.enabled) {
+      this.resend = new Resend(apiKey);
+      return;
+    }
+
+    this.logger.warn('RESEND_API_KEY not configured; email delivery is disabled', {
+      context: 'MailService',
+      action: 'EMAIL_DISABLED',
+    });
   }
 
   async sendEmail(to: string, subject: string, html: string) {
+    if (!this.enabled || !this.resend) {
+      this.logger.warn('Skipped email send because Resend is not configured', {
+        context: 'MailService',
+        action: 'EMAIL_SKIPPED',
+        meta: { to, subject },
+      });
+      return;
+    }
+
     try {
       await this.resend.emails.send({
         from: this.fromEmail,

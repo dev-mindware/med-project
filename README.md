@@ -78,6 +78,35 @@ npx prisma migrate dev
 npx prisma db seed
 ```
 
+### Dados de demonstração (apresentação)
+
+A seed popula a base com conteúdo diversificado para API, back-office e portal público:
+
+- Utilizadores (admin, supervisor, 2 operadores)
+- ~20 verbetes em vários estados de aprovação
+- Topónimos, antropónimos, estrangeirismos, neologismos
+- Termos VONALP / VONALP-EP completos
+- Vocabulário VOLNA em línguas nacionais
+- Artigos, eventos com inscrições, notificações e relatórios
+
+```bash
+cd api
+npm run db:setup:demo   # migrações + sync schema + seed completa
+# ou, passo a passo:
+npm run db:seed          # seed normal (ignora se já houver dados)
+npm run db:seed:demo     # força repovoamento completo
+npm run db:reset         # migrações + seed do zero
+```
+
+Credenciais de demo:
+
+| Perfil     | Email                      | Password    |
+|------------|----------------------------|-------------|
+| Admin      | admin@linguistic.com       | admin123    |
+| Supervisor | supervisor@linguistic.com  | demo123     |
+| Operador   | operator@linguistic.com    | operator123 |
+| Operador 2 | operator2@linguistic.com   | demo123     |
+
 ## Desenvolvimento
 
 Em terminais separados:
