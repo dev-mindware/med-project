@@ -581,25 +581,68 @@ export class PublicService {
     return post;
   }
 
-  private async paginate<DelegateName extends PublicDelegateName>(
-    delegateName: DelegateName,
-    where: PublicWhereInput[DelegateName],
-    select: PublicSelectInput[DelegateName],
-    orderBy: PublicOrderByInput[DelegateName],
+  private async paginate(
+    delegateName: PublicDelegateName,
+    where: Prisma.EntryWhereInput
+      | Prisma.NeologismWhereInput
+      | Prisma.ToponymWhereInput
+      | Prisma.AnthroponymWhereInput
+      | Prisma.ForeignismWhereInput
+      | Prisma.EventWhereInput
+      | Prisma.BlogPostWhereInput,
+    select: Prisma.EntrySelect
+      | Prisma.NeologismSelect
+      | Prisma.ToponymSelect
+      | Prisma.AnthroponymSelect
+      | Prisma.ForeignismSelect
+      | Prisma.EventSelect
+      | Prisma.BlogPostSelect,
+    orderBy: Prisma.EntryOrderByWithRelationInput
+      | Prisma.NeologismOrderByWithRelationInput
+      | Prisma.ToponymOrderByWithRelationInput
+      | Prisma.AnthroponymOrderByWithRelationInput
+      | Prisma.ForeignismOrderByWithRelationInput
+      | Prisma.EventOrderByWithRelationInput
+      | Prisma.BlogPostOrderByWithRelationInput,
     filters: PublicContentFilterDto,
   ) {
     const { page, limit, skip } = this.pagination(filters);
-    const delegate = this.prisma[delegateName];
 
+    switch (delegateName) {
+      case 'entry':
+        return this.paginateDelegate(this.prisma.entry, where as Prisma.EntryWhereInput, select as Prisma.EntrySelect, orderBy as Prisma.EntryOrderByWithRelationInput, page, limit, skip);
+      case 'neologism':
+        return this.paginateDelegate(this.prisma.neologism, where as Prisma.NeologismWhereInput, select as Prisma.NeologismSelect, orderBy as Prisma.NeologismOrderByWithRelationInput, page, limit, skip);
+      case 'toponym':
+        return this.paginateDelegate(this.prisma.toponym, where as Prisma.ToponymWhereInput, select as Prisma.ToponymSelect, orderBy as Prisma.ToponymOrderByWithRelationInput, page, limit, skip);
+      case 'anthroponym':
+        return this.paginateDelegate(this.prisma.anthroponym, where as Prisma.AnthroponymWhereInput, select as Prisma.AnthroponymSelect, orderBy as Prisma.AnthroponymOrderByWithRelationInput, page, limit, skip);
+      case 'foreignism':
+        return this.paginateDelegate(this.prisma.foreignism, where as Prisma.ForeignismWhereInput, select as Prisma.ForeignismSelect, orderBy as Prisma.ForeignismOrderByWithRelationInput, page, limit, skip);
+      case 'event':
+        return this.paginateDelegate(this.prisma.event, where as Prisma.EventWhereInput, select as Prisma.EventSelect, orderBy as Prisma.EventOrderByWithRelationInput, page, limit, skip);
+      case 'blogPost':
+        return this.paginateDelegate(this.prisma.blogPost, where as Prisma.BlogPostWhereInput, select as Prisma.BlogPostSelect, orderBy as Prisma.BlogPostOrderByWithRelationInput, page, limit, skip);
+    }
+  }
+
+  private async paginateDelegate<TDelegate extends {
+    findMany(args: { where: object; select: object; orderBy: object; skip: number; take: number }): Promise<unknown[]>;
+    count(args: { where: object }): Promise<number>;
+  }>(
+    delegate: TDelegate,
+    where: object,
+    select: object,
+    orderBy: object,
+    page: number,
+    limit: number,
+    skip: number,
+  ) {
     const [data, total] = await Promise.all([
       delegate.findMany({ where, select, orderBy, skip, take: limit }),
       delegate.count({ where }),
     ]);
-
-    return {
-      data,
-      meta: this.meta(total, page, limit),
-    };
+    return { data, meta: this.meta(total, page, limit) };
   }
 
   private paginateArray<T>(items: T[], filters: PublicContentFilterDto) {
@@ -608,18 +651,46 @@ export class PublicService {
     return { data, meta: this.meta(items.length, page, limit) };
   }
 
-  private async findApprovedOrThrow<DelegateName extends Exclude<PublicDelegateName, 'event' | 'blogPost'>>(
-    delegateName: DelegateName,
-    where: PublicWhereInput[DelegateName],
-    select: PublicSelectInput[DelegateName],
+  private async findApprovedOrThrow(
+    delegateName: Exclude<PublicDelegateName, 'event' | 'blogPost'>,
+    where: Prisma.EntryWhereInput
+      | Prisma.NeologismWhereInput
+      | Prisma.ToponymWhereInput
+      | Prisma.AnthroponymWhereInput
+      | Prisma.ForeignismWhereInput,
+    select: Prisma.EntrySelect
+      | Prisma.NeologismSelect
+      | Prisma.ToponymSelect
+      | Prisma.AnthroponymSelect
+      | Prisma.ForeignismSelect,
     message: string,
   ) {
-    const delegate = this.prisma[delegateName];
+    switch (delegateName) {
+      case 'entry':
+        return this.findApproved(this.prisma.entry, where as Prisma.EntryWhereInput, select as Prisma.EntrySelect, message);
+      case 'neologism':
+        return this.findApproved(this.prisma.neologism, where as Prisma.NeologismWhereInput, select as Prisma.NeologismSelect, message);
+      case 'toponym':
+        return this.findApproved(this.prisma.toponym, where as Prisma.ToponymWhereInput, select as Prisma.ToponymSelect, message);
+      case 'anthroponym':
+        return this.findApproved(this.prisma.anthroponym, where as Prisma.AnthroponymWhereInput, select as Prisma.AnthroponymSelect, message);
+      case 'foreignism':
+        return this.findApproved(this.prisma.foreignism, where as Prisma.ForeignismWhereInput, select as Prisma.ForeignismSelect, message);
+    }
+  }
+
+  private async findApproved<TDelegate extends {
+    findFirst(args: { where: object; select: object }): Promise<unknown>;
+  }>(
+    delegate: TDelegate,
+    where: object,
+    select: object,
+    message: string,
+  ) {
     const item = await delegate.findFirst({
       where: { ...where, approvalStatus: ApprovalStatus.APPROVED },
       select,
     });
-
     if (!item) throw new NotFoundException(message);
     return item;
   }
