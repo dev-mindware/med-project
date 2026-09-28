@@ -9,6 +9,7 @@ import { UpdateVolnaTermDto } from './dto/update-volna-term.dto';
 import { VolnaFilterDto } from './dto/volna-filter.dto';
 import { VolnaService } from './volna.service';
 
+import { AuthRequest } from '../auth/types/auth-request';
 @ApiTags('volna')
 @ApiBearerAuth()
 @Controller('volna')
@@ -19,28 +20,28 @@ export class VolnaController {
   @Post()
   @Roles(UserRole.ADMIN, UserRole.SUPERVISOR, UserRole.OPERATOR)
   @ApiOperation({ summary: 'Criar vocábulo VOLNA' })
-  create(@Request() req: any, @Body() dto: CreateVolnaTermDto) {
+  create(@Request() req: AuthRequest, @Body() dto: CreateVolnaTermDto) {
     return this.volnaService.create(dto, req.user);
   }
 
   @Get()
   @Roles(UserRole.ADMIN, UserRole.SUPERVISOR, UserRole.OPERATOR)
   @ApiOperation({ summary: 'Listar vocábulos VOLNA' })
-  findAll(@Request() req: any, @Query() filters: VolnaFilterDto) {
+  findAll(@Request() req: AuthRequest, @Query() filters: VolnaFilterDto) {
     return this.volnaService.findAll(filters, req.user);
   }
 
   @Get(':id')
   @Roles(UserRole.ADMIN, UserRole.SUPERVISOR, UserRole.OPERATOR)
   @ApiOperation({ summary: 'Detalhar vocábulo VOLNA' })
-  findOne(@Request() req: any, @Param('id') id: string) {
+  findOne(@Request() req: AuthRequest, @Param('id') id: string) {
     return this.volnaService.findOne(id, req.user);
   }
 
   @Patch(':id')
   @Roles(UserRole.ADMIN, UserRole.SUPERVISOR, UserRole.OPERATOR)
   @ApiOperation({ summary: 'Actualizar vocábulo VOLNA' })
-  update(@Request() req: any, @Param('id') id: string, @Body() dto: UpdateVolnaTermDto) {
+  update(@Request() req: AuthRequest, @Param('id') id: string, @Body() dto: UpdateVolnaTermDto) {
     return this.volnaService.update(id, dto, req.user);
   }
 
@@ -58,7 +59,7 @@ export class VolnaController {
     },
   })
   review(
-    @Request() req: any,
+    @Request() req: AuthRequest,
     @Param('id') id: string,
     @Body('status') status: ApprovalStatus,
     @Body('reason') reason?: string,
@@ -69,7 +70,7 @@ export class VolnaController {
   @Delete(':id')
   @Roles(UserRole.ADMIN, UserRole.SUPERVISOR, UserRole.OPERATOR)
   @ApiOperation({ summary: 'Eliminar vocábulo VOLNA' })
-  remove(@Request() req: any, @Param('id') id: string) {
+  remove(@Request() req: AuthRequest, @Param('id') id: string) {
     return this.volnaService.remove(id, req.user);
   }
 }
