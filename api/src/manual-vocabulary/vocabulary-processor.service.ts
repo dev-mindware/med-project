@@ -43,7 +43,8 @@ export class VocabularyProcessorService {
     for (const item of items) {
       const sourceModel = item.sourceModel;
       const data: Record<string, unknown> = this.normalize(sourceModel, item.data);
-      const term = String(data[TERM_FIELD[sourceModel]] || '').trim();
+      const rawTerm = data[TERM_FIELD[sourceModel]];
+      const term = typeof rawTerm === 'string' || typeof rawTerm === 'number' ? String(rawTerm).trim() : '';
       const rowNumber = this.bucket(sourceModel, grouped).length + 2;
       const dedupeKey = `${sourceModel}:${term.toLowerCase()}`;
 
