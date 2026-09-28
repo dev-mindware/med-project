@@ -41,7 +41,13 @@ export class ManualVocabularyController {
 
   @Post('extract')
   @Roles(UserRole.ADMIN, UserRole.SUPERVISOR, UserRole.OPERATOR)
-  @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
+  @UseInterceptors(FileInterceptor('file', {
+    storage: memoryStorage(),
+    limits: { fileSize: 20 * 1024 * 1024 },
+    fileFilter: (_req, file, callback) => {
+      callback(null, file.mimetype === 'application/pdf');
+    },
+  }))
   @ApiConsumes('multipart/form-data')
   @ApiProduces('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
   @ApiOperation({ summary: 'Extrair vocabulário de um manual PDF e gerar Excel revisável' })
@@ -81,7 +87,17 @@ export class ManualVocabularyController {
 
   private validatePdf(file: Express.Multer.File) {
     if (file.mimetype !== 'application/pdf') {
-      throw new BadRequestException('Apenas ficheiros PDF sao permitidos');
+      throw new BadRequestException('Apenas ficheiros PDF são permitidos');
+    }
+
+    const signature = file.buffer.subarray(0, 5).toString('ascii');
+    if (signature !== '%PDF-') {
+      throw new BadRequestException('O conteúdo do ficheiro não corresponde a um PDF válido');
+    }
+
+    const eof = file.buffer.lastIndexOf(Buffer.from('%%EOF'));
+    if (eof === -1) {
+      throw new BadRequestException('PDF inválido ou incompleto');
     }
   }
 
