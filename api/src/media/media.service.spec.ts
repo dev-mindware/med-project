@@ -36,16 +36,14 @@ const mockPrismaService = {
 };
 
 const mockConfigService = {
-  get: jest.fn((key: string) => {
-    const config: Record<string, string> = {
-      R2_ENDPOINT: 'http://r2.endpoint',
-      R2_ACCESS_KEY_ID: 'access-key',
-      R2_SECRET_ACCESS_KEY: 'secret-key',
-      R2_BUCKET_NAME: 'test-bucket',
-      R2_PUBLIC_URL: 'http://public.url',
-    };
-    return config[key];
-  }),
+  getOrThrow: jest.fn((key: string) => ({
+    'storage.r2Endpoint': 'http://r2.endpoint',
+    'storage.r2AccessKeyId': 'access-key',
+    'storage.r2SecretAccessKey': 'secret-key',
+    'storage.r2BucketName': 'test-bucket',
+    'storage.r2PublicUrl': 'http://public.url',
+    'app.mediaMaxFileMb': 10,
+  })[key]),
 };
 
 describe('MediaService', () => {
@@ -77,7 +75,7 @@ describe('MediaService', () => {
         mimetype: 'image/jpeg',
         size: 500,
         buffer: Buffer.from('test'),
-      } as any;
+      } as Express.Multer.File;
 
       const result = await service.uploadFile(mockFile, 'user-1', 'entries', 'entry-1');
       
