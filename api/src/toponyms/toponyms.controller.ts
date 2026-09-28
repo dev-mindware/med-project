@@ -12,6 +12,7 @@ import { UsersService } from '../users/users.service';
 import { applySupervisorToponymScope, ensureSupervisorCanAccessCreator } from '../common/supervisor-scope';
 import { ImportRowsDto } from '../common/dto/import-rows.dto';
 
+import { AuthRequest } from '../auth/types/auth-request';
 @ApiTags('toponyms')
 @ApiBearerAuth()
 @Controller('toponyms')
@@ -25,7 +26,7 @@ export class ToponymsController {
   @Post()
   @Roles(UserRole.ADMIN, UserRole.SUPERVISOR, UserRole.OPERATOR)
   @ApiOperation({ summary: 'Create a new toponym' })
-  create(@Request() req: any, @Body() createToponymDto: CreateToponymDto) {
+  create(@Request() req: AuthRequest, @Body() createToponymDto: CreateToponymDto) {
     return this.toponymsService.create({
       ...createToponymDto,
       createdBy: { connect: { id: req.user.id } },
@@ -36,13 +37,13 @@ export class ToponymsController {
   @Post('import')
   @Roles(UserRole.ADMIN, UserRole.SUPERVISOR, UserRole.OPERATOR)
   @ApiOperation({ summary: 'Import toponyms in bulk' })
-  import(@Request() req: any, @Body() importDto: ImportRowsDto) {
+  import(@Request() req: AuthRequest, @Body() importDto: ImportRowsDto) {
     return this.toponymsService.importRows(importDto.rows, req.user.id);
   }
 
   @Get()
   @ApiOperation({ summary: 'List all toponyms' })
-  findAll(@Request() req: any, @Query() filters?: LinguisticFilterDto) {
+  findAll(@Request() req: AuthRequest, @Query() filters?: LinguisticFilterDto) {
     if (!filters) {
       filters = req;
       req = { user: { id: '', role: UserRole.ADMIN } };
@@ -74,7 +75,7 @@ export class ToponymsController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Get a specific toponym by ID' })
-  async findOne(@Param('id') id: string, @Request() req: any = { user: { id: '', role: UserRole.ADMIN } }) {
+  async findOne(@Param('id') id: string, @Request() req: AuthRequest = { user: { id: '', role: UserRole.ADMIN } }) {
     const toponym = await this.toponymsService.findOne({ id });
     if (!toponym) throw new NotFoundException();
 
@@ -88,7 +89,7 @@ export class ToponymsController {
   @Patch(':id')
   @Roles(UserRole.ADMIN, UserRole.SUPERVISOR, UserRole.OPERATOR)
   @ApiOperation({ summary: 'Update an existing toponym' })
-  async update(@Param('id') id: string, @Request() req: any, @Body() updateToponymDto: UpdateToponymDto) {
+  async update(@Param('id') id: string, @Request() req: AuthRequest, @Body() updateToponymDto: UpdateToponymDto) {
     const toponym = await this.toponymsService.findOne({ id });
     if (!toponym) throw new NotFoundException();
     
@@ -121,7 +122,7 @@ export class ToponymsController {
   @Delete(':id')
   @Roles(UserRole.ADMIN, UserRole.OPERATOR)
   @ApiOperation({ summary: 'Delete a toponym' })
-  async remove(@Param('id') id: string, @Request() req: any) {
+  async remove(@Param('id') id: string, @Request() req: AuthRequest) {
     const toponym = await this.toponymsService.findOne({ id });
     if (!toponym) throw new NotFoundException();
     
@@ -159,7 +160,7 @@ export class ToponymsController {
   })
   async review(
     @Param('id') id: string, 
-    @Request() req: any,
+    @Request() req: AuthRequest,
     @Body('status') status: ApprovalStatus,
     @Body('reason') reason?: string
   ) {
