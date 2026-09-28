@@ -146,7 +146,11 @@ export class AuthService {
     const user = await this.usersService.findById(payload.sub);
     if (!user) throw new UnauthorizedException('User not found');
 
-    const storedTokens = await this.prisma.refreshToken.findMany({ where: { userId: user.id } });
+    const storedTokens = await this.prisma.refreshToken.findMany({
+      where: { userId: user.id },
+      orderBy: { createdAt: 'desc' },
+      take: 10,
+    });
     let matchedToken: (typeof storedTokens)[number] | undefined;
     for (const storedToken of storedTokens) {
       if (await argon2.verify(storedToken.tokenHash, refreshToken)) {
@@ -196,7 +200,12 @@ export class AuthService {
   }
 
   private getRefreshTokenExpiry(): Date {
-    return new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    const configured = this.configService.get<string>('jwt.refreshExpiresIn') ?? '7d';
+    const match = /^(\\d+)([smhd])$/.exec(configured);
+    if (!match) return new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    const value = Number(match[1]);
+    const multipliers: Record<string, number> = { s: 1000, m: 60_000, h: 3_600_000, d: 86_400_000 };
+    return new Date(Date.now() + value * (multipliers[match[2]] ?? 86_400_000));
   }
 
   async logout(userId: string) {
