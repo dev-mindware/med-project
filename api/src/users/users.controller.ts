@@ -13,6 +13,19 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 @ApiTags('users')
 @ApiBearerAuth()
 @Controller('users')
+type CreateUserBody = {
+  email: string;
+  password: string;
+  name: string;
+  role?: UserRole;
+  isActive?: boolean;
+  profilePhotoUrl?: string | null;
+  supervisorId?: string | null;
+};
+
+type UpdateUserBody = Partial<Omit<CreateUserBody, 'password'>> & {
+  password?: string;
+};
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
@@ -31,7 +44,7 @@ async findAll(
   // ✅ Se SUPERVISOR, restringir apenas aos seus operadores geridos
   if (currentUser.role === UserRole.SUPERVISOR) {
     const managedOperators = await this.usersService.listManagedOperators(currentUser.id);
-    const managedIds = managedOperators.map((op: any) => op.id);
+    const managedIds = managedOperators.map((op) => op.id);
     where.id = { in: managedIds };
   }
 
@@ -90,12 +103,14 @@ async findAll(
       required: ['email', 'password', 'name'],
     },
   })
-  async create(@Body() createData: any) {
-    if (createData.password) {
-      createData.passwordHash = await argon2.hash(createData.password);
-      delete createData.password;
-    }
-    return this.usersService.create(createData);
+  async create(@Body() createData: CreateUserBody) {
+    const { password, ...userData } = createData;
+    const passwordHash = await argon2.hash(password);
+
+    return this.usersService.create({
+      ...userData,
+      passwordHash,
+    });
   }
 
   @Get(':id')
@@ -124,12 +139,15 @@ async findAll(
       }
     },
   })
-  async update(@Param('id') id: string, @Body() updateData: any) {
-    if (updateData.password) {
-      updateData.passwordHash = await argon2.hash(updateData.password);
-      delete updateData.password;
+  async update(@Param('id') id: string, @Body() updateData: UpdateUserBody) {
+    const { password, ...userData } = updateData;
+    const data: Prisma.UserUpdateInput = { ...userData };
+
+    if (password) {
+      data.passwordHash = await argon2.hash(password);
     }
-    return this.usersService.update(id, updateData);
+
+    return this.usersService.update(id, data);
   }
 
   @Patch(':id/role')
