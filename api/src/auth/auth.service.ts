@@ -5,6 +5,11 @@ import * as argon2 from 'argon2';
 import { UsersService } from '../users/users.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { AppLogger } from '../common/logger/app-logger.service';
+import { UserRole } from '@prisma/client';
+
+type AuthUser = Awaited<ReturnType<UsersService['findById']>>;
+type AuthCredentials = { email: string; name: string; password: string; role?: UserRole };
+type PublicUser = Omit<NonNullable<AuthUser>, 'passwordHash'>;
 
 @Injectable()
 export class AuthService {
@@ -16,7 +21,7 @@ export class AuthService {
     private logger: AppLogger,
   ) {}
 
-  async validateUser(email: string, pass: string): Promise<any> {
+  async validateUser(email: string, pass: string): Promise<PublicUser | null> {
     const user = await this.usersService.findByEmail(email);
     if (user && (await argon2.verify(user.passwordHash, pass))) {
       const { passwordHash, ...result } = user;
@@ -25,7 +30,7 @@ export class AuthService {
     return null;
   }
 
-  async register(data: any) {
+  async register(data: AuthCredentials): Promise<PublicUser> {
     const passwordHash = await argon2.hash(data.password);
     const user = await this.usersService.create({
       email: data.email,
@@ -37,7 +42,7 @@ export class AuthService {
     return result;
   }
 
-  async login(user: any) {
+  async login(user: NonNullable<AuthUser>) {
     const payload = { email: user.email, sub: user.id, role: user.role };
     
     const accessToken = await this.jwtService.signAsync(payload, {
@@ -129,7 +134,7 @@ export class AuthService {
     let userId: string;
     try {
       const payload = await this.jwtService.verifyAsync(refreshToken, {
-        secret: this.configService.get('JWT_REFRESH_SECRET'),
+        secret: this.configService.getOrThrow<string>('jwt.refreshSecret'),
       });
       userId = payload.sub;
     } catch (error) {
@@ -167,7 +172,7 @@ export class AuthService {
     });
   }
 
-  private toPublicUser(user: any) {
+  private toPublicUser(user: NonNullable<AuthUser>): PublicUser {
     const { passwordHash, ...publicUser } = user;
     return publicUser;
   }
