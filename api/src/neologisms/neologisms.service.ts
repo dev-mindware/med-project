@@ -35,7 +35,7 @@ export class NeologismsService {
         continue;
       }
 
-      const data = validation.data as CreateNeologismDto;
+      const data = validation.data;
       const key = importKey(data.entry);
 
       if (seen.has(key)) {
