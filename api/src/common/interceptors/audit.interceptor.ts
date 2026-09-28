@@ -635,5 +635,4 @@ export class AuditInterceptor implements NestInterceptor {
     };
     return delegates[name];
   }
-  }
 }
