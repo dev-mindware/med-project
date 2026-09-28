@@ -29,7 +29,7 @@ async function bootstrap() {
   );
 
   app.enableCors({
-    origin: (config.get<string>('app.frontendUrls') ?? []).length > 0 ? config.get<string[]>('app.frontendUrls') : false,
+    origin: (config.get<string[]>('app.frontendUrls') ?? []).length > 0 ? config.get<string[]>('app.frontendUrls') : false,
     methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-Id'],
     credentials: true,
