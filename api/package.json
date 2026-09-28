@@ -25,7 +25,7 @@
     "format:check": "prettier --check \"src/**/*.ts\" \"test/**/*.ts\"",
     "typecheck": "tsc --noEmit",
     "prisma:validate": "prisma validate",
-    "verify": "pnpm run lint && pnpm run format:check && pnpm run typecheck && pnpm run prisma:validate && pnpm test -- --runInBand"
+    "verify": "pnpm lint && pnpm format:check && pnpm typecheck && pnpm prisma:validate && pnpm test -- --runInBand"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1045.0",
