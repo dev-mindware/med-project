@@ -1,4 +1,5 @@
 import { ConflictException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { User } from '@prisma/client';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as argon2 from 'argon2';
@@ -16,19 +17,20 @@ export class AuthService {
     private logger: AppLogger,
   ) {}
 
-  async validateUser(email: string, pass: string): Promise<any> {
-    const user = await this.usersService.findByEmail(email);
-    if (user && (await argon2.verify(user.passwordHash, pass))) {
-      const { passwordHash, ...result } = user;
+  async validateUser(email: string, pass: string): Promise<Omit<User, 'passwordHash'> | null> {
+    const normalizedEmail = email.trim().toLowerCase();
+    const user = await this.usersService.findByEmail(normalizedEmail);
+    if (user && user.isActive && (await argon2.verify(user.passwordHash, pass))) {
+      const { passwordHash: _passwordHash, ...result } = user;
       return result;
     }
     return null;
   }
 
-  async register(data: any) {
+  async register(data: { email: string; name: string; password: string; role?: User['role'] }) {
     const passwordHash = await argon2.hash(data.password);
     const user = await this.usersService.create({
-      email: data.email,
+      email: data.email.trim().toLowerCase(),
       name: data.name,
       passwordHash,
       role: data.role || 'OPERATOR',
@@ -37,7 +39,7 @@ export class AuthService {
     return result;
   }
 
-  async login(user: any) {
+  async login(user: Omit<User, 'passwordHash'>) {
     const payload = { email: user.email, sub: user.id, role: user.role };
     
     const accessToken = await this.jwtService.signAsync(payload, {
@@ -167,7 +169,7 @@ export class AuthService {
     });
   }
 
-  private toPublicUser(user: any) {
+  private toPublicUser(user: User) {
     const { passwordHash, ...publicUser } = user;
     return publicUser;
   }
