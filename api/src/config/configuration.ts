@@ -26,5 +26,6 @@ export default () => ({
     mistralOcrModel: process.env.MISTRAL_OCR_MODEL ?? 'mistral-ocr-latest',
     vocabularyChunkWords: Number.parseInt(process.env.VOCABULARY_CHUNK_WORDS ?? '2200', 10),
     vocabularyMaxFileMb: Number.parseInt(process.env.VOCABULARY_MAX_FILE_MB ?? '20', 10),
+    mediaMaxFileMb: Number.parseInt(process.env.MEDIA_MAX_FILE_MB ?? '10', 10),
   },
 });
