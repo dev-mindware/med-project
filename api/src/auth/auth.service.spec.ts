@@ -32,14 +32,17 @@ const mockJwtService = {
 };
 
 const mockConfigService = {
-  get: jest.fn().mockReturnValue('mock-secret'),
+  get: jest.fn((key: string) => key.includes('ExpiresIn') ? '7d' : 'mock-secret'),
+  getOrThrow: jest.fn((key: string) => key.includes('ExpiresIn') ? '7d' : 'mock-secret'),
 };
 
 const mockPrismaService = {
   refreshToken: {
     deleteMany: jest.fn().mockResolvedValue({ count: 1 }),
+    updateMany: jest.fn().mockResolvedValue({ count: 1 }),
+    update: jest.fn().mockResolvedValue({ id: 'rt-1' }),
     create: jest.fn().mockResolvedValue({ id: 'rt-1' }),
-    findMany: jest.fn().mockResolvedValue([{ tokenHash: 'hashed_rt' }]),
+    findMany: jest.fn().mockResolvedValue([{ id: 'rt-1', tokenHash: 'hashed_rt', revokedAt: null, expiresAt: new Date(Date.now() + 86400000) }]),
   },
 };
 
@@ -117,7 +120,7 @@ describe('AuthService', () => {
   describe('login()', () => {
     it('should return access_token, refresh_token and user info', async () => {
       mockJwtService.signAsync.mockResolvedValue('signed.token');
-      mockPrismaService.refreshToken.deleteMany.mockResolvedValueOnce({ count: 0 });
+      mockPrismaService.refreshToken.updateMany.mockResolvedValueOnce({ count: 0 });
       mockPrismaService.refreshToken.create.mockResolvedValueOnce({});
       (argon2.hash as jest.Mock).mockResolvedValueOnce('hash');
 
@@ -131,7 +134,7 @@ describe('AuthService', () => {
 
     it('should call jwtService.signAsync twice (access + refresh)', async () => {
       (argon2.hash as jest.Mock).mockResolvedValue('hash');
-      mockPrismaService.refreshToken.deleteMany.mockResolvedValue({ count: 0 });
+      mockPrismaService.refreshToken.updateMany.mockResolvedValue({ count: 0 });
       mockPrismaService.refreshToken.create.mockResolvedValue({});
       await service.login(mockUser);
       expect(mockJwtService.signAsync).toHaveBeenCalledTimes(2);
@@ -150,6 +153,23 @@ describe('AuthService', () => {
 
   // ─── REFRESH TOKENS ────────────────────────────────────────────────────────
   describe('refreshTokens()', () => {
+    it('should rotate an active refresh token', async () => {
+      (argon2.verify as jest.Mock).mockResolvedValueOnce(true);
+      (argon2.hash as jest.Mock).mockResolvedValueOnce('next-hash');
+      const result = await service.refreshTokens('token');
+      expect(result).toHaveProperty('access_token');
+      expect(result).toHaveProperty('refresh_token');
+      expect(mockPrismaService.refreshToken.update).toHaveBeenCalled();
+      expect(mockPrismaService.refreshToken.create).toHaveBeenCalled();
+    });
+
+    it('should reject a refresh token reuse', async () => {
+      (argon2.verify as jest.Mock).mockResolvedValueOnce(true);
+      mockPrismaService.refreshToken.findMany.mockResolvedValueOnce([{ id: 'rt-1', tokenHash: 'hashed_rt', revokedAt: new Date(), expiresAt: new Date(Date.now() + 86400000) }]);
+      await expect(service.refreshTokens('token')).rejects.toThrow(UnauthorizedException);
+      expect(mockPrismaService.refreshToken.updateMany).toHaveBeenCalled();
+    });
+
     it('should throw UnauthorizedException if user not found', async () => {
       mockJwtService.verifyAsync.mockResolvedValueOnce({ sub: 'ghost-id' });
       mockUsersService.findById.mockResolvedValueOnce(null);
