@@ -405,13 +405,23 @@ export class VonalpService {
   }
 
   private async getSource(sourceType: VonalpSourceType, sourceId: string): Promise<SourceRecord> {
-    const config = SOURCE_CONFIG[sourceType];
-    const delegate = (this.prisma as any)[config.delegateName];
-    const source = await delegate.findUnique({
-      where: { id: sourceId },
-      include: { createdBy: { select: { id: true, supervisorId: true } } },
-    });
+    const include = {
+      createdBy: { select: { id: true, supervisorId: true } },
+    } as const;
 
+    switch (sourceType) {
+      case VonalpSourceType.ENTRY:
+        return this.requireSource(await this.prisma.entry.findUnique({ where: { id: sourceId }, include }));
+      case VonalpSourceType.TOPONYM:
+        return this.requireSource(await this.prisma.toponym.findUnique({ where: { id: sourceId }, include }));
+      case VonalpSourceType.ANTHROPONYM:
+        return this.requireSource(await this.prisma.anthroponym.findUnique({ where: { id: sourceId }, include }));
+      case VonalpSourceType.FOREIGNISM:
+        return this.requireSource(await this.prisma.foreignism.findUnique({ where: { id: sourceId }, include }));
+    }
+  }
+
+  private requireSource(source: SourceRecord | null): SourceRecord {
     if (!source) {
       throw new NotFoundException('Registo de origem não encontrado');
     }
