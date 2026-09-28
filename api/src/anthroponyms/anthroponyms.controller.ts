@@ -12,6 +12,7 @@ import { UsersService } from '../users/users.service';
 import { applySupervisorAnthroponymScope, ensureSupervisorCanAccessCreator } from '../common/supervisor-scope';
 import { ImportRowsDto } from '../common/dto/import-rows.dto';
 
+import { AuthRequest } from '../auth/types/auth-request';
 @ApiTags('anthroponyms')
 @ApiBearerAuth()
 @Controller('anthroponyms')
@@ -25,7 +26,7 @@ export class AnthroponymsController {
   @Post()
   @Roles(UserRole.ADMIN, UserRole.SUPERVISOR, UserRole.OPERATOR)
   @ApiOperation({ summary: 'Create a new anthroponym' })
-  create(@Request() req: any, @Body() createAnthroponymDto: CreateAnthroponymDto) {
+  create(@Request() req: AuthRequest, @Body() createAnthroponymDto: CreateAnthroponymDto) {
     return this.anthroponymsService.create({
       ...createAnthroponymDto,
       createdBy: { connect: { id: req.user.id } },
@@ -36,13 +37,13 @@ export class AnthroponymsController {
   @Post('import')
   @Roles(UserRole.ADMIN, UserRole.SUPERVISOR, UserRole.OPERATOR)
   @ApiOperation({ summary: 'Import anthroponyms in bulk' })
-  import(@Request() req: any, @Body() importDto: ImportRowsDto) {
+  import(@Request() req: AuthRequest, @Body() importDto: ImportRowsDto) {
     return this.anthroponymsService.importRows(importDto.rows, req.user.id);
   }
 
   @Get()
   @ApiOperation({ summary: 'List all anthroponyms' })
-  findAll(@Request() req: any, @Query() filters?: LinguisticFilterDto) {
+  findAll(@Request() req: AuthRequest, @Query() filters?: LinguisticFilterDto) {
     if (!filters) {
       filters = req;
       req = { user: { id: '', role: UserRole.ADMIN } };
@@ -74,7 +75,7 @@ export class AnthroponymsController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Get a specific anthroponym by ID' })
-  async findOne(@Param('id') id: string, @Request() req: any = { user: { id: '', role: UserRole.ADMIN } }) {
+  async findOne(@Param('id') id: string, @Request() req: AuthRequest = { user: { id: '', role: UserRole.ADMIN } }) {
     const anthroponym = await this.anthroponymsService.findOne({ id });
     if (!anthroponym) throw new NotFoundException();
 
@@ -88,7 +89,7 @@ export class AnthroponymsController {
   @Patch(':id')
   @Roles(UserRole.ADMIN, UserRole.SUPERVISOR, UserRole.OPERATOR)
   @ApiOperation({ summary: 'Update an existing anthroponym' })
-  async update(@Param('id') id: string, @Request() req: any, @Body() updateAnthroponymDto: UpdateAnthroponymDto) {
+  async update(@Param('id') id: string, @Request() req: AuthRequest, @Body() updateAnthroponymDto: UpdateAnthroponymDto) {
     const anthroponym = await this.anthroponymsService.findOne({ id });
     if (!anthroponym) throw new NotFoundException();
     
@@ -121,7 +122,7 @@ export class AnthroponymsController {
   @Delete(':id')
   @Roles(UserRole.ADMIN, UserRole.OPERATOR)
   @ApiOperation({ summary: 'Delete an anthroponym' })
-  async remove(@Param('id') id: string, @Request() req: any) {
+  async remove(@Param('id') id: string, @Request() req: AuthRequest) {
     const anthroponym = await this.anthroponymsService.findOne({ id });
     if (!anthroponym) throw new NotFoundException();
     
@@ -159,7 +160,7 @@ export class AnthroponymsController {
   })
   async review(
     @Param('id') id: string, 
-    @Request() req: any,
+    @Request() req: AuthRequest,
     @Body('status') status: ApprovalStatus,
     @Body('reason') reason?: string
   ) {
