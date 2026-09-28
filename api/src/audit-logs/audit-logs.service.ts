@@ -154,7 +154,7 @@ export class AuditLogsService {
     return Buffer.from(pdf, 'latin1');
   }
 
-  private buildDescription(log: any) {
+  private buildDescription(log: AuditLog & { actor?: { name: string | null } | null }) {
     const actor = log.actor?.name || 'Sistema';
     return `${actor} executou ${this.translateAction(log.action).toLowerCase()} em ${this.translateEntity(log.entity)}.`;
   }
