@@ -6,6 +6,7 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '@prisma/client';
 import { DashboardStatsDto } from './dto/dashboard-stats.dto';
+import type { AuthRequest } from '../auth/types/auth-request';
 
 @ApiTags('stats')
 @ApiBearerAuth()
@@ -25,7 +26,7 @@ export class StatsController {
   @Get('dashboard/me')
   @ApiOperation({ summary: 'Get stats for the current user' })
   @ApiResponse({ status: 200, type: DashboardStatsDto })
-  getMeDashboard(@Request() req: any) {
+  getMeDashboard(@Request() req: AuthRequest) {
     return this.statsService.getUserDashboard(req.user.id, req.user.role);
   }
 
@@ -34,7 +35,6 @@ export class StatsController {
   @ApiOperation({ summary: 'Get stats for a specific user (Admin/Supervisor)' })
   @ApiResponse({ status: 200, type: DashboardStatsDto })
   getUserDashboard(@Param('userId') userId: string) {
-    // For now returning a simplified view based on OPERATOR role logic
     return this.statsService.getUserDashboard(userId, UserRole.OPERATOR);
   }
 }
