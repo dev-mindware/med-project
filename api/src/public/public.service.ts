@@ -166,6 +166,46 @@ const eventSelect = {
   updatedAt: true,
 } satisfies Prisma.EventSelect;
 
+
+type PublicDelegateName =
+  | 'entry'
+  | 'neologism'
+  | 'toponym'
+  | 'anthroponym'
+  | 'foreignism'
+  | 'event'
+  | 'blogPost';
+
+type PublicWhereInput = {
+  entry: Prisma.EntryWhereInput;
+  neologism: Prisma.NeologismWhereInput;
+  toponym: Prisma.ToponymWhereInput;
+  anthroponym: Prisma.AnthroponymWhereInput;
+  foreignism: Prisma.ForeignismWhereInput;
+  event: Prisma.EventWhereInput;
+  blogPost: Prisma.BlogPostWhereInput;
+};
+
+type PublicSelectInput = {
+  entry: Prisma.EntrySelect;
+  neologism: Prisma.NeologismSelect;
+  toponym: Prisma.ToponymSelect;
+  anthroponym: Prisma.AnthroponymSelect;
+  foreignism: Prisma.ForeignismSelect;
+  event: Prisma.EventSelect;
+  blogPost: Prisma.BlogPostSelect;
+};
+
+type PublicOrderByInput = {
+  entry: Prisma.EntryOrderByWithRelationInput;
+  neologism: Prisma.NeologismOrderByWithRelationInput;
+  toponym: Prisma.ToponymOrderByWithRelationInput;
+  anthroponym: Prisma.AnthroponymOrderByWithRelationInput;
+  foreignism: Prisma.ForeignismOrderByWithRelationInput;
+  event: Prisma.EventOrderByWithRelationInput;
+  blogPost: Prisma.BlogPostOrderByWithRelationInput;
+};
+
 const blogPostSelect = {
   id: true,
   title: true,
@@ -541,17 +581,15 @@ export class PublicService {
     return post;
   }
 
-  private async paginate<
-    DelegateName extends 'entry' | 'neologism' | 'toponym' | 'anthroponym' | 'foreignism' | 'event' | 'blogPost',
-  >(
+  private async paginate<DelegateName extends PublicDelegateName>(
     delegateName: DelegateName,
-    where: any,
-    select: any,
-    orderBy: any,
+    where: PublicWhereInput[DelegateName],
+    select: PublicSelectInput[DelegateName],
+    orderBy: PublicOrderByInput[DelegateName],
     filters: PublicContentFilterDto,
   ) {
     const { page, limit, skip } = this.pagination(filters);
-    const delegate = this.prisma[delegateName] as any;
+    const delegate = this.prisma[delegateName];
 
     const [data, total] = await Promise.all([
       delegate.findMany({ where, select, orderBy, skip, take: limit }),
@@ -570,8 +608,13 @@ export class PublicService {
     return { data, meta: this.meta(items.length, page, limit) };
   }
 
-  private async findApprovedOrThrow(delegateName: 'entry' | 'neologism' | 'toponym' | 'anthroponym' | 'foreignism', where: any, select: any, message: string) {
-    const delegate = this.prisma[delegateName] as any;
+  private async findApprovedOrThrow<DelegateName extends Exclude<PublicDelegateName, 'event' | 'blogPost'>>(
+    delegateName: DelegateName,
+    where: PublicWhereInput[DelegateName],
+    select: PublicSelectInput[DelegateName],
+    message: string,
+  ) {
+    const delegate = this.prisma[delegateName];
     const item = await delegate.findFirst({
       where: { ...where, approvalStatus: ApprovalStatus.APPROVED },
       select,
