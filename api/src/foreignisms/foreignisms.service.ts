@@ -52,7 +52,7 @@ export class ForeignismsService {
         continue;
       }
 
-      const data = validation.data as CreateForeignismDto;
+      const data = validation.data;
       const key = importKey(data.term);
 
       if (seen.has(key)) {
