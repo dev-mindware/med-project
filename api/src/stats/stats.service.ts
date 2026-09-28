@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { UserRole, ApprovalStatus, PostStatus } from '@prisma/client';
+import { UserRole, ApprovalStatus, PostStatus, Prisma } from '@prisma/client';
 
 @Injectable()
 export class StatsService {
@@ -153,7 +153,12 @@ export class StatsService {
     };
   }
 
-  private async countAcrossModules(where: any) {
+  private async countAcrossModules(where: {
+    createdById?: string;
+    approvalStatus?: ApprovalStatus;
+    isVocabulary?: boolean;
+    isVocabularyEP?: boolean;
+  }) {
     const [e, a, t, f, n] = await Promise.all([
       this.prisma.entry.count({ where }),
       this.prisma.anthroponym.count({ where }),
@@ -248,32 +253,38 @@ export class StatsService {
   private async groupContributorsByModule(
     model: 'entry' | 'anthroponym' | 'toponym' | 'foreignism' | 'neologism',
   ): Promise<Array<{ createdById: string | null; _count: { _all: number } }>> {
-    const args = {
-      by: ['createdById'],
-      where: { createdById: { not: null } },
-      _count: { _all: true },
-    };
-
-    let rows: unknown;
     switch (model) {
       case 'entry':
-        rows = await this.prisma.entry.groupBy(args as any);
-        break;
+        return this.prisma.entry.groupBy({
+          by: ['createdById'],
+          where: { createdById: { not: null } },
+          _count: { _all: true },
+        });
       case 'anthroponym':
-        rows = await this.prisma.anthroponym.groupBy(args as any);
-        break;
+        return this.prisma.anthroponym.groupBy({
+          by: ['createdById'],
+          where: { createdById: { not: null } },
+          _count: { _all: true },
+        });
       case 'toponym':
-        rows = await this.prisma.toponym.groupBy(args as any);
-        break;
+        return this.prisma.toponym.groupBy({
+          by: ['createdById'],
+          where: { createdById: { not: null } },
+          _count: { _all: true },
+        });
       case 'foreignism':
-        rows = await this.prisma.foreignism.groupBy(args as any);
-        break;
+        return this.prisma.foreignism.groupBy({
+          by: ['createdById'],
+          where: { createdById: { not: null } },
+          _count: { _all: true },
+        });
       case 'neologism':
-        rows = await this.prisma.neologism.groupBy(args as any);
-        break;
+        return this.prisma.neologism.groupBy({
+          by: ['createdById'],
+          where: { createdById: { not: null } },
+          _count: { _all: true },
+        });
     }
-
-    return rows as Array<{ createdById: string | null; _count: { _all: number } }>;
   }
 
   private buildCharts(contentStats: Awaited<ReturnType<StatsService['getContentStats']>>) {
