@@ -7,6 +7,7 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole, Prisma } from '@prisma/client';
 import { GlobalFilterDto } from '../common/dto/global-filter.dto';
+import type { Request as ExpressRequest } from 'express';
 
 @ApiTags('media')
 @ApiBearerAuth()
@@ -17,7 +18,7 @@ export class MediaController {
 
   @Post('upload')
   @Roles(UserRole.ADMIN, UserRole.SUPERVISOR, UserRole.OPERATOR)
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 10 * 1024 * 1024 } }))
   @ApiConsumes('multipart/form-data')
   @ApiOperation({ summary: 'Upload a file to Cloudflare R2' })
   @ApiBody({
@@ -35,7 +36,7 @@ export class MediaController {
   })
   async uploadFile(
     @UploadedFile() file: Express.Multer.File,
-    @Request() req: any,
+    @Request() req: ExpressRequest & { user: { id: string } },
     @Body('entity') entity?: string,
     @Body('entityId') entityId?: string,
   ) {
@@ -48,7 +49,7 @@ export class MediaController {
   findAll(@Query() filters: GlobalFilterDto) {
     const { page = 1, limit = 20, orderBy, orderDirection, search, startDate, endDate } = filters;
     
-    const where: any = {};
+    const where: Prisma.MediaAssetWhereInput = {};
 
     if (search) {
       where.OR = [
