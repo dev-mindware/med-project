@@ -11,10 +11,14 @@ export type RequestWithContext = Request & {
 export class RequestContextMiddleware implements NestMiddleware {
   use(req: RequestWithContext, res: Response, next: NextFunction) {
     const incomingRequestId = req.get('x-request-id');
-    const requestId = incomingRequestId?.trim() || randomUUID();
+    const requestId = this.isValidRequestId(incomingRequestId) ? incomingRequestId!.trim() : randomUUID();
 
     req.requestId = requestId;
     res.setHeader('x-request-id', requestId);
     next();
+  }
+
+  private isValidRequestId(value?: string): boolean {
+    return typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value.trim());
   }
 }
