@@ -11,6 +11,7 @@ import { UpdateBlogPostDto } from './dto/update-blog-post.dto';
 import { BlogPostsFilterDto } from './dto/blog-posts-filter.dto';
 import { GlobalFilterDto } from '../common/dto/global-filter.dto';
 
+import { AuthRequest } from '../auth/types/auth-request';
 @ApiTags('blog')
 @ApiBearerAuth()
 @Controller('blog-posts')
@@ -21,7 +22,7 @@ export class BlogController {
   @Post()
   @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Create a new blog post' })
-  create(@Request() req: any, @Body() createDto: CreateBlogPostDto) {
+  create(@Request() req: AuthRequest, @Body() createDto: CreateBlogPostDto) {
     return this.blogService.create({
       ...createDto,
       author: { connect: { id: req.user.id } },
@@ -31,7 +32,7 @@ export class BlogController {
   @Public()
   @Get()
   @ApiOperation({ summary: 'List blog posts (Public see only PUBLISHED, Admin see all)' })
-  findAll(@Request() req: any, @Query() filters: BlogPostsFilterDto) {
+  findAll(@Request() req: AuthRequest, @Query() filters: BlogPostsFilterDto) {
     const { page = 1, limit = 20, orderBy, orderDirection, category, status, search, startDate, endDate } = filters;
     const where: Prisma.BlogPostWhereInput = {};
   
@@ -69,7 +70,7 @@ export class BlogController {
   @Public()
   @Get(':id')
   @ApiOperation({ summary: 'Get a specific blog post by ID' })
-  async findOne(@Request() req: any, @Param('id') id: string) {
+  async findOne(@Request() req: AuthRequest, @Param('id') id: string) {
     const post = await this.blogService.findOne(id);
     if (!post) throw new NotFoundException();
 
