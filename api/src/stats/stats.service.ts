@@ -256,31 +256,31 @@ export class StatsService {
     switch (model) {
       case 'entry':
         return this.prisma.entry.groupBy({
-          by: ['createdById'],
+          by: ['createdById'] as ['createdById'],
           where: { createdById: { not: null } },
           _count: { _all: true },
         });
       case 'anthroponym':
         return this.prisma.anthroponym.groupBy({
-          by: ['createdById'],
+          by: ['createdById'] as ['createdById'],
           where: { createdById: { not: null } },
           _count: { _all: true },
         });
       case 'toponym':
         return this.prisma.toponym.groupBy({
-          by: ['createdById'],
+          by: ['createdById'] as ['createdById'],
           where: { createdById: { not: null } },
           _count: { _all: true },
         });
       case 'foreignism':
         return this.prisma.foreignism.groupBy({
-          by: ['createdById'],
+          by: ['createdById'] as ['createdById'],
           where: { createdById: { not: null } },
           _count: { _all: true },
         });
       case 'neologism':
         return this.prisma.neologism.groupBy({
-          by: ['createdById'],
+          by: ['createdById'] as ['createdById'],
           where: { createdById: { not: null } },
           _count: { _all: true },
         });
