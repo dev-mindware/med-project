@@ -12,6 +12,7 @@ import { UsersService } from '../users/users.service';
 import { applySupervisorForeignismScope, ensureSupervisorCanAccessCreator } from '../common/supervisor-scope';
 import { ImportRowsDto } from '../common/dto/import-rows.dto';
 
+import { AuthRequest } from '../auth/types/auth-request';
 @ApiTags('foreignisms')
 @ApiBearerAuth()
 @Controller('foreignisms')
@@ -25,7 +26,7 @@ export class ForeignismsController {
   @Post()
   @Roles(UserRole.ADMIN, UserRole.SUPERVISOR, UserRole.OPERATOR)
   @ApiOperation({ summary: 'Create a new foreignism' })
-  create(@Request() req: any, @Body() createForeignismDto: CreateForeignismDto) {
+  create(@Request() req: AuthRequest, @Body() createForeignismDto: CreateForeignismDto) {
     return this.foreignismsService.create({
       ...createForeignismDto,
       createdBy: { connect: { id: req.user.id } },
@@ -36,13 +37,13 @@ export class ForeignismsController {
   @Post('import')
   @Roles(UserRole.ADMIN, UserRole.SUPERVISOR, UserRole.OPERATOR)
   @ApiOperation({ summary: 'Import foreignisms in bulk' })
-  import(@Request() req: any, @Body() importDto: ImportRowsDto) {
+  import(@Request() req: AuthRequest, @Body() importDto: ImportRowsDto) {
     return this.foreignismsService.importRows(importDto.rows, req.user.id);
   }
 
   @Get()
   @ApiOperation({ summary: 'List all foreignisms' })
-  findAll(@Request() req: any, @Query() filters?: LinguisticFilterDto) {
+  findAll(@Request() req: AuthRequest, @Query() filters?: LinguisticFilterDto) {
     if (!filters) {
       filters = req;
       req = { user: { id: '', role: UserRole.ADMIN } };
@@ -74,7 +75,7 @@ export class ForeignismsController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Get a specific foreignism by ID' })
-  async findOne(@Param('id') id: string, @Request() req: any = { user: { id: '', role: UserRole.ADMIN } }) {
+  async findOne(@Param('id') id: string, @Request() req: AuthRequest = { user: { id: '', role: UserRole.ADMIN } }) {
     const foreignism = await this.foreignismsService.findOne({ id });
     if (!foreignism) throw new NotFoundException();
 
@@ -88,7 +89,7 @@ export class ForeignismsController {
   @Patch(':id')
   @Roles(UserRole.ADMIN, UserRole.SUPERVISOR, UserRole.OPERATOR)
   @ApiOperation({ summary: 'Update an existing foreignism' })
-  async update(@Param('id') id: string, @Request() req: any, @Body() updateForeignismDto: UpdateForeignismDto) {
+  async update(@Param('id') id: string, @Request() req: AuthRequest, @Body() updateForeignismDto: UpdateForeignismDto) {
     const foreignism = await this.foreignismsService.findOne({ id });
     if (!foreignism) throw new NotFoundException();
     
@@ -121,7 +122,7 @@ export class ForeignismsController {
   @Delete(':id')
   @Roles(UserRole.ADMIN, UserRole.OPERATOR)
   @ApiOperation({ summary: 'Delete a foreignism' })
-  async remove(@Param('id') id: string, @Request() req: any) {
+  async remove(@Param('id') id: string, @Request() req: AuthRequest) {
     const foreignism = await this.foreignismsService.findOne({ id });
     if (!foreignism) throw new NotFoundException();
     
@@ -159,7 +160,7 @@ export class ForeignismsController {
   })
   async review(
     @Param('id') id: string, 
-    @Request() req: any,
+    @Request() req: AuthRequest,
     @Body('status') status: ApprovalStatus,
     @Body('reason') reason?: string
   ) {
