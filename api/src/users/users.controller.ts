@@ -10,9 +10,6 @@ import { UserFilterDto } from './dto/user-filter.dto';
 import { AssignSupervisorOperatorsDto } from './dto/assign-supervisor-operators.dto';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
-@ApiTags('users')
-@ApiBearerAuth()
-@Controller('users')
 type CreateUserBody = {
   email: string;
   password: string;
@@ -26,6 +23,10 @@ type CreateUserBody = {
 type UpdateUserBody = Partial<Omit<CreateUserBody, 'password'>> & {
   password?: string;
 };
+
+@ApiTags('users')
+@ApiBearerAuth()
+@Controller('users')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
