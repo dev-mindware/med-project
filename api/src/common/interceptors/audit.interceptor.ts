@@ -34,7 +34,7 @@ type ActorSnapshot = {
 type ContentSnapshot = {
   id: string;
   createdById?: string | null;
-  approvalStatus?: ApprovalStatus | string | null;
+  approvalStatus?: ApprovalStatus | null;
   createdBy?: ActorSnapshot | null;
   [key: string]: unknown;
 };
@@ -131,50 +131,30 @@ export class AuditInterceptor implements NestInterceptor {
       : Promise.resolve(null);
 
     return next.handle().pipe(
-      tap(async (data) => {
+      tap((data) => {
         if (!shouldAudit) return;
 
-        const oldValues = await oldValuesPromise;
-        const newValues = method === 'DELETE' ? null : this.sanitize(data?.id ? data : body);
-        const persistedEntityId = data?.id || entityId;
-
-        await this.createAuditLog({
-          actorId: user?.id,
-          actorRole: user?.role,
-          action: actionName,
-          entity: entityName,
-          entityId: persistedEntityId,
-          oldValues,
-          newValues,
-          ipAddress: ip,
+        void this.handleSuccessfulAudit({
+          data,
+          oldValuesPromise,
+          method,
+          body,
+          entityId,
+          actionName,
+          entityName,
+          user,
+          ip,
           userAgent,
-          status: 'SUCCESS',
-          metadata: {
-            method,
-            url,
-            path,
-            route: route?.path,
-            params,
-            query,
-            requestId,
-            requestBody: sanitizedBody,
-            statusCode: response?.statusCode,
-            changedFields: this.getChangedFields(oldValues, sanitizedBody),
-          },
+          url,
+          path,
+          route,
+          params,
+          query,
+          requestId,
+          sanitizedBody,
+          response,
         });
 
-        await this.createNotificationsFromAudit({
-          actorId: user?.id,
-          actorRole: user?.role,
-          action: actionName,
-          entity: entityName,
-          entityId: persistedEntityId,
-          path,
-          oldValues,
-          newValues,
-          result: this.sanitize(data),
-        });
-      }),
       catchError((error) => {
         if (!shouldAudit) return throwError(() => error);
 
@@ -225,6 +205,74 @@ export class AuditInterceptor implements NestInterceptor {
         return throwError(() => error);
       }),
     );
+  }
+
+
+  private async handleSuccessfulAudit(params: {
+    data: unknown;
+    oldValuesPromise: Promise<Record<string, unknown> | null>;
+    method: string;
+    body: unknown;
+    entityId: string | null;
+    actionName: string;
+    entityName: string;
+    user?: { id?: string; role?: UserRole };
+    ip?: string;
+    userAgent?: string;
+    url: string;
+    path: string;
+    route?: { path?: string };
+    params: Record<string, unknown>;
+    query: Record<string, unknown>;
+    requestId?: string;
+    sanitizedBody: Record<string, unknown> | null;
+    response?: { statusCode?: number };
+  }) {
+    const oldValues = await params.oldValuesPromise;
+    const dataRecord = params.data && typeof params.data === 'object'
+      ? params.data as Record<string, unknown>
+      : null;
+    const newValues = params.method === 'DELETE'
+      ? null
+      : this.sanitize(dataRecord?.id ? params.data : params.body);
+    const persistedEntityId = typeof dataRecord?.id === 'string' ? dataRecord.id : params.entityId;
+
+    await this.createAuditLog({
+      actorId: params.user?.id,
+      actorRole: params.user?.role,
+      action: params.actionName,
+      entity: params.entityName,
+      entityId: persistedEntityId,
+      oldValues,
+      newValues,
+      ipAddress: params.ip,
+      userAgent: params.userAgent,
+      status: 'SUCCESS',
+      metadata: {
+        method: params.method,
+        url: params.url,
+        path: params.path,
+        route: params.route?.path,
+        params: params.params,
+        query: params.query,
+        requestId: params.requestId,
+        requestBody: params.sanitizedBody,
+        statusCode: params.response?.statusCode,
+        changedFields: this.getChangedFields(oldValues, params.sanitizedBody),
+      },
+    });
+
+    await this.createNotificationsFromAudit({
+      actorId: params.user?.id,
+      actorRole: params.user?.role,
+      action: params.actionName,
+      entity: params.entityName,
+      entityId: persistedEntityId,
+      path: params.path,
+      oldValues,
+      newValues,
+      result: this.sanitize(params.data),
+    });
   }
 
   private getActionName(method: string, url: string) {
