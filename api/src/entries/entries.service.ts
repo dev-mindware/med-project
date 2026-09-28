@@ -38,7 +38,7 @@ export class EntriesService {
         continue;
       }
 
-      const data = validation.data as CreateEntryDto;
+      const data = validation.data;
       const key = importKey(data.entry);
 
       if (seen.has(key)) {
