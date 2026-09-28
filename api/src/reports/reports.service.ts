@@ -2,8 +2,11 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import * as ExcelJS from 'exceljs';
 import { NotificationsService } from '../notifications/notifications.service';
+import { Prisma } from '@prisma/client';
 
 type ReportFormat = 'xlsx' | 'pdf';
+
+type ReportValue = string | number | boolean | Date | null;
 
 type ReportColumn = {
   header: string;
@@ -16,7 +19,7 @@ type ReportDefinition = {
   title: string;
   subtitle: string;
   columns: ReportColumn[];
-  rows: Record<string, any>[];
+  rows: Record<string, ReportValue>[];
 };
 
 type GeneratedReport = {
@@ -296,7 +299,7 @@ export class ReportsService {
 
   private buildPdfPage(params: {
     report: ReportDefinition;
-    rows: Record<string, any>[];
+    rows: Record<string, ReportValue>[];
     pageIndex: number;
     pageCount: number;
     generatedAt: Date;
@@ -455,7 +458,12 @@ export class ReportsService {
     return { SUCCESS: 'Sucesso', FAILED: 'Falhou', COMPLETED: 'Concluído' }[status] || status;
   }
 
-  async getHistory(params: { skip?: number; take?: number; orderBy?: any; where?: any }) {
+  async getHistory(params: {
+    skip?: number;
+    take?: number;
+    orderBy?: Prisma.ReportOrderByWithRelationInput;
+    where?: Prisma.ReportWhereInput;
+  }) {
     return this.prisma.report.findMany({
       ...params,
       include: { generatedBy: { select: { name: true, email: true } } },
