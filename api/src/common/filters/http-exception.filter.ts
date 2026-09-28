@@ -41,7 +41,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
       meta: { response: message },
     };
 
-    if (status >= HttpStatus.INTERNAL_SERVER_ERROR) {
+    if (status >= 500) {
       this.logger.error('Request failed', logPayload);
     } else {
       this.logger.warn('Request rejected', logPayload);
