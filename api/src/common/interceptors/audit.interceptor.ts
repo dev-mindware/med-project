@@ -11,6 +11,7 @@ import { ApprovalStatus, UserRole } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AppLogger } from '../logger/app-logger.service';
 import { maskSensitive } from '../logger/log-sanitizer';
+import type { Prisma } from '@prisma/client';
 
 type ContentEntityConfig = {
   delegateName: string;
@@ -35,7 +36,7 @@ type ContentSnapshot = {
   createdById?: string | null;
   approvalStatus?: ApprovalStatus | string | null;
   createdBy?: ActorSnapshot | null;
-  [key: string]: any;
+  [key: string]: unknown;
 };
 
 type NotificationDraft = {
@@ -54,9 +55,9 @@ type AuditNotificationData = {
   entity: string;
   entityId?: string | null;
   path: string;
-  oldValues: any;
-  newValues: any;
-  result: any;
+  oldValues: Record<string, unknown> | null;
+  newValues: Record<string, unknown> | null;
+  result: unknown;
 };
 
 const CONTENT_ENTITIES: Record<string, ContentEntityConfig> = {
@@ -114,9 +115,9 @@ export class AuditInterceptor implements NestInterceptor {
     private logger: AppLogger,
   ) {}
 
-  intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
-    const request = context.switchToHttp().getRequest();
-    const response = context.switchToHttp().getResponse();
+  intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
+    const request = context.switchToHttp().getRequest<Record<string, unknown> & { get: (name: string) => string | undefined }>();
+    const response = context.switchToHttp().getResponse<{ statusCode?: number }>();
     const { method, url, user, body, ip, params, query, route, requestId } = request;
     const userAgent = request.get('user-agent');
     const path = url.split('?')[0];
@@ -258,8 +259,8 @@ export class AuditInterceptor implements NestInterceptor {
   private async getOldValues(delegateName: string | undefined, entityId: string | null, method: string) {
     if (!delegateName || !entityId || !['PUT', 'PATCH', 'DELETE'].includes(method)) return null;
 
-    const delegate = (this.prisma as any)[delegateName];
-    if (!delegate?.findUnique) return null;
+    const delegate = this.getDelegate(delegateName);
+    if (!delegate) return null;
 
     try {
       return this.sanitize(await delegate.findUnique({ where: { id: entityId } }));
@@ -274,16 +275,17 @@ export class AuditInterceptor implements NestInterceptor {
     }
   }
 
-  private sanitize(value: any): any {
-    return maskSensitive(value) ?? null;
+  private sanitize(value: unknown): Record<string, unknown> | null {
+    const masked = maskSensitive(value);
+    return masked && typeof masked === 'object' && !Array.isArray(masked) ? masked as Record<string, unknown> : null;
   }
 
-  private getChangedFields(oldValues: any, newValues: any) {
+  private getChangedFields(oldValues: Record<string, unknown> | null, newValues: Record<string, unknown> | null) {
     if (!oldValues || !newValues || typeof newValues !== 'object') return [];
     return Object.keys(newValues).filter((key) => JSON.stringify(oldValues[key]) !== JSON.stringify(newValues[key]));
   }
 
-  private async createAuditLog(data: any) {
+  private async createAuditLog(data: Prisma.AuditLogCreateArgs['data']) {
     try {
       await this.prisma.auditLog.create({ data });
     } catch (error) {
@@ -517,8 +519,8 @@ export class AuditInterceptor implements NestInterceptor {
     const config = CONTENT_ENTITIES[entity];
     if (!config) return null;
 
-    const delegate = (this.prisma as any)[config.delegateName];
-    if (!delegate?.findUnique) return null;
+    const delegate = this.getDelegate(config.delegateName);
+    if (!delegate) return null;
 
     return delegate.findUnique({
       where: { id: entityId },
@@ -576,13 +578,13 @@ export class AuditInterceptor implements NestInterceptor {
     return path.split('/').filter(Boolean).includes('review');
   }
 
-  private getItemLabel(config: ContentEntityConfig, value: any) {
+  private getItemLabel(config: ContentEntityConfig, value: Record<string, unknown> | null) {
     const label = value?.[config.itemKey];
     if (typeof label === 'string' && label.trim()) return label.trim();
     return `registo de ${config.label}`;
   }
 
-  private getReviewReason(value: any) {
+  private getReviewReason(value: Record<string, unknown> | null) {
     const reason = value?.rejectionReason || value?.correctionNotes;
     return typeof reason === 'string' && reason.trim() ? reason.trim() : '';
   }
@@ -617,3 +619,19 @@ export class AuditInterceptor implements NestInterceptor {
     return labels[field] || field;
   }
 }
+
+  private getDelegate(name: string) {
+    const delegates: Record<string, { findUnique: (args: { where: { id: string }; select?: Record<string, unknown> }) => Promise<unknown> }> = {
+      entry: this.prisma.entry,
+      neologism: this.prisma.neologism,
+      toponym: this.prisma.toponym,
+      anthroponym: this.prisma.anthroponym,
+      foreignism: this.prisma.foreignism,
+      blogPost: this.prisma.blogPost,
+      event: this.prisma.event,
+      eventRegistration: this.prisma.eventRegistration,
+      user: this.prisma.user,
+      mediaAsset: this.prisma.mediaAsset,
+    };
+    return delegates[name];
+  }
