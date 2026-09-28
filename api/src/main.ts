@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { apiReference } from '@scalar/nestjs-api-reference';
 import { ValidationPipe } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/filters/http-exception.filter';
 import { AppLogger } from './common/logger/app-logger.service';
@@ -10,6 +11,7 @@ import helmet from 'helmet';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const logger = app.get(AppLogger);
+  const configService = app.get(ConfigService);
 
   app.use(
     helmet({
@@ -26,8 +28,13 @@ async function bootstrap() {
     }),
   );
 
+  const allowedOrigins = (configService.get<string>('FRONTEND_URLS') || configService.get<string>('FRONTEND_URL') || '')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
   app.enableCors({
-    origin: process.env.FRONTEND_URL || '*',
+    origin: allowedOrigins.length > 0 ? allowedOrigins : false,
     methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-Id'],
     credentials: true,
@@ -67,7 +74,7 @@ async function bootstrap() {
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
-  app.getHttpAdapter().getInstance().get('/api/openapi.json', (_req: any, res: any) => res.json(document));
+  app.getHttpAdapter().getInstance().get('/api/openapi.json', (_req: unknown, res: { json: (value: unknown) => unknown }) => res.json(document));
   app.use(
     '/api/reference',
     apiReference({
