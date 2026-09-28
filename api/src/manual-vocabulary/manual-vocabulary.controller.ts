@@ -22,7 +22,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { memoryStorage } from 'multer';
-import type { Response } from 'express';
+import type { Request, Response } from 'express';
 import { UserRole } from '@prisma/client';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -61,7 +61,7 @@ export class ManualVocabularyController {
       }),
     )
     file: Express.Multer.File,
-    @Request() _req: any,
+    @Request() _req: Request,
     @Body() _body: Record<string, unknown>,
     @Res() res: Response,
   ) {
@@ -86,7 +86,7 @@ export class ManualVocabularyController {
   }
 
   private validateSize(file: Express.Multer.File) {
-    const maxMb = Number(this.configService.get<string>('VOCABULARY_MAX_FILE_MB') || 50);
+    const maxMb = Number(this.configService.get<number>('ai.vocabularyMaxFileMb') ?? 20);
     const maxBytes = maxMb * 1024 * 1024;
 
     if (file.size > maxBytes) {
