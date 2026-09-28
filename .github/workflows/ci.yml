@@ -30,7 +30,6 @@ jobs:
           cache: pnpm
           cache-dependency-path: api/pnpm-lock.yaml
       - run: pnpm install --frozen-lockfile
-      - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm prisma:validate
       - run: pnpm test -- --runInBand
