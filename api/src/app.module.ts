@@ -1,5 +1,7 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import configuration from './config/configuration';
+import { validateEnv } from './config/env.validation';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { AppController } from './app.controller';
@@ -34,7 +36,12 @@ import { RequestContextMiddleware } from './common/middleware/request-context.mi
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({
+      isGlobal: true,
+      cache: true,
+      load: [configuration],
+      validate: validateEnv,
+    }),
     LoggerModule,
     ThrottlerModule.forRoot([{ ttl: 60000, limit: 300 }]),
     PrismaModule,
