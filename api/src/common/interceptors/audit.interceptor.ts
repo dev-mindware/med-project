@@ -618,7 +618,6 @@ export class AuditInterceptor implements NestInterceptor {
 
     return labels[field] || field;
   }
-}
 
   private getDelegate(name: string) {
     const delegates: Record<string, { findUnique: (args: { where: { id: string }; select?: Record<string, unknown> }) => Promise<unknown> }> = {
@@ -635,3 +634,4 @@ export class AuditInterceptor implements NestInterceptor {
     };
     return delegates[name];
   }
+}
