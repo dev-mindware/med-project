@@ -34,7 +34,23 @@ type SourceRecord = {
   createdById?: string | null;
   approvalStatus?: ApprovalStatus;
   createdBy?: { id: string; supervisorId?: string | null } | null;
-  [key: string]: any;
+  entry?: string | null;
+  pronunciation?: string | null;
+  grammaticalCategory?: string | null;
+  grammaticalSubcategory?: string | null;
+  syllabicDivision?: string | null;
+  etymology?: string | null;
+  definition?: string | null;
+  meaning?: string | null;
+  toponym?: string | null;
+  toponymProvenance?: string | null;
+  toponymHistory?: string | null;
+  name?: string | null;
+  gender?: string | null;
+  term?: string | null;
+  originalLanguage?: string | null;
+  originCountry?: string | null;
+  origin?: string | null;
 };
 
 type VonalpFields = Pick<
@@ -511,10 +527,21 @@ export class VonalpService {
     enabled: boolean,
   ) {
     const config = this.getSourceConfig(sourceType, vocabularyType);
-    await (this.prisma as any)[config.delegateName].update({
-      where: { id: sourceId },
-      data: { [config.vocabularyFlag]: enabled },
-    });
+    const data = { [config.vocabularyFlag]: enabled };
+    switch (config.delegateName) {
+      case 'entry':
+        await this.prisma.entry.update({ where: { id: sourceId }, data });
+        break;
+      case 'toponym':
+        await this.prisma.toponym.update({ where: { id: sourceId }, data });
+        break;
+      case 'anthroponym':
+        await this.prisma.anthroponym.update({ where: { id: sourceId }, data });
+        break;
+      case 'foreignism':
+        await this.prisma.foreignism.update({ where: { id: sourceId }, data });
+        break;
+    }
   }
 
   private getSourceConfig(sourceType: VonalpSourceType, vocabularyType: VonalpVocabularyType): SourceConfig {
