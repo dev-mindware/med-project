@@ -60,7 +60,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
   private extractMessage(payload: unknown) {
     if (typeof payload === 'string') return payload;
     if (payload && typeof payload === 'object') {
-      const message = (payload as Record<string, any>).message;
+      const message = (payload as Record<string, unknown>).message;
       if (Array.isArray(message)) return message.join(', ');
       if (message) return message;
     }
