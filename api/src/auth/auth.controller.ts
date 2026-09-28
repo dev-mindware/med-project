@@ -1,6 +1,20 @@
 import { Controller, Post, UseGuards, Request, Body, Get, Patch } from '@nestjs/common';
+import { IsEmail, IsOptional, IsString, IsUUID, MinLength } from 'class-validator';
+import type { Request as ExpressRequest } from 'express';
+import type { User } from '@prisma/client';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiBody } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
+
+class RegisterDto {
+  @IsString() @MinLength(2) name!: string;
+  @IsEmail() email!: string;
+  @IsString() @MinLength(8) password!: string;
+  @IsOptional() @IsString() role?: User['role'];
+}
+
+class RefreshDto {
+  @IsString() @MinLength(20) refreshToken!: string;
+}
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
@@ -22,7 +36,7 @@ export class AuthController {
       required: ['email', 'password'],
     },
   })
-  async login(@Request() req: any) {
+  async login(@Request() req: ExpressRequest & { user: User }) {
     return this.authService.login(req.user);
   }
 
@@ -40,7 +54,7 @@ export class AuthController {
       required: ['name', 'email', 'password'],
     },
   })
-  async register(@Body() body: Record<string, any>) {
+  async register(@Body() body: RegisterDto) {
     return this.authService.register(body);
   }
 
@@ -55,15 +69,15 @@ export class AuthController {
       required: ['refreshToken'],
     },
   })
-  async refresh(@Body('refreshToken') refreshToken: string) {
-    return this.authService.refreshTokens(refreshToken);
+  async refresh(@Body() body: RefreshDto) {
+    return this.authService.refreshTokens(body.refreshToken);
   }
 
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   @Post('logout')
   @ApiOperation({ summary: 'Logout and invalidate refresh token' })
-  async logout(@Request() req: any) {
+  async logout(@Request() req: ExpressRequest & { user: Pick<User, 'id'> }) {
     return this.authService.logout(req.user.id);
   }
 
@@ -71,7 +85,7 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @Get('profile')
   @ApiOperation({ summary: 'Get current user profile' })
-  getProfile(@Request() req: any) {
+  getProfile(@Request() req: ExpressRequest & { user: Pick<User, 'id'> }) {
     return this.authService.getProfile(req.user.id);
   }
 
@@ -88,7 +102,7 @@ export class AuthController {
       },
     },
   })
-  updateProfile(@Request() req: any, @Body() body: { name?: string; profilePhotoUrl?: string }) {
+  updateProfile(@Request() req: ExpressRequest & { user: Pick<User, 'id'> }, @Body() body: { name?: string; profilePhotoUrl?: string }) {
     return this.authService.updateProfile(req.user.id, body);
   }
 
@@ -105,7 +119,7 @@ export class AuthController {
       required: ['email'],
     },
   })
-  updateEmail(@Request() req: any, @Body('email') email: string) {
+  updateEmail(@Request() req: ExpressRequest & { user: Pick<User, 'id'> }, @Body('email') email: string) {
     return this.authService.updateEmail(req.user.id, email);
   }
 
@@ -123,7 +137,7 @@ export class AuthController {
       required: ['currentPassword', 'newPassword'],
     },
   })
-  updatePassword(@Request() req: any, @Body() body: { currentPassword: string; newPassword: string }) {
+  updatePassword(@Request() req: ExpressRequest & { user: Pick<User, 'id'> }, @Body() body: { currentPassword: string; newPassword: string }) {
     return this.authService.updatePassword(req.user.id, body);
   }
 }

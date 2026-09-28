@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { apiReference } from '@scalar/nestjs-api-reference';
 import { ValidationPipe } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/filters/http-exception.filter';
 import { AppLogger } from './common/logger/app-logger.service';
@@ -9,6 +10,7 @@ import helmet from 'helmet';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  const config = app.get(ConfigService);
   const logger = app.get(AppLogger);
 
   app.use(
@@ -27,7 +29,7 @@ async function bootstrap() {
   );
 
   app.enableCors({
-    origin: process.env.FRONTEND_URL || '*',
+    origin: (config.get<string[]>('app.frontendUrls') ?? []).length > 0 ? config.get<string[]>('app.frontendUrls') : false,
     methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-Id'],
     credentials: true,
@@ -85,7 +87,7 @@ async function bootstrap() {
     },
   });
 
-  await app.listen(process.env.PORT ?? 4000);
+  await app.listen(config.get<number>('app.port') ?? 4000);
   const url = await app.getUrl();
   logger.info('API started', {
     context: 'Bootstrap',

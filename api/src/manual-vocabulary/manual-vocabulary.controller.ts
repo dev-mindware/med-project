@@ -22,7 +22,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { memoryStorage } from 'multer';
-import type { Response } from 'express';
+import type { Request, Response } from 'express';
 import { UserRole } from '@prisma/client';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -41,7 +41,13 @@ export class ManualVocabularyController {
 
   @Post('extract')
   @Roles(UserRole.ADMIN, UserRole.SUPERVISOR, UserRole.OPERATOR)
-  @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
+  @UseInterceptors(FileInterceptor('file', {
+    storage: memoryStorage(),
+    limits: { fileSize: 20 * 1024 * 1024 },
+    fileFilter: (_req, file, callback) => {
+      callback(null, file.mimetype === 'application/pdf');
+    },
+  }))
   @ApiConsumes('multipart/form-data')
   @ApiProduces('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
   @ApiOperation({ summary: 'Extrair vocabulário de um manual PDF e gerar Excel revisável' })
@@ -61,7 +67,7 @@ export class ManualVocabularyController {
       }),
     )
     file: Express.Multer.File,
-    @Request() _req: any,
+    @Request() _req: Request,
     @Body() _body: Record<string, unknown>,
     @Res() res: Response,
   ) {
@@ -81,12 +87,22 @@ export class ManualVocabularyController {
 
   private validatePdf(file: Express.Multer.File) {
     if (file.mimetype !== 'application/pdf') {
-      throw new BadRequestException('Apenas ficheiros PDF sao permitidos');
+      throw new BadRequestException('Apenas ficheiros PDF são permitidos');
+    }
+
+    const signature = file.buffer.subarray(0, 5).toString('ascii');
+    if (signature !== '%PDF-') {
+      throw new BadRequestException('O conteúdo do ficheiro não corresponde a um PDF válido');
+    }
+
+    const eof = file.buffer.lastIndexOf(Buffer.from('%%EOF'));
+    if (eof === -1) {
+      throw new BadRequestException('PDF inválido ou incompleto');
     }
   }
 
   private validateSize(file: Express.Multer.File) {
-    const maxMb = Number(this.configService.get<string>('VOCABULARY_MAX_FILE_MB') || 50);
+    const maxMb = Number(this.configService.get<number>('ai.vocabularyMaxFileMb') ?? 20);
     const maxBytes = maxMb * 1024 * 1024;
 
     if (file.size > maxBytes) {

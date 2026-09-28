@@ -1,6 +1,8 @@
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, PayloadTooLargeException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import type { Response } from 'express';
 import { ManualVocabularyController } from './manual-vocabulary.controller';
+import { ManualVocabularyService } from './manual-vocabulary.service';
 
 describe('ManualVocabularyController', () => {
   let controller: ManualVocabularyController;
@@ -25,21 +27,33 @@ describe('ManualVocabularyController', () => {
     };
 
     controller = new ManualVocabularyController(
-      service as any,
-      { get: jest.fn().mockReturnValue('50') } as unknown as ConfigService,
+      service as unknown as ManualVocabularyService,
+      { get: jest.fn().mockReturnValue(20) } as unknown as ConfigService,
     );
   });
 
   it('rejects non-PDF files', async () => {
     const response = mockResponse();
-    const file = { mimetype: 'image/png', size: 1000 } as Express.Multer.File;
+    const file = { mimetype: 'image/png', size: 1000, buffer: Buffer.from('not-pdf') } as Express.Multer.File;
 
+    await expect(controller.extract(file, {}, {}, response as Response)).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it('rejects a fake PDF with an incorrect signature', async () => {
+    const response = mockResponse();
+    const file = { mimetype: 'application/pdf', size: 1000, buffer: Buffer.from('not-pdf') } as Express.Multer.File;
     await expect(controller.extract(file, {}, {}, response as any)).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it('rejects an oversized PDF', async () => {
+    const response = mockResponse();
+    const file = { mimetype: 'application/pdf', size: 21 * 1024 * 1024, buffer: Buffer.from('%PDF-1.7\nvalid\n%%EOF') } as Express.Multer.File;
+    await expect(controller.extract(file, {}, {}, response as any)).rejects.toBeInstanceOf(PayloadTooLargeException);
   });
 
   it('sets Excel response headers', async () => {
     const response = mockResponse();
-    const file = { mimetype: 'application/pdf', size: 1000 } as Express.Multer.File;
+    const file = { mimetype: 'application/pdf', size: 1000, buffer: Buffer.from('%PDF-1.7\nvalid\n%%EOF') } as Express.Multer.File;
 
     await controller.extract(file, {}, {}, response as any);
 
