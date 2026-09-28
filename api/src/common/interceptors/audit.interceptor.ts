@@ -619,6 +619,7 @@ export class AuditInterceptor implements NestInterceptor {
     return labels[field] || field;
   }
 
+
   private getDelegate(name: string) {
     const delegates: Record<string, { findUnique: (args: { where: { id: string }; select?: Record<string, unknown> }) => Promise<unknown> }> = {
       entry: this.prisma.entry,
@@ -633,5 +634,6 @@ export class AuditInterceptor implements NestInterceptor {
       mediaAsset: this.prisma.mediaAsset,
     };
     return delegates[name];
+  }
   }
 }
