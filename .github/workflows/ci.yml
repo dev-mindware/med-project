@@ -14,27 +14,66 @@ concurrency:
 
 jobs:
   api:
-    name: API quality
+    name: API
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: api
     steps:
       - uses: actions/checkout@v4
-
       - uses: pnpm/action-setup@v4
         with:
           package_json_file: api/package.json
-
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: pnpm
           cache-dependency-path: api/pnpm-lock.yaml
-
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm prisma:validate
       - run: pnpm test -- --runInBand
+      - run: pnpm build
+
+  back-office:
+    name: Back-office
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: back-office
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: back-office/package.json
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: back-office/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm build
+
+  public-platform:
+    name: Public platform
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: public-platform
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: public-platform/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm typecheck
       - run: pnpm build
