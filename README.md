@@ -1,46 +1,33 @@
 # MED Project
 
-Monorepo da plataforma de gestao linguistica, cultural e documental. O projecto
-esta dividido em tres aplicacoes:
+Monorepo da plataforma de gestão linguística, cultural e documental. O projecto está dividido em três aplicações:
 
-- `api`: backend NestJS com Prisma, PostgreSQL, autenticacao, RBAC, auditoria,
-  gestao de conteudos, eventos, media e modulos linguisticos.
-- `back-office`: painel administrativo Next.js para operadores, supervisores e
-  administradores.
-- `public-platform`: portal publico Next.js com conteudos institucionais,
-  artigos, eventos, dicionario e areas publicas.
+- `api`: backend NestJS com Prisma, PostgreSQL, autenticação, RBAC, auditoria, gestão de conteúdos, eventos, media e módulos linguísticos.
+- `back-office`: painel administrativo Next.js para operadores, supervisores e administradores.
+- `public-platform`: portal público Next.js com conteúdos institucionais, artigos, eventos, dicionário e áreas públicas.
 
 ## Stack
 
-- Node.js
+- Node.js 20 ou superior
 - NestJS
 - Prisma
 - PostgreSQL
 - Next.js
 - React
 - TypeScript
-- pnpm nos frontends
-- npm na API
-
-## Estrutura
-
-```text
-med-project/
-  api/              Backend NestJS + Prisma
-  back-office/      Painel administrativo Next.js
-  public-platform/  Portal publico Next.js
-```
+- pnpm
 
 ## Requisitos
 
 - Node.js 20 ou superior
-- npm
-- pnpm
-- Docker, opcional para subir o PostgreSQL local
+- pnpm 9
+- Docker, para subir o PostgreSQL localmente
 
-## Configuracao inicial
+## Configuração inicial
 
-1. Copie os ficheiros de exemplo de ambiente:
+### 1. Configurar as variáveis de ambiente
+
+Copie os ficheiros de exemplo:
 
 ```bash
 cp api/.env.example api/.env
@@ -48,20 +35,22 @@ cp back-office/.env.example back-office/.env
 cp public-platform/.env.example public-platform/.env
 ```
 
-2. Ajuste as variaveis em `api/.env`, `back-office/.env` e `public-platform/.env`.
+Os valores de `api/.env.example` permitem executar o projecto localmente com PostgreSQL e sem os serviços opcionais de R2, Resend e IA. Os respectivos módulos só precisam das credenciais quando essas funcionalidades forem utilizadas.
 
-3. Suba a base de dados local, se for usar Docker:
+### 2. Subir PostgreSQL
 
 ```bash
 cd api
 docker compose up -d
 ```
 
-4. Instale as dependencias:
+O PostgreSQL ficará disponível em `localhost:5439`.
+
+### 3. Instalar dependências
 
 ```bash
 cd api
-npm install
+pnpm install
 
 cd ../back-office
 pnpm install
@@ -70,67 +59,101 @@ cd ../public-platform
 pnpm install
 ```
 
-5. Prepare a base de dados:
+### 4. Preparar a base de dados
 
 ```bash
 cd api
-npx prisma migrate dev
-npx prisma db seed
+pnpm prisma migrate dev
+pnpm prisma db seed
 ```
 
-### Dados de demonstração (apresentação)
-
-A seed popula a base com conteúdo diversificado para API, back-office e portal público:
-
-- Utilizadores (admin, supervisor, 2 operadores)
-- ~20 verbetes em vários estados de aprovação
-- Topónimos, antropónimos, estrangeirismos, neologismos
-- Termos VONALP / VONALP-EP completos
-- Vocabulário VOLNA em línguas nacionais
-- Artigos, eventos com inscrições, notificações e relatórios
+Para preparar directamente uma base completa de demonstração:
 
 ```bash
-cd api
-npm run db:setup:demo   # migrações + sync schema + seed completa
-# ou, passo a passo:
-npm run db:seed          # seed normal (ignora se já houver dados)
-npm run db:seed:demo     # força repovoamento completo
-npm run db:reset         # migrações + seed do zero
+pnpm db:setup:demo
 ```
 
-Credenciais de demo:
+Para repovoar completamente os dados de demonstração:
 
-| Perfil     | Email                      | Password    |
-|------------|----------------------------|-------------|
-| Admin      | admin@linguistic.com       | admin123    |
-| Supervisor | supervisor@linguistic.com  | demo123     |
-| Operador   | operator@linguistic.com    | operator123 |
-| Operador 2 | operator2@linguistic.com   | demo123     |
+```bash
+pnpm db:seed:demo
+```
+
+### Credenciais de demonstração
+
+| Perfil | Email | Password |
+|---|---|---|
+| Admin | admin@linguistic.com | admin123 |
+| Supervisor | supervisor@linguistic.com | demo123 |
+| Operador | operator@linguistic.com | operator123 |
+| Operador 2 | operator2@linguistic.com | demo123 |
 
 ## Desenvolvimento
 
-Em terminais separados:
+Execute cada aplicação num terminal separado.
+
+### API
 
 ```bash
 cd api
-npm run start:dev
+pnpm start:dev
 ```
+
+API: `http://localhost:4000`
+
+Documentação Swagger: `http://localhost:4000/api/docs`
+
+Documentação Scalar: `http://localhost:4000/api/reference`
+
+### Back-office
 
 ```bash
 cd back-office
 pnpm dev
 ```
 
+Back-office: `http://localhost:3000`
+
+### Portal público
+
 ```bash
 cd public-platform
-pnpm dev
+pnpm dev -- -p 3002
 ```
 
-Se executar mais de uma aplicacao Next.js ao mesmo tempo, use portas diferentes:
+Portal público: `http://localhost:3002`
+
+## Verificação local
+
+Antes de considerar o projecto pronto:
+
+### API
 
 ```bash
-pnpm dev -- -p 3001
-pnpm dev -- -p 3002
+cd api
+pnpm lint
+pnpm typecheck
+pnpm prisma:validate
+pnpm test -- --runInBand
+pnpm build
+```
+
+### Back-office
+
+```bash
+cd back-office
+pnpm lint
+pnpm typecheck
+pnpm build
+```
+
+### Portal público
+
+```bash
+cd public-platform
+pnpm lint
+pnpm typecheck
+pnpm build
 ```
 
 ## Scripts principais
@@ -138,10 +161,14 @@ pnpm dev -- -p 3002
 API:
 
 ```bash
-npm run start:dev
-npm run build
-npm run test
-npm run test:e2e
+pnpm start:dev
+pnpm build
+pnpm test
+pnpm test:e2e
+pnpm lint
+pnpm typecheck
+pnpm prisma:validate
+pnpm db:setup:demo
 ```
 
 Back-office:
@@ -150,27 +177,27 @@ Back-office:
 pnpm dev
 pnpm build
 pnpm lint
+pnpm typecheck
 ```
 
-Portal publico:
+Portal público:
 
 ```bash
 pnpm dev
 pnpm build
 pnpm lint
+pnpm typecheck
 ```
 
 ## Antes de enviar para o GitHub
 
-- Nao versionar `.env`, `.next`, `dist`, `node_modules`, logs ou ficheiros de
-  cache.
-- Confirmar que os ficheiros `.env.example` contem apenas valores de exemplo.
-- Remover repositorios Git internos de `api`, `back-office` e
-  `public-platform` caso queira publicar tudo como um unico repositorio.
-- Definir a licenca do projecto, se aplicavel.
+- Não versionar `.env`, `.next`, `dist`, `node_modules`, logs ou ficheiros de cache.
+- Confirmar que os ficheiros `.env.example` contêm apenas valores de exemplo.
+- Remover repositórios Git internos de `api`, `back-office` e `public-platform` caso queira publicar tudo como um único repositório.
+- Definir a licença do projecto, se aplicável.
 
-## Documentacao adicional
+## Documentação adicional
 
 - [API](./api/README.md)
 - [Back-office](./back-office/README.md)
-- [Portal publico](./public-platform/README.md)
+- [Portal público](./public-platform/README.md)
