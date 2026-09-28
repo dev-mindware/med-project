@@ -3,6 +3,7 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { apiReference } from '@scalar/nestjs-api-reference';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import type { Request, Response } from 'express';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/filters/http-exception.filter';
 import { AppLogger } from './common/logger/app-logger.service';
@@ -69,7 +70,7 @@ async function bootstrap() {
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
-  app.getHttpAdapter().getInstance().get('/api/openapi.json', (_req: any, res: any) => res.json(document));
+  app.getHttpAdapter().getInstance().get('/api/openapi.json', (_req: Request, res: Response) => res.json(document));
   app.use(
     '/api/reference',
     apiReference({
