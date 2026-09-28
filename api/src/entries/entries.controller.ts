@@ -12,6 +12,7 @@ import { UsersService } from '../users/users.service';
 import { applySupervisorEntryScope, ensureSupervisorCanAccessCreator } from '../common/supervisor-scope';
 import { ImportRowsDto } from '../common/dto/import-rows.dto';
 
+import { AuthRequest } from '../auth/types/auth-request';
 @ApiTags('entries')
 @ApiBearerAuth()
 @Controller('entries')
@@ -25,7 +26,7 @@ export class EntriesController {
   @Post()
   @Roles(UserRole.ADMIN, UserRole.SUPERVISOR, UserRole.OPERATOR)
   @ApiOperation({ summary: 'Create a new linguistic entry' })
-  create(@Request() req: any, @Body() createEntryDto: CreateEntryDto) {
+  create(@Request() req: AuthRequest, @Body() createEntryDto: CreateEntryDto) {
     return this.entriesService.create({
       ...createEntryDto,
       createdBy: { connect: { id: req.user.id } },
@@ -36,13 +37,13 @@ export class EntriesController {
   @Post('import')
   @Roles(UserRole.ADMIN, UserRole.SUPERVISOR, UserRole.OPERATOR)
   @ApiOperation({ summary: 'Import linguistic entries in bulk' })
-  import(@Request() req: any, @Body() importDto: ImportRowsDto) {
+  import(@Request() req: AuthRequest, @Body() importDto: ImportRowsDto) {
     return this.entriesService.importRows(importDto.rows, req.user.id);
   }
 
   @Get()
   @ApiOperation({ summary: 'List all entries' })
-  findAll(@Request() req: any, @Query() filters?: LinguisticFilterDto) {
+  findAll(@Request() req: AuthRequest, @Query() filters?: LinguisticFilterDto) {
     if (!filters) {
       filters = req;
       req = { user: { id: '', role: UserRole.ADMIN } };
@@ -74,7 +75,7 @@ export class EntriesController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Get a specific entry by ID' })
-  async findOne(@Param('id') id: string, @Request() req: any = { user: { id: '', role: UserRole.ADMIN } }) {
+  async findOne(@Param('id') id: string, @Request() req: AuthRequest = { user: { id: '', role: UserRole.ADMIN } }) {
     const entry = await this.entriesService.findOne({ id });
     if (!entry) throw new NotFoundException();
 
@@ -88,7 +89,7 @@ export class EntriesController {
   @Patch(':id')
   @Roles(UserRole.ADMIN, UserRole.SUPERVISOR, UserRole.OPERATOR)
   @ApiOperation({ summary: 'Update an existing entry' })
-  async update(@Param('id') id: string, @Request() req: any, @Body() updateEntryDto: UpdateEntryDto) {
+  async update(@Param('id') id: string, @Request() req: AuthRequest, @Body() updateEntryDto: UpdateEntryDto) {
     const entry = await this.entriesService.findOne({ id });
     if (!entry) throw new NotFoundException();
     
@@ -121,7 +122,7 @@ export class EntriesController {
   @Delete(':id')
   @Roles(UserRole.ADMIN, UserRole.OPERATOR)
   @ApiOperation({ summary: 'Delete an entry' })
-  async remove(@Param('id') id: string, @Request() req: any) {
+  async remove(@Param('id') id: string, @Request() req: AuthRequest) {
     const entry = await this.entriesService.findOne({ id });
     if (!entry) throw new NotFoundException();
     
@@ -159,7 +160,7 @@ export class EntriesController {
   })
   async review(
     @Param('id') id: string, 
-    @Request() req: any,
+    @Request() req: AuthRequest,
     @Body('status') status: ApprovalStatus,
     @Body('reason') reason?: string
   ) {
