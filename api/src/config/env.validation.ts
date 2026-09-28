@@ -2,7 +2,7 @@ const REQUIRED_IN_ALL_ENVS = ['DATABASE_URL', 'JWT_ACCESS_SECRET', 'JWT_REFRESH_
 const REQUIRED_IN_PRODUCTION = ['FRONTEND_URL'] as const;
 
 export function validateEnv(config: Record<string, unknown>): Record<string, unknown> {
-  const missing = REQUIRED_IN_ALL_ENVS.filter((key) => {
+  const missing: string[] = REQUIRED_IN_ALL_ENVS.filter((key) => {
     const value = config[key];
     return typeof value !== 'string' || value.trim().length === 0;
   });
