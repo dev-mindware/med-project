@@ -49,6 +49,13 @@ class ContributorDto {
   count: number;
 }
 
+type DashboardSummary = {
+  users: Record<string, number>;
+  content: Record<string, number>;
+  blog: Record<string, number>;
+  events: Record<string, number>;
+};
+
 export class DashboardStatsDto {
   @ApiProperty({ type: [DashboardCardDto] })
   cards: DashboardCardDto[];
@@ -63,5 +70,5 @@ export class DashboardStatsDto {
   topContributors: ContributorDto[];
 
   @ApiProperty()
-  summary: any;
+  summary: DashboardSummary;
 }
