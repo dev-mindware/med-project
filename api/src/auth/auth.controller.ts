@@ -1,8 +1,20 @@
 import { Controller, Post, UseGuards, Request, Body, Get, Patch } from '@nestjs/common';
+import { IsEmail, IsOptional, IsString, IsUUID, MinLength } from 'class-validator';
 import type { Request as ExpressRequest } from 'express';
 import type { User } from '@prisma/client';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiBody } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
+
+class RegisterDto {
+  @IsString() @MinLength(2) name!: string;
+  @IsEmail() email!: string;
+  @IsString() @MinLength(8) password!: string;
+  @IsOptional() @IsString() role?: User['role'];
+}
+
+class RefreshDto {
+  @IsString() @MinLength(20) refreshToken!: string;
+}
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
@@ -42,7 +54,7 @@ export class AuthController {
       required: ['name', 'email', 'password'],
     },
   })
-  async register(@Body() body: { name: string; email: string; password: string; role?: User['role'] }) {
+  async register(@Body() body: RegisterDto) {
     return this.authService.register(body);
   }
 
@@ -57,8 +69,8 @@ export class AuthController {
       required: ['refreshToken'],
     },
   })
-  async refresh(@Body('refreshToken') refreshToken: string) {
-    return this.authService.refreshTokens(refreshToken);
+  async refresh(@Body() body: RefreshDto) {
+    return this.authService.refreshTokens(body.refreshToken);
   }
 
   @ApiBearerAuth()
