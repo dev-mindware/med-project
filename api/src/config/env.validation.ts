@@ -29,5 +29,8 @@ export function validateEnv(config: Record<string, unknown>): Record<string, unk
   const maxFileMb = Number(config.VOCABULARY_MAX_FILE_MB ?? 20);
   if (!Number.isInteger(maxFileMb) || maxFileMb < 1 || maxFileMb > 100) throw new Error('VOCABULARY_MAX_FILE_MB must be an integer between 1 and 100');
 
+  const mediaMaxFileMb = Number(config.MEDIA_MAX_FILE_MB ?? 10);
+  if (!Number.isInteger(mediaMaxFileMb) || mediaMaxFileMb < 1 || mediaMaxFileMb > 50) throw new Error('MEDIA_MAX_FILE_MB must be an integer between 1 and 50');
+
   return config;
 }
