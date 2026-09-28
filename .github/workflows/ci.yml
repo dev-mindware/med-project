@@ -24,6 +24,8 @@ jobs:
     defaults:
       run:
         working-directory: api
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/med_ci
     steps:
       - uses: actions/checkout@v4
 
