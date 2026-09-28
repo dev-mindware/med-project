@@ -12,6 +12,7 @@ import { CreateNeologismDto } from './dto/create-neologism.dto';
 import { UpdateNeologismDto } from './dto/update-neologism.dto';
 import { NeologismsService } from './neologisms.service';
 
+import { AuthRequest } from '../auth/types/auth-request';
 @ApiTags('neologisms')
 @ApiBearerAuth()
 @Controller('neologisms')
@@ -25,7 +26,7 @@ export class NeologismsController {
   @Post()
   @Roles(UserRole.ADMIN, UserRole.SUPERVISOR, UserRole.OPERATOR)
   @ApiOperation({ summary: 'Create a new neologism' })
-  create(@Request() req: any, @Body() createNeologismDto: CreateNeologismDto) {
+  create(@Request() req: AuthRequest, @Body() createNeologismDto: CreateNeologismDto) {
     return this.neologismsService.create({
       ...createNeologismDto,
       createdBy: { connect: { id: req.user.id } },
@@ -36,13 +37,13 @@ export class NeologismsController {
   @Post('import')
   @Roles(UserRole.ADMIN, UserRole.SUPERVISOR, UserRole.OPERATOR)
   @ApiOperation({ summary: 'Import neologisms in bulk' })
-  import(@Request() req: any, @Body() importDto: ImportRowsDto) {
+  import(@Request() req: AuthRequest, @Body() importDto: ImportRowsDto) {
     return this.neologismsService.importRows(importDto.rows, req.user.id);
   }
 
   @Get()
   @ApiOperation({ summary: 'List all neologisms' })
-  findAll(@Request() req: any, @Query() filters?: LinguisticFilterDto) {
+  findAll(@Request() req: AuthRequest, @Query() filters?: LinguisticFilterDto) {
     if (!filters) {
       filters = req;
       req = { user: { id: '', role: UserRole.ADMIN } };
@@ -74,7 +75,7 @@ export class NeologismsController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Get a specific neologism by ID' })
-  async findOne(@Param('id') id: string, @Request() req: any = { user: { id: '', role: UserRole.ADMIN } }) {
+  async findOne(@Param('id') id: string, @Request() req: AuthRequest = { user: { id: '', role: UserRole.ADMIN } }) {
     const neologism = await this.neologismsService.findOne({ id });
     if (!neologism) throw new NotFoundException();
 
@@ -88,7 +89,7 @@ export class NeologismsController {
   @Patch(':id')
   @Roles(UserRole.ADMIN, UserRole.SUPERVISOR, UserRole.OPERATOR)
   @ApiOperation({ summary: 'Update an existing neologism' })
-  async update(@Param('id') id: string, @Request() req: any, @Body() updateNeologismDto: UpdateNeologismDto) {
+  async update(@Param('id') id: string, @Request() req: AuthRequest, @Body() updateNeologismDto: UpdateNeologismDto) {
     const neologism = await this.neologismsService.findOne({ id });
     if (!neologism) throw new NotFoundException();
 
@@ -121,7 +122,7 @@ export class NeologismsController {
   @Delete(':id')
   @Roles(UserRole.ADMIN, UserRole.OPERATOR)
   @ApiOperation({ summary: 'Delete a neologism' })
-  async remove(@Param('id') id: string, @Request() req: any) {
+  async remove(@Param('id') id: string, @Request() req: AuthRequest) {
     const neologism = await this.neologismsService.findOne({ id });
     if (!neologism) throw new NotFoundException();
 
@@ -159,7 +160,7 @@ export class NeologismsController {
   })
   async review(
     @Param('id') id: string,
-    @Request() req: any,
+    @Request() req: AuthRequest,
     @Body('status') status: ApprovalStatus,
     @Body('reason') reason?: string,
   ) {
