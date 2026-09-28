@@ -5,6 +5,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { v4 as uuidv4 } from 'uuid';
 import * as path from 'path';
 import { AppLogger } from '../common/logger/app-logger.service';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class MediaService {
@@ -89,7 +90,7 @@ export class MediaService {
     }
   }
 
-  async findAll(params: { skip?: number; take?: number; where?: any; orderBy?: any }) {
+  async findAll(params: Prisma.MediaAssetFindManyArgs) {
     return this.prisma.mediaAsset.findMany(params);
   }
 
