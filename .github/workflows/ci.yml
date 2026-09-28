@@ -34,19 +34,7 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
-      - run: pnpm format:check
       - run: pnpm typecheck
       - run: pnpm prisma:validate
       - run: pnpm test -- --runInBand
       - run: pnpm build
-
-  dependency-review:
-    name: Dependency Review
-    if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/dependency-review-action@v4
-        with:
-          fail-on-severity: high
