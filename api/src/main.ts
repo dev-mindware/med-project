@@ -46,7 +46,7 @@ async function bootstrap() {
     }),
   );
 
-  const config = new DocumentBuilder()
+  const swaggerConfig = new DocumentBuilder()
     .setTitle('Linguistic API')
     .setDescription('Sistema Linguístico - API completa com busca global, relatórios e gestão de conteúdo')
     .setVersion('2.0')
@@ -69,7 +69,7 @@ async function bootstrap() {
     .addTag('auth', 'Autenticação')
     .build();
 
-  const document = SwaggerModule.createDocument(app, config);
+  const document = SwaggerModule.createDocument(app, swaggerConfig);
   app.getHttpAdapter().getInstance().get('/api/openapi.json', (_req: Request, res: Response) => res.json(document));
   app.use(
     '/api/reference',
@@ -101,4 +101,7 @@ async function bootstrap() {
   });
 }
 
-bootstrap();
+void bootstrap().catch((error: unknown) => {
+  console.error('Failed to bootstrap API', error);
+  process.exitCode = 1;
+});
