@@ -154,7 +154,7 @@ export class AuditInterceptor implements NestInterceptor {
           sanitizedBody,
           response,
         });
-      }),
+
       catchError((error) => {
         if (!shouldAudit) return throwError(() => error);
 
