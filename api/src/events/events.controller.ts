@@ -10,6 +10,7 @@ import { UpdateEventDto } from './dto/update-event.dto';
 import { EventsFilterDto, EventPeriod } from './dto/events-filter.dto';
 import { GlobalFilterDto } from '../common/dto/global-filter.dto';
 
+import { AuthRequest } from '../auth/types/auth-request';
 @ApiTags('events')
 @ApiBearerAuth()
 @Controller('events')
@@ -20,7 +21,7 @@ export class EventsController {
   @Post()
   @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Create a new event' })
-  create(@Request() req: any, @Body() createDto: CreateEventDto) {
+  create(@Request() req: AuthRequest, @Body() createDto: CreateEventDto) {
     return this.eventsService.create({
       ...createDto,
       createdBy: { connect: { id: req.user.id } },
@@ -29,7 +30,7 @@ export class EventsController {
 
   @Get()
   @ApiOperation({ summary: 'List events for authenticated users' })
-  findAll(@Request() req: any, @Query() filters: EventsFilterDto) {
+  findAll(@Request() req: AuthRequest, @Query() filters: EventsFilterDto) {
     const { page = 1, limit = 20, orderBy, orderDirection, period, category, status, search, startDate, endDate } = filters;
     const where: Prisma.EventWhereInput = {};
     
@@ -73,7 +74,7 @@ export class EventsController {
 
   @Get(':idOrSlug')
   @ApiOperation({ summary: 'Get a specific event by ID or slug' })
-  async findOne(@Request() req: any, @Param('idOrSlug') idOrSlug: string) {
+  async findOne(@Request() req: AuthRequest, @Param('idOrSlug') idOrSlug: string) {
     const event = await this.eventsService.findOne(idOrSlug);
     if (!event) throw new NotFoundException();
     
