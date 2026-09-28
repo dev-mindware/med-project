@@ -55,8 +55,8 @@ type AuditNotificationData = {
   entity: string;
   entityId?: string | null;
   path: string;
-  oldValues: Record<string, unknown> | null;
-  newValues: Record<string, unknown> | null;
+  oldValues: Prisma.InputJsonObject | null;
+  newValues: Prisma.InputJsonObject | null;
   result: unknown;
 };
 
@@ -108,6 +108,19 @@ const CONTENT_ENTITIES: Record<string, ContentEntityConfig> = {
   },
 };
 
+type AuditRequest = {
+  method: string;
+  url: string;
+  user?: { id: string; role: UserRole };
+  body: unknown;
+  ip?: string;
+  params: Record<string, string>;
+  query: Record<string, string | string[]>;
+  route?: { path?: string };
+  requestId?: string;
+  get: (name: string) => string | undefined;
+};
+
 @Injectable()
 export class AuditInterceptor implements NestInterceptor {
   constructor(
@@ -116,7 +129,7 @@ export class AuditInterceptor implements NestInterceptor {
   ) {}
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
-    const request = context.switchToHttp().getRequest<Record<string, unknown> & { get: (name: string) => string | undefined }>();
+    const request = context.switchToHttp().getRequest<AuditRequest>();
     const response = context.switchToHttp().getResponse<{ statusCode?: number }>();
     const { method, url, user, body, ip, params, query, route, requestId } = request;
     const userAgent = request.get('user-agent');
@@ -154,7 +167,7 @@ export class AuditInterceptor implements NestInterceptor {
           sanitizedBody,
           response,
         });
-
+      }),
       catchError((error) => {
         if (!shouldAudit) return throwError(() => error);
 
@@ -222,8 +235,8 @@ export class AuditInterceptor implements NestInterceptor {
     url: string;
     path: string;
     route?: { path?: string };
-    params: Record<string, unknown>;
-    query: Record<string, unknown>;
+    params: Record<string, string>;
+    query: Record<string, string | string[]>;
     requestId?: string;
     sanitizedBody: Record<string, unknown> | null;
     response?: { statusCode?: number };
@@ -323,12 +336,12 @@ export class AuditInterceptor implements NestInterceptor {
     }
   }
 
-  private sanitize(value: unknown): Record<string, unknown> | null {
+  private sanitize(value: unknown): Prisma.InputJsonObject | null {
     const masked = maskSensitive(value);
-    return masked && typeof masked === 'object' && !Array.isArray(masked) ? masked as Record<string, unknown> : null;
+    return masked && typeof masked === 'object' && !Array.isArray(masked) ? masked as Prisma.InputJsonObject : null;
   }
 
-  private getChangedFields(oldValues: Record<string, unknown> | null, newValues: Record<string, unknown> | null) {
+  private getChangedFields(oldValues: Prisma.InputJsonObject | null, newValues: Prisma.InputJsonObject | null) {
     if (!oldValues || !newValues || typeof newValues !== 'object') return [];
     return Object.keys(newValues).filter((key) => JSON.stringify(oldValues[key]) !== JSON.stringify(newValues[key]));
   }
@@ -439,12 +452,17 @@ export class AuditInterceptor implements NestInterceptor {
     config: ContentEntityConfig,
     actor: ActorSnapshot,
   ) {
-    const successCount = Number(data.result?.successCount || data.result?.created?.length || 0);
+    const result = data.result && typeof data.result === 'object' ? data.result as Record<string, unknown> : null;
+    const created = Array.isArray(result?.created) ? result.created : [];
+    const successCount = Number(result?.successCount || created.length || 0);
     if (!successCount) return;
 
     const notifications: NotificationDraft[] = [];
     const title = `Importação de ${config.pluralLabel} concluída`;
-    const entityId = Array.isArray(data.result?.created) ? data.result.created[0]?.id : null;
+    const firstCreated = created[0];
+    const entityId = firstCreated && typeof firstCreated === 'object' && 'id' in firstCreated && typeof firstCreated.id === 'string'
+      ? firstCreated.id
+      : null;
 
     const admins = await this.getActiveAdminsExcept(actor.id);
     notifications.push(...admins.map((admin) => ({
@@ -481,7 +499,8 @@ export class AuditInterceptor implements NestInterceptor {
     if (actor.role !== UserRole.ADMIN && actor.role !== UserRole.SUPERVISOR) return;
 
     const oldStatus = data.oldValues?.approvalStatus;
-    const newStatus = data.newValues?.approvalStatus || data.result?.approvalStatus;
+    const result = data.result && typeof data.result === 'object' ? data.result as Record<string, unknown> : null;
+    const newStatus = data.newValues?.approvalStatus || (typeof result?.approvalStatus === 'string' ? result.approvalStatus : null);
     if (!newStatus || oldStatus === newStatus) return;
 
     const content = await this.getContentSnapshot(data.entity, data.entityId) || data.newValues || data.oldValues;
