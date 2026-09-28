@@ -38,7 +38,7 @@ export class ToponymsService {
         continue;
       }
 
-      const data = validation.data as CreateToponymDto;
+      const data = validation.data;
       const key = importKey(data.toponym);
 
       if (seen.has(key)) {
