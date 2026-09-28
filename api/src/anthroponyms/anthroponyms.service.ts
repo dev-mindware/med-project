@@ -52,34 +52,24 @@ export class AnthroponymsService {
         continue;
       }
 
-      const data = validation.data as CreateAnthroponymDto;
+      const data = validation.data;
       const key = importKey(data.name);
 
       if (seen.has(key)) {
-        errors.push({
-          rowNumber: row.rowNumber,
-          field: 'name',
-          value: data.name,
-          message: 'Vocábulo duplicado no ficheiro',
-        });
+        errors.push({ rowNumber: row.rowNumber, field: 'name', value: data.name, message: 'Vocábulo duplicado no ficheiro' });
         continue;
       }
       seen.add(key);
 
       try {
         const item = await this.create({
-          ...(data as Prisma.AnthroponymCreateInput),
+          ...data,
           createdBy: { connect: { id: userId } },
           approvalStatus: ApprovalStatus.DRAFT,
         });
         created.push({ rowNumber: row.rowNumber, id: item.id, label: item.name });
       } catch (error) {
-        errors.push({
-          rowNumber: row.rowNumber,
-          field: 'name',
-          value: data.name,
-          message: httpErrorToImportMessage(error),
-        });
+        errors.push({ rowNumber: row.rowNumber, field: 'name', value: data.name, message: httpErrorToImportMessage(error) });
       }
     }
 
@@ -87,27 +77,16 @@ export class AnthroponymsService {
   }
 
   async findOne(where: Prisma.AnthroponymWhereUniqueInput): Promise<Anthroponym | null> {
-    const item = await this.prisma.anthroponym.findUnique({
-      where,
-      include: {
-        createdBy: { select: { id: true, name: true } },
-        approvedBy: { select: { id: true, name: true } },
-      },
-    });
+    const item = await this.prisma.anthroponym.findUnique({ where, include: { createdBy: { select: { id: true, name: true } }, approvedBy: { select: { id: true, name: true } } } });
     return attachVonalpStatus(this.prisma, VonalpSourceType.ANTHROPONYM, item);
   }
 
-  async update(params: {
-    where: Prisma.AnthroponymWhereUniqueInput;
-    data: Prisma.AnthroponymUpdateInput;
-  }): Promise<Anthroponym> {
+  async update(params: { where: Prisma.AnthroponymWhereUniqueInput; data: Prisma.AnthroponymUpdateInput }): Promise<Anthroponym> {
     const { where, data } = params;
-
     if (typeof data.name === 'string') {
       data.name = data.name.trim();
       await this.ensureUniqueAnthroponym(data.name, typeof where.id === 'string' ? where.id : undefined);
     }
-
     return this.prisma.anthroponym.update(params);
   }
 
@@ -115,50 +94,15 @@ export class AnthroponymsService {
     return this.prisma.anthroponym.delete({ where });
   }
 
-  async search(query: string, params: {
-    skip?: number;
-    take?: number;
-    where?: Prisma.AnthroponymWhereInput;
-    orderBy?: Prisma.AnthroponymOrderByWithRelationInput;
-  }): Promise<Anthroponym[]> {
-    const searchQuery = query.trim().split(/\s+/).map(w => `${w}:*`).join(' | ');
+  async search(query: string, params: { skip?: number; take?: number; where?: Prisma.AnthroponymWhereInput; orderBy?: Prisma.AnthroponymOrderByWithRelationInput }): Promise<Anthroponym[]> {
+    const searchQuery = query.trim().split(/\s+/).map((w) => `${w}:*`).join(' | ');
     const { skip, take, where: filters, orderBy } = params;
-    const items = await this.prisma.anthroponym.findMany({
-      skip,
-      take,
-      orderBy,
-      where: {
-        AND: [
-          filters || {},
-          {
-            OR: [
-              { name: { search: searchQuery } },
-              { meaning: { search: searchQuery } },
-              { etymology: { search: searchQuery } },
-              { name: { contains: query, mode: 'insensitive' } },
-            ],
-          },
-        ],
-      },
-      include: {
-        createdBy: { select: { id: true, name: true } },
-        approvedBy: { select: { id: true, name: true } },
-      },
-    });
+    const items = await this.prisma.anthroponym.findMany({ skip, take, orderBy, where: { AND: [filters || {}, { OR: [{ name: { search: searchQuery } }, { meaning: { search: searchQuery } }, { etymology: { search: searchQuery } }, { name: { contains: query, mode: 'insensitive' } }] }] }, include: { createdBy: { select: { id: true, name: true } }, approvedBy: { select: { id: true, name: true } } } });
     return attachVonalpStatuses(this.prisma, VonalpSourceType.ANTHROPONYM, items);
   }
 
   private async ensureUniqueAnthroponym(name: string, currentId?: string) {
-    const existing = await this.prisma.anthroponym.findFirst({
-      where: {
-        name: { equals: name, mode: 'insensitive' },
-        ...(currentId ? { NOT: { id: currentId } } : {}),
-      },
-      select: { id: true },
-    });
-
-    if (existing) {
-      throw new ConflictException('Já existe um antropónimo com este vocábulo');
-    }
+    const existing = await this.prisma.anthroponym.findFirst({ where: { name: { equals: name, mode: 'insensitive' }, ...(currentId ? { NOT: { id: currentId } } : {}) }, select: { id: true } });
+    if (existing) throw new ConflictException('Já existe um antropónimo com este vocábulo');
   }
 }
