@@ -35,6 +35,8 @@ type SourceRecord = {
   approvalStatus?: ApprovalStatus;
   createdBy?: { id: string; supervisorId?: string | null } | null;
   entry?: string | null;
+  firstDefinition?: string | null;
+  secondDefinition?: string | null;
   pronunciation?: string | null;
   grammaticalCategory?: string | null;
   grammaticalSubcategory?: string | null;
@@ -470,7 +472,7 @@ export class VonalpService {
         grammaticalCategory: null,
         grammaticalSubcategory: null,
         syllabicDivision: null,
-        etymology: source.toponymProvenance || source.toponymHistory,
+        etymology: source.toponymProvenance ?? source.toponymHistory ?? null,
         firstDefinition: source.meaning,
         secondDefinition: null,
         origin: SOURCE_CONFIG[sourceType].origin,
@@ -498,7 +500,7 @@ export class VonalpService {
       grammaticalSubcategory: null,
       syllabicDivision: null,
       etymology: this.buildForeignismEtymology(source),
-      firstDefinition: source.definition || source.meaning,
+      firstDefinition: source.definition ?? source.meaning ?? null,
       secondDefinition: null,
       origin: SOURCE_CONFIG[sourceType].origin,
     });
