@@ -40,10 +40,6 @@ services:
     env_file:
       - path: ./api/.env
         required: false
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER:-johndoe}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-randompassword}
-      POSTGRES_DB: ${POSTGRES_DB:-mydb}
     ports:
       - "${POSTGRES_PORT:-5439}:5432"
     volumes:
