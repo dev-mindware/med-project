@@ -37,11 +37,11 @@ describe('AuditLogsController', () => {
       const filters = { page: 1, limit: 10, action: 'CREATE' } as any;
       await controller.findAll(filters);
       expect(service.findAll).toHaveBeenCalledWith(
-        expect.objectContaining({ 
-          skip: 0, 
+        expect.objectContaining({
+          skip: 0,
           take: 10,
-          where: expect.objectContaining({ action: 'CREATE' })
-        })
+          where: expect.objectContaining({ action: 'CREATE' }),
+        }),
       );
     });
 
@@ -54,9 +54,9 @@ describe('AuditLogsController', () => {
             createdAt: expect.objectContaining({
               gte: expect.any(Date),
               lte: expect.any(Date),
-            })
-          })
-        })
+            }),
+          }),
+        }),
       );
     });
   });
@@ -69,7 +69,9 @@ describe('AuditLogsController', () => {
 
     it('should throw NotFoundException if not found', async () => {
       service.findOne.mockResolvedValueOnce(null);
-      await expect(controller.findOne('ghost')).rejects.toThrow(NotFoundException);
+      await expect(controller.findOne('ghost')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 });

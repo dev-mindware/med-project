@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Prisma, User, UserRole } from '@prisma/client';
 
@@ -48,7 +52,10 @@ export class UsersService {
     });
   }
 
-  async assignOperatorsToSupervisor(supervisorId: string, operatorIds: string[]) {
+  async assignOperatorsToSupervisor(
+    supervisorId: string,
+    operatorIds: string[],
+  ) {
     await this.ensureSupervisor(supervisorId);
     await this.ensureOperators(operatorIds);
 
@@ -74,7 +81,10 @@ export class UsersService {
     });
   }
 
-  async isOperatorManagedBySupervisor(supervisorId: string, operatorId: string): Promise<boolean> {
+  async isOperatorManagedBySupervisor(
+    supervisorId: string,
+    operatorId: string,
+  ): Promise<boolean> {
     const operator = await this.prisma.user.findFirst({
       where: {
         id: operatorId,
@@ -136,7 +146,9 @@ export class UsersService {
     }
 
     if (operators.some((operator) => operator.role !== UserRole.OPERATOR)) {
-      throw new BadRequestException('Only users with OPERATOR role can be assigned to a supervisor');
+      throw new BadRequestException(
+        'Only users with OPERATOR role can be assigned to a supervisor',
+      );
     }
   }
 }

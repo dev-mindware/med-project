@@ -42,14 +42,25 @@ export class VocabularyProcessorService {
 
     for (const item of items) {
       const sourceModel = item.sourceModel;
-      const data: Record<string, unknown> = this.normalize(sourceModel, item.data);
+      const data: Record<string, unknown> = this.normalize(
+        sourceModel,
+        item.data,
+      );
       const rawTerm = data[TERM_FIELD[sourceModel]];
-      const term = typeof rawTerm === 'string' || typeof rawTerm === 'number' ? String(rawTerm).trim() : '';
+      const term =
+        typeof rawTerm === 'string' || typeof rawTerm === 'number'
+          ? String(rawTerm).trim()
+          : '';
       const rowNumber = this.bucket(sourceModel, grouped).length + 2;
       const dedupeKey = `${sourceModel}:${term.toLowerCase()}`;
 
       if (!term || !this.isValidTerm(sourceModel, term)) {
-        warnings.push({ sourceModel, rowNumber, term, message: 'Vocábulo ausente ou fora das regras de tamanho' });
+        warnings.push({
+          sourceModel,
+          rowNumber,
+          term,
+          message: 'Vocábulo ausente ou fora das regras de tamanho',
+        });
         continue;
       }
 
@@ -61,20 +72,36 @@ export class VocabularyProcessorService {
 
       for (const field of REQUIRED_FIELDS[sourceModel]) {
         if (this.isEmpty(data[field])) {
-          warnings.push({ sourceModel, rowNumber, field, term, message: 'Campo obrigatorio ausente' });
+          warnings.push({
+            sourceModel,
+            rowNumber,
+            field,
+            term,
+            message: 'Campo obrigatorio ausente',
+          });
         }
       }
 
       for (const field of RECOMMENDED_FIELDS[sourceModel]) {
         if (this.isEmpty(data[field])) {
-          warnings.push({ sourceModel, rowNumber, field, term, message: 'Campo recomendado ausente' });
+          warnings.push({
+            sourceModel,
+            rowNumber,
+            field,
+            term,
+            message: 'Campo recomendado ausente',
+          });
         }
       }
 
       this.bucket(sourceModel, grouped).push(data);
     }
 
-    const validRows = grouped.entries.length + grouped.toponyms.length + grouped.anthroponyms.length + grouped.foreignisms.length;
+    const validRows =
+      grouped.entries.length +
+      grouped.toponyms.length +
+      grouped.anthroponyms.length +
+      grouped.foreignisms.length;
 
     return {
       ...grouped,
@@ -92,13 +119,24 @@ export class VocabularyProcessorService {
     };
   }
 
-  private normalize(sourceModel: ManualVocabularySourceModel, data: Record<string, unknown>) {
+  private normalize(
+    sourceModel: ManualVocabularySourceModel,
+    data: Record<string, unknown>,
+  ) {
     const normalized = Object.fromEntries(
-      Object.entries(data).map(([key, value]) => [key, this.normalizeValue(value)]),
+      Object.entries(data).map(([key, value]) => [
+        key,
+        this.normalizeValue(value),
+      ]),
     );
 
     if (sourceModel === 'ENTRY') {
-      return { isVocabulary: true, isVocabularyEP: false, isForeignism: false, ...normalized };
+      return {
+        isVocabulary: true,
+        isVocabularyEP: false,
+        isForeignism: false,
+        ...normalized,
+      };
     }
 
     if (sourceModel === 'TOPONYM') {
@@ -113,7 +151,12 @@ export class VocabularyProcessorService {
     }
 
     if (sourceModel === 'ANTHROPONYM') {
-      return { isVocabulary: true, isVocabularyEP: false, isForeignism: false, ...normalized };
+      return {
+        isVocabulary: true,
+        isVocabularyEP: false,
+        isForeignism: false,
+        ...normalized,
+      };
     }
 
     return { isVocabulary: false, isVocabularyEP: false, ...normalized };
@@ -121,7 +164,8 @@ export class VocabularyProcessorService {
 
   private normalizeValue(value: unknown): unknown {
     if (typeof value === 'string') return value.trim();
-    if (Array.isArray(value)) return value.map((item) => String(item).trim()).filter(Boolean);
+    if (Array.isArray(value))
+      return value.map((item) => String(item).trim()).filter(Boolean);
     if (value === null || value === undefined) return '';
     return value;
   }
@@ -133,13 +177,20 @@ export class VocabularyProcessorService {
   }
 
   private isEmpty(value: unknown) {
-    return value === null || value === undefined || (typeof value === 'string' && value.trim() === '') ||
-      (Array.isArray(value) && value.length === 0);
+    return (
+      value === null ||
+      value === undefined ||
+      (typeof value === 'string' && value.trim() === '') ||
+      (Array.isArray(value) && value.length === 0)
+    );
   }
 
   private bucket(
     sourceModel: ManualVocabularySourceModel,
-    grouped: Pick<ManualVocabularyWorkbookData, 'entries' | 'toponyms' | 'anthroponyms' | 'foreignisms'>,
+    grouped: Pick<
+      ManualVocabularyWorkbookData,
+      'entries' | 'toponyms' | 'anthroponyms' | 'foreignisms'
+    >,
   ) {
     if (sourceModel === 'ENTRY') return grouped.entries;
     if (sourceModel === 'TOPONYM') return grouped.toponyms;

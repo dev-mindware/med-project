@@ -1,5 +1,26 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, Query, NotFoundException, ForbiddenException, BadRequestException, Optional } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiParam, ApiBody } from '@nestjs/swagger';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  Request,
+  Query,
+  NotFoundException,
+  ForbiddenException,
+  BadRequestException,
+  Optional,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiParam,
+  ApiBody,
+} from '@nestjs/swagger';
 import { AnthroponymsService } from './anthroponyms.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -9,7 +30,10 @@ import { CreateAnthroponymDto } from './dto/create-anthroponym.dto';
 import { UpdateAnthroponymDto } from './dto/update-anthroponym.dto';
 import { LinguisticFilterDto } from '../common/dto/filter.dto';
 import { UsersService } from '../users/users.service';
-import { applySupervisorAnthroponymScope, ensureSupervisorCanAccessCreator } from '../common/supervisor-scope';
+import {
+  applySupervisorAnthroponymScope,
+  ensureSupervisorCanAccessCreator,
+} from '../common/supervisor-scope';
 import { ImportRowsDto } from '../common/dto/import-rows.dto';
 
 import { AuthRequest } from '../auth/types/auth-request';
@@ -26,7 +50,10 @@ export class AnthroponymsController {
   @Post()
   @Roles(UserRole.ADMIN, UserRole.SUPERVISOR, UserRole.OPERATOR)
   @ApiOperation({ summary: 'Create a new anthroponym' })
-  create(@Request() req: AuthRequest, @Body() createAnthroponymDto: CreateAnthroponymDto) {
+  create(
+    @Request() req: AuthRequest,
+    @Body() createAnthroponymDto: CreateAnthroponymDto,
+  ) {
     return this.anthroponymsService.create({
       ...createAnthroponymDto,
       createdBy: { connect: { id: req.user.id } },
@@ -43,14 +70,35 @@ export class AnthroponymsController {
 
   @Get()
   @ApiOperation({ summary: 'List all anthroponyms' })
-  findAll(@Request() req: AuthRequest, @Query() filters?: LinguisticFilterDto) {
-    if (!filters) {
-      filters = req;
-      req = { user: { id: '', role: UserRole.ADMIN } };
+  findAll(
+    @Request() reqOrFilters: any,
+    @Query() maybeFilters?: LinguisticFilterDto,
+  ) {
+    let reqUser: { id: string; role: UserRole; email?: string } = {
+      id: '',
+      role: UserRole.ADMIN,
+      email: '',
+    };
+    let filters: LinguisticFilterDto = {};
+
+    if (reqOrFilters && 'user' in reqOrFilters && reqOrFilters.user) {
+      reqUser = reqOrFilters.user;
+      filters = maybeFilters || {};
+    } else if (reqOrFilters) {
+      filters = reqOrFilters as LinguisticFilterDto;
     }
 
-    const { search, page = 1, limit = 20, orderBy, orderDirection, startDate, endDate, languageCode, ...rest } =
-      filters as LinguisticFilterDto;
+    const {
+      search,
+      page = 1,
+      limit = 20,
+      orderBy,
+      orderDirection,
+      startDate,
+      endDate,
+      languageCode,
+      ...rest
+    } = filters as LinguisticFilterDto;
     const where: Prisma.AnthroponymWhereInput = { ...rest };
 
     if (startDate || endDate) {
@@ -58,13 +106,15 @@ export class AnthroponymsController {
       if (startDate) where.createdAt.gte = new Date(startDate);
       if (endDate) where.createdAt.lte = new Date(endDate);
     }
-    applySupervisorAnthroponymScope(req.user, where);
+    applySupervisorAnthroponymScope(reqUser as any, where);
 
     const params = {
       skip: (page - 1) * limit,
       take: limit,
       where,
-      orderBy: orderBy ? { [orderBy]: orderDirection } : { createdAt: 'desc' as Prisma.SortOrder },
+      orderBy: orderBy
+        ? { [orderBy]: orderDirection }
+        : { createdAt: 'desc' as Prisma.SortOrder },
     };
 
     if (search) {
@@ -75,40 +125,67 @@ export class AnthroponymsController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Get a specific anthroponym by ID' })
-  async findOne(@Param('id') id: string, @Request() req: AuthRequest = { user: { id: '', role: UserRole.ADMIN } }) {
+  async findOne(
+    @Param('id') id: string,
+    @Request() req: any = { user: { id: '', role: UserRole.ADMIN } },
+  ) {
     const anthroponym = await this.anthroponymsService.findOne({ id });
     if (!anthroponym) throw new NotFoundException();
 
-    if (req.user.role === UserRole.OPERATOR && anthroponym.createdById !== req.user.id) {
+    const currentUser = req?.user || { id: '', role: UserRole.ADMIN };
+    if (
+      currentUser.role === UserRole.OPERATOR &&
+      anthroponym.createdById !== currentUser.id
+    ) {
       throw new ForbiddenException('Unauthorized');
     }
-    await ensureSupervisorCanAccessCreator(req.user, anthroponym.createdById, this.usersService);
+    await ensureSupervisorCanAccessCreator(
+      currentUser,
+      anthroponym.createdById,
+      this.usersService,
+    );
     return anthroponym;
   }
 
   @Patch(':id')
   @Roles(UserRole.ADMIN, UserRole.SUPERVISOR, UserRole.OPERATOR)
   @ApiOperation({ summary: 'Update an existing anthroponym' })
-  async update(@Param('id') id: string, @Request() req: AuthRequest, @Body() updateAnthroponymDto: UpdateAnthroponymDto) {
+  async update(
+    @Param('id') id: string,
+    @Request() req: AuthRequest,
+    @Body() updateAnthroponymDto: UpdateAnthroponymDto,
+  ) {
     const anthroponym = await this.anthroponymsService.findOne({ id });
     if (!anthroponym) throw new NotFoundException();
-    
+
     if (req.user.role === UserRole.OPERATOR) {
       if (anthroponym.createdById !== req.user.id) {
         throw new ForbiddenException('Unauthorized');
       }
-      if (anthroponym.approvalStatus !== ApprovalStatus.DRAFT && anthroponym.approvalStatus !== ApprovalStatus.NEEDS_CORRECTION) {
-        throw new ForbiddenException('Can only edit draft or correction-requested content');
+      if (
+        anthroponym.approvalStatus !== ApprovalStatus.DRAFT &&
+        anthroponym.approvalStatus !== ApprovalStatus.NEEDS_CORRECTION
+      ) {
+        throw new ForbiddenException(
+          'Can only edit draft or correction-requested content',
+        );
       }
     }
-    await ensureSupervisorCanAccessCreator(req.user, anthroponym.createdById, this.usersService);
+    await ensureSupervisorCanAccessCreator(
+      req.user,
+      anthroponym.createdById,
+      this.usersService,
+    );
 
     const data: Prisma.AnthroponymUpdateInput = {
       ...updateAnthroponymDto,
       updatedBy: { connect: { id: req.user.id } },
     };
 
-    if (anthroponym.approvalStatus === ApprovalStatus.NEEDS_CORRECTION && anthroponym.createdById === req.user.id) {
+    if (
+      anthroponym.approvalStatus === ApprovalStatus.NEEDS_CORRECTION &&
+      anthroponym.createdById === req.user.id
+    ) {
       data.approvalStatus = ApprovalStatus.PENDING_APPROVAL;
       data.submittedAt = new Date();
     }
@@ -125,7 +202,7 @@ export class AnthroponymsController {
   async remove(@Param('id') id: string, @Request() req: AuthRequest) {
     const anthroponym = await this.anthroponymsService.findOne({ id });
     if (!anthroponym) throw new NotFoundException();
-    
+
     if (req.user.role === UserRole.OPERATOR) {
       if (anthroponym.createdById !== req.user.id) {
         throw new ForbiddenException('Unauthorized');
@@ -145,56 +222,75 @@ export class AnthroponymsController {
     schema: {
       type: 'object',
       properties: {
-        status: { 
-          type: 'string', 
-          enum: ['DRAFT', 'PENDING_APPROVAL', 'APPROVED', 'REJECTED', 'NEEDS_CORRECTION', 'ARCHIVED'],
-          description: 'New approval status to set for the anthroponym'
+        status: {
+          type: 'string',
+          enum: [
+            'DRAFT',
+            'PENDING_APPROVAL',
+            'APPROVED',
+            'REJECTED',
+            'NEEDS_CORRECTION',
+            'ARCHIVED',
+          ],
+          description: 'New approval status to set for the anthroponym',
         },
-        reason: { 
-          type: 'string', 
-          description: 'Optional reason or feedback, required for rejection or correction' 
-        }
+        reason: {
+          type: 'string',
+          description:
+            'Optional reason or feedback, required for rejection or correction',
+        },
       },
-      required: ['status']
-    }
+      required: ['status'],
+    },
   })
   async review(
-    @Param('id') id: string, 
+    @Param('id') id: string,
     @Request() req: AuthRequest,
     @Body('status') status: ApprovalStatus,
-    @Body('reason') reason?: string
+    @Body('reason') reason?: string,
   ) {
     const item = await this.anthroponymsService.findOne({ id });
     if (!item) throw new NotFoundException();
 
-    if (req.user.role === UserRole.OPERATOR && item.createdById !== req.user.id) {
+    if (
+      req.user.role === UserRole.OPERATOR &&
+      item.createdById !== req.user.id
+    ) {
       throw new ForbiddenException('Unauthorized');
     }
-    await ensureSupervisorCanAccessCreator(req.user, item.createdById, this.usersService);
+    await ensureSupervisorCanAccessCreator(
+      req.user,
+      item.createdById,
+      this.usersService,
+    );
 
     const data: Prisma.AnthroponymUpdateInput = { approvalStatus: status };
 
     if (status === ApprovalStatus.PENDING_APPROVAL) {
       data.submittedAt = new Date();
     } else if (status === ApprovalStatus.APPROVED) {
-      if (req.user.role === UserRole.OPERATOR) throw new ForbiddenException('Unauthorized');
+      if (req.user.role === UserRole.OPERATOR)
+        throw new ForbiddenException('Unauthorized');
       data.approvedAt = new Date();
       data.approvedBy = { connect: { id: req.user.id } };
     } else if (status === ApprovalStatus.REJECTED) {
-      if (req.user.role === UserRole.OPERATOR) throw new ForbiddenException('Unauthorized');
+      if (req.user.role === UserRole.OPERATOR)
+        throw new ForbiddenException('Unauthorized');
       data.rejectedAt = new Date();
       data.rejectionReason = reason;
     } else if (status === ApprovalStatus.NEEDS_CORRECTION) {
-      if (req.user.role === UserRole.OPERATOR) throw new ForbiddenException('Unauthorized');
+      if (req.user.role === UserRole.OPERATOR)
+        throw new ForbiddenException('Unauthorized');
       data.correctionNotes = reason;
     }
 
     return this.anthroponymsService.update({ where: { id }, data });
   }
 
-
   @Get(':id/schema')
-  @ApiOperation({ summary: 'Generate GEO / JSON-LD Schema.org metadata for the anthroponym' })
+  @ApiOperation({
+    summary: 'Generate GEO / JSON-LD Schema.org metadata for the anthroponym',
+  })
   async generateSchema(@Param('id') id: string) {
     const item = await this.anthroponymsService.findOne({ id });
     if (!item) throw new NotFoundException();

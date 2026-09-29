@@ -58,7 +58,11 @@ describe('ForeignismsService', () => {
     });
 
     it('should accept filtering and pagination', async () => {
-      await service.findAll({ skip: 0, take: 20, where: { context: 'Tecnologia' } });
+      await service.findAll({
+        skip: 0,
+        take: 20,
+        where: { context: 'Tecnologia' },
+      });
       expect(prisma.foreignism.findMany).toHaveBeenCalledTimes(1);
     });
   });

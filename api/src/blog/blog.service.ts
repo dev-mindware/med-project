@@ -33,7 +33,10 @@ export class BlogService {
     });
   }
 
-  async update(id: string, data: Prisma.BlogPostUpdateInput): Promise<BlogPost> {
+  async update(
+    id: string,
+    data: Prisma.BlogPostUpdateInput,
+  ): Promise<BlogPost> {
     return this.prisma.blogPost.update({
       where: { id },
       data,

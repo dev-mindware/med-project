@@ -1,10 +1,13 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateRegistrationDto } from './dto/create-registration.dto';
 import { RegistrationFilterDto } from './dto/registration-filter.dto';
 import { RegistrationStatus, Prisma } from '@prisma/client';
 import { MailService } from '../common/mail/mail.service';
-
 
 @Injectable()
 export class EventRegistrationsService {
@@ -12,7 +15,6 @@ export class EventRegistrationsService {
     private readonly prisma: PrismaService,
     private readonly mailService: MailService,
   ) {}
-
 
   async create(createDto: CreateRegistrationDto) {
     const event = await this.prisma.event.findUnique({
@@ -22,7 +24,10 @@ export class EventRegistrationsService {
 
     if (!event) throw new NotFoundException('Event not found');
 
-    if (event.maxRegistrations && event._count.registrations >= event.maxRegistrations) {
+    if (
+      event.maxRegistrations &&
+      event._count.registrations >= event.maxRegistrations
+    ) {
       throw new BadRequestException('Event registration is full');
     }
 
@@ -36,7 +41,9 @@ export class EventRegistrationsService {
     });
 
     if (existing) {
-      throw new BadRequestException('You are already registered for this event');
+      throw new BadRequestException(
+        'You are already registered for this event',
+      );
     }
 
     return this.prisma.$transaction(async (tx) => {
@@ -94,7 +101,10 @@ export class EventRegistrationsService {
         registration.event.location,
         registration.id.substring(0, 8).toUpperCase(), // Short ID as "Pass ID"
       );
-    } else if (status === RegistrationStatus.REJECTED || status === RegistrationStatus.CANCELLED) {
+    } else if (
+      status === RegistrationStatus.REJECTED ||
+      status === RegistrationStatus.CANCELLED
+    ) {
       await this.mailService.sendEventRegistrationRejected(
         registration.email,
         registration.name,
@@ -105,7 +115,6 @@ export class EventRegistrationsService {
 
     return registration;
   }
-
 
   async markAttendance(id: string, attended: boolean) {
     return this.prisma.eventRegistration.update({

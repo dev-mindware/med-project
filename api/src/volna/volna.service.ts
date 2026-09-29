@@ -1,4 +1,9 @@
-import { ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { ApprovalStatus, Prisma, UserRole } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateVolnaTermDto } from './dto/create-volna-term.dto';
@@ -106,11 +111,18 @@ export class VolnaService {
     });
   }
 
-  async review(id: string, status: ApprovalStatus, reason: string | undefined, user: AuthUser) {
+  async review(
+    id: string,
+    status: ApprovalStatus,
+    reason: string | undefined,
+    user: AuthUser,
+  ) {
     const current = await this.findOne(id, user);
 
     if (user.role === UserRole.OPERATOR && status === ApprovalStatus.APPROVED) {
-      throw new ForbiddenException('Operadores não podem aprovar vocábulos VOLNA');
+      throw new ForbiddenException(
+        'Operadores não podem aprovar vocábulos VOLNA',
+      );
     }
 
     const data: Prisma.VolnaTermUpdateInput = {
@@ -194,10 +206,18 @@ export class VolnaService {
   private buildWhere(filters: VolnaFilterDto): Prisma.VolnaTermWhereInput {
     const query = filters.search?.trim();
     return {
-      ...(filters.approvalStatus ? { approvalStatus: filters.approvalStatus } : {}),
-      ...(filters.language ? { language: { equals: filters.language, mode: 'insensitive' } } : {}),
-      ...(filters.grammaticalCategory ? { grammaticalCategory: filters.grammaticalCategory } : {}),
-      ...(filters.grammaticalSubcategory ? { grammaticalSubcategory: filters.grammaticalSubcategory } : {}),
+      ...(filters.approvalStatus
+        ? { approvalStatus: filters.approvalStatus }
+        : {}),
+      ...(filters.language
+        ? { language: { equals: filters.language, mode: 'insensitive' } }
+        : {}),
+      ...(filters.grammaticalCategory
+        ? { grammaticalCategory: filters.grammaticalCategory }
+        : {}),
+      ...(filters.grammaticalSubcategory
+        ? { grammaticalSubcategory: filters.grammaticalSubcategory }
+        : {}),
       ...(query
         ? {
             OR: [
@@ -229,10 +249,13 @@ export class VolnaService {
 
     if (dto.term !== undefined) data.term = dto.term.trim();
     if (dto.language !== undefined) data.language = dto.language.trim();
-    if (dto.grammaticalCategory !== undefined) data.grammaticalCategory = this.optional(dto.grammaticalCategory);
-    if (dto.grammaticalSubcategory !== undefined) data.grammaticalSubcategory = this.optional(dto.grammaticalSubcategory);
+    if (dto.grammaticalCategory !== undefined)
+      data.grammaticalCategory = this.optional(dto.grammaticalCategory);
+    if (dto.grammaticalSubcategory !== undefined)
+      data.grammaticalSubcategory = this.optional(dto.grammaticalSubcategory);
     if (dto.definition !== undefined) data.definition = dto.definition.trim();
-    if (dto.usageExample !== undefined) data.usageExample = this.optional(dto.usageExample);
+    if (dto.usageExample !== undefined)
+      data.usageExample = this.optional(dto.usageExample);
     if (dto.notes !== undefined) data.notes = this.optional(dto.notes);
 
     return data;
@@ -242,7 +265,11 @@ export class VolnaService {
     return value?.trim() || null;
   }
 
-  private async ensureUnique(term: string, language: string, currentId?: string) {
+  private async ensureUnique(
+    term: string,
+    language: string,
+    currentId?: string,
+  ) {
     const existing = await this.prisma.volnaTerm.findFirst({
       where: {
         term: { equals: term, mode: 'insensitive' },
@@ -253,20 +280,39 @@ export class VolnaService {
     });
 
     if (existing) {
-      throw new ConflictException('Já existe este vocábulo VOLNA para a língua indicada');
+      throw new ConflictException(
+        'Já existe este vocábulo VOLNA para a língua indicada',
+      );
     }
   }
 
   private ensureCanAccess(user: AuthUser, createdById: string | null) {
-    if (user.role === UserRole.ADMIN || user.role === UserRole.SUPERVISOR) return;
-    if (createdById !== user.id) throw new ForbiddenException('Sem permissão para aceder a este vocábulo VOLNA');
+    if (user.role === UserRole.ADMIN || user.role === UserRole.SUPERVISOR)
+      return;
+    if (createdById !== user.id)
+      throw new ForbiddenException(
+        'Sem permissão para aceder a este vocábulo VOLNA',
+      );
   }
 
-  private ensureCanEdit(user: AuthUser, createdById: string | null, status: ApprovalStatus) {
-    if (user.role === UserRole.ADMIN || user.role === UserRole.SUPERVISOR) return;
-    if (createdById !== user.id) throw new ForbiddenException('Sem permissão para gerir este vocábulo VOLNA');
-    if (status !== ApprovalStatus.DRAFT && status !== ApprovalStatus.NEEDS_CORRECTION) {
-      throw new ForbiddenException('Só pode editar ou eliminar rascunhos ou vocábulos com correcção solicitada');
+  private ensureCanEdit(
+    user: AuthUser,
+    createdById: string | null,
+    status: ApprovalStatus,
+  ) {
+    if (user.role === UserRole.ADMIN || user.role === UserRole.SUPERVISOR)
+      return;
+    if (createdById !== user.id)
+      throw new ForbiddenException(
+        'Sem permissão para gerir este vocábulo VOLNA',
+      );
+    if (
+      status !== ApprovalStatus.DRAFT &&
+      status !== ApprovalStatus.NEEDS_CORRECTION
+    ) {
+      throw new ForbiddenException(
+        'Só pode editar ou eliminar rascunhos ou vocábulos com correcção solicitada',
+      );
     }
   }
 }

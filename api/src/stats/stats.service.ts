@@ -23,15 +23,18 @@ export class StatsService {
       this.getTopContributors(),
     ]);
 
-    const trunc = (str: string) => str.length > 40 ? str.slice(0, 37) + '...' : str;
+    const trunc = (str: string) =>
+      str.length > 40 ? str.slice(0, 37) + '...' : str;
 
-    const approvalRate = contentStats.total > 0
-      ? Math.round((contentStats.approved / contentStats.total) * 100)
-      : 0;
+    const approvalRate =
+      contentStats.total > 0
+        ? Math.round((contentStats.approved / contentStats.total) * 100)
+        : 0;
 
-    const pendingRate = contentStats.total > 0
-      ? Math.round((contentStats.pendingApproval / contentStats.total) * 100)
-      : 0;
+    const pendingRate =
+      contentStats.total > 0
+        ? Math.round((contentStats.pendingApproval / contentStats.total) * 100)
+        : 0;
 
     const cards = [
       {
@@ -103,21 +106,35 @@ export class StatsService {
   private async getUserStats() {
     const total = await this.prisma.user.count();
     const active = await this.prisma.user.count({ where: { isActive: true } });
-    const admins = await this.prisma.user.count({ where: { role: UserRole.ADMIN } });
-    const supervisors = await this.prisma.user.count({ where: { role: UserRole.SUPERVISOR } });
-    const operators = await this.prisma.user.count({ where: { role: UserRole.OPERATOR } });
+    const admins = await this.prisma.user.count({
+      where: { role: UserRole.ADMIN },
+    });
+    const supervisors = await this.prisma.user.count({
+      where: { role: UserRole.SUPERVISOR },
+    });
+    const operators = await this.prisma.user.count({
+      where: { role: UserRole.OPERATOR },
+    });
 
-    return { total, active, inactive: total - active, admins, supervisors, operators };
+    return {
+      total,
+      active,
+      inactive: total - active,
+      admins,
+      supervisors,
+      operators,
+    };
   }
 
   private async getContentStats(where?: { createdById?: string }) {
-    const [entries, anthroponyms, toponyms, foreignisms, neologisms] = await Promise.all([
-      this.prisma.entry.count({ where }),
-      this.prisma.anthroponym.count({ where }),
-      this.prisma.toponym.count({ where }),
-      this.prisma.foreignism.count({ where }),
-      this.prisma.neologism.count({ where }),
-    ]);
+    const [entries, anthroponyms, toponyms, foreignisms, neologisms] =
+      await Promise.all([
+        this.prisma.entry.count({ where }),
+        this.prisma.anthroponym.count({ where }),
+        this.prisma.toponym.count({ where }),
+        this.prisma.foreignism.count({ where }),
+        this.prisma.neologism.count({ where }),
+      ]);
 
     const total = entries + anthroponyms + toponyms + foreignisms + neologisms;
 
@@ -129,10 +146,22 @@ export class StatsService {
       vocabulary,
       vocabularyEP,
     ] = await Promise.all([
-      this.countAcrossModules({ ...where, approvalStatus: ApprovalStatus.APPROVED }),
-      this.countAcrossModules({ ...where, approvalStatus: ApprovalStatus.PENDING_APPROVAL }),
-      this.countAcrossModules({ ...where, approvalStatus: ApprovalStatus.DRAFT }),
-      this.countAcrossModules({ ...where, approvalStatus: ApprovalStatus.NEEDS_CORRECTION }),
+      this.countAcrossModules({
+        ...where,
+        approvalStatus: ApprovalStatus.APPROVED,
+      }),
+      this.countAcrossModules({
+        ...where,
+        approvalStatus: ApprovalStatus.PENDING_APPROVAL,
+      }),
+      this.countAcrossModules({
+        ...where,
+        approvalStatus: ApprovalStatus.DRAFT,
+      }),
+      this.countAcrossModules({
+        ...where,
+        approvalStatus: ApprovalStatus.NEEDS_CORRECTION,
+      }),
       this.countAcrossModules({ ...where, isVocabulary: true }),
       this.countAcrossModules({ ...where, isVocabularyEP: true }),
     ]);
@@ -171,8 +200,12 @@ export class StatsService {
 
   private async getBlogStats() {
     const total = await this.prisma.blogPost.count();
-    const published = await this.prisma.blogPost.count({ where: { status: PostStatus.PUBLISHED } });
-    const drafts = await this.prisma.blogPost.count({ where: { status: PostStatus.DRAFT } });
+    const published = await this.prisma.blogPost.count({
+      where: { status: PostStatus.PUBLISHED },
+    });
+    const drafts = await this.prisma.blogPost.count({
+      where: { status: PostStatus.DRAFT },
+    });
 
     return { total, published, drafts };
   }
@@ -180,7 +213,9 @@ export class StatsService {
   private async getEventStats() {
     const total = await this.prisma.event.count();
     const now = new Date();
-    const upcoming = await this.prisma.event.count({ where: { startDate: { gt: now } } });
+    const upcoming = await this.prisma.event.count({
+      where: { startDate: { gt: now } },
+    });
     const ongoing = await this.prisma.event.count({
       where: {
         startDate: { lte: now },
@@ -195,42 +230,107 @@ export class StatsService {
     const take = 6;
     const where = createdById ? { createdById } : undefined;
     const [e, a, t, f, n] = await Promise.all([
-      this.prisma.entry.findMany({ where, take, orderBy: { createdAt: 'desc' }, include: { createdBy: { select: { name: true } } } }),
-      this.prisma.anthroponym.findMany({ where, take, orderBy: { createdAt: 'desc' }, include: { createdBy: { select: { name: true } } } }),
-      this.prisma.toponym.findMany({ where, take, orderBy: { createdAt: 'desc' }, include: { createdBy: { select: { name: true } } } }),
-      this.prisma.foreignism.findMany({ where, take, orderBy: { createdAt: 'desc' }, include: { createdBy: { select: { name: true } } } }),
-      this.prisma.neologism.findMany({ where, take, orderBy: { createdAt: 'desc' }, include: { createdBy: { select: { name: true } } } }),
+      this.prisma.entry.findMany({
+        where,
+        take,
+        orderBy: { createdAt: 'desc' },
+        include: { createdBy: { select: { name: true } } },
+      }),
+      this.prisma.anthroponym.findMany({
+        where,
+        take,
+        orderBy: { createdAt: 'desc' },
+        include: { createdBy: { select: { name: true } } },
+      }),
+      this.prisma.toponym.findMany({
+        where,
+        take,
+        orderBy: { createdAt: 'desc' },
+        include: { createdBy: { select: { name: true } } },
+      }),
+      this.prisma.foreignism.findMany({
+        where,
+        take,
+        orderBy: { createdAt: 'desc' },
+        include: { createdBy: { select: { name: true } } },
+      }),
+      this.prisma.neologism.findMany({
+        where,
+        take,
+        orderBy: { createdAt: 'desc' },
+        include: { createdBy: { select: { name: true } } },
+      }),
     ]);
 
     const activity = [
-      ...e.map(i => ({ id: i.id, title: i.entry, type: 'Entrada', date: i.createdAt, user: i.createdBy?.name ?? 'Sistema' })),
-      ...a.map(i => ({ id: i.id, title: i.name, type: 'Antropónimo', date: i.createdAt, user: i.createdBy?.name ?? 'Sistema' })),
-      ...t.map(i => ({ id: i.id, title: i.toponym, type: 'Topónimo', date: i.createdAt, user: i.createdBy?.name ?? 'Sistema' })),
-      ...f.map(i => ({ id: i.id, title: i.term, type: 'Estrangeirismo', date: i.createdAt, user: i.createdBy?.name ?? 'Sistema' })),
-      ...n.map(i => ({ id: i.id, title: i.entry, type: 'Neologismo', date: i.createdAt, user: i.createdBy?.name ?? 'Sistema' })),
+      ...e.map((i) => ({
+        id: i.id,
+        title: i.entry,
+        type: 'Entrada',
+        date: i.createdAt,
+        user: i.createdBy?.name ?? 'Sistema',
+      })),
+      ...a.map((i) => ({
+        id: i.id,
+        title: i.name,
+        type: 'Antropónimo',
+        date: i.createdAt,
+        user: i.createdBy?.name ?? 'Sistema',
+      })),
+      ...t.map((i) => ({
+        id: i.id,
+        title: i.toponym,
+        type: 'Topónimo',
+        date: i.createdAt,
+        user: i.createdBy?.name ?? 'Sistema',
+      })),
+      ...f.map((i) => ({
+        id: i.id,
+        title: i.term,
+        type: 'Estrangeirismo',
+        date: i.createdAt,
+        user: i.createdBy?.name ?? 'Sistema',
+      })),
+      ...n.map((i) => ({
+        id: i.id,
+        title: i.entry,
+        type: 'Neologismo',
+        date: i.createdAt,
+        user: i.createdBy?.name ?? 'Sistema',
+      })),
     ];
 
-    return activity.sort((a, b) => b.date.getTime() - a.date.getTime()).slice(0, take);
+    return activity
+      .sort((a, b) => b.date.getTime() - a.date.getTime())
+      .slice(0, take);
   }
 
   private async getTopContributors() {
-    const [entries, anthroponyms, toponyms, foreignisms, neologisms] = await Promise.all([
-      this.groupContributorsByModule('entry'),
-      this.groupContributorsByModule('anthroponym'),
-      this.groupContributorsByModule('toponym'),
-      this.groupContributorsByModule('foreignism'),
-      this.groupContributorsByModule('neologism'),
-    ]);
+    const [entries, anthroponyms, toponyms, foreignisms, neologisms] =
+      await Promise.all([
+        this.groupContributorsByModule('entry'),
+        this.groupContributorsByModule('anthroponym'),
+        this.groupContributorsByModule('toponym'),
+        this.groupContributorsByModule('foreignism'),
+        this.groupContributorsByModule('neologism'),
+      ]);
 
     const counts = new Map<string, number>();
-    [...entries, ...anthroponyms, ...toponyms, ...foreignisms, ...neologisms].forEach((item) => {
+    [
+      ...entries,
+      ...anthroponyms,
+      ...toponyms,
+      ...foreignisms,
+      ...neologisms,
+    ].forEach((item) => {
       if (!item.createdById) return;
-      counts.set(item.createdById, (counts.get(item.createdById) ?? 0) + item._count._all);
+      counts.set(
+        item.createdById,
+        (counts.get(item.createdById) ?? 0) + item._count._all,
+      );
     });
 
-    const top = [...counts.entries()]
-      .sort(([, a], [, b]) => b - a)
-      .slice(0, 5);
+    const top = [...counts.entries()].sort(([, a], [, b]) => b - a).slice(0, 5);
 
     return Promise.all(
       top.map(async ([userId, count]) => {
@@ -253,6 +353,7 @@ export class StatsService {
   private async groupContributorsByModule(
     model: 'entry' | 'anthroponym' | 'toponym' | 'foreignism' | 'neologism',
   ): Promise<Array<{ createdById: string | null; _count: { _all: number } }>> {
+<<<<<<< Updated upstream
     switch (model) {
       case 'entry':
         return this.prisma.entry.groupBy({
@@ -285,9 +386,19 @@ export class StatsService {
           _count: { _all: true },
         });
     }
+=======
+    const delegate = this.prisma[model] as any;
+    return delegate.groupBy({
+      by: ['createdById'],
+      where: { createdById: { not: null } },
+      _count: { _all: true },
+    });
+>>>>>>> Stashed changes
   }
 
-  private buildCharts(contentStats: Awaited<ReturnType<StatsService['getContentStats']>>) {
+  private buildCharts(
+    contentStats: Awaited<ReturnType<StatsService['getContentStats']>>,
+  ) {
     return {
       moduleDistribution: [
         { name: 'Entradas', value: contentStats.entries },
@@ -305,7 +416,13 @@ export class StatsService {
       vocabularyStats: [
         { name: 'VONALP', value: contentStats.vocabulary },
         { name: 'VONALP-EP', value: contentStats.vocabularyEP },
-        { name: 'Outros', value: contentStats.total - contentStats.vocabulary - contentStats.vocabularyEP },
+        {
+          name: 'Outros',
+          value:
+            contentStats.total -
+            contentStats.vocabulary -
+            contentStats.vocabularyEP,
+        },
       ],
     };
   }
@@ -318,12 +435,16 @@ export class StatsService {
     const [contentStats, recentActivity, user] = await Promise.all([
       this.getContentStats({ createdById: userId }),
       this.getRecentActivity(userId),
-      this.prisma.user.findUnique({ where: { id: userId }, select: { name: true, role: true } }),
+      this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { name: true, role: true },
+      }),
     ]);
 
-    const approvalRate = contentStats.total > 0
-      ? Math.round((contentStats.approved / contentStats.total) * 100)
-      : 0;
+    const approvalRate =
+      contentStats.total > 0
+        ? Math.round((contentStats.approved / contentStats.total) * 100)
+        : 0;
 
     return {
       cards: [
@@ -332,41 +453,54 @@ export class StatsService {
           value: contentStats.total,
           icon: 'FileText',
           color: 'blue',
-          description: contentStats.total === 0
-            ? 'Nenhum registo criado'
-            : `${contentStats.entries} entradas, ${contentStats.neologisms} neologismos`,
+          description:
+            contentStats.total === 0
+              ? 'Nenhum registo criado'
+              : `${contentStats.entries} entradas, ${contentStats.neologisms} neologismos`,
         },
         {
           label: 'Aprovados',
           value: contentStats.approved,
           icon: 'CheckCircle',
           color: 'green',
-          description: contentStats.total === 0 ? 'Sem registos ainda' : `${approvalRate}% dos seus registos`,
+          description:
+            contentStats.total === 0
+              ? 'Sem registos ainda'
+              : `${approvalRate}% dos seus registos`,
         },
         {
           label: 'Pendentes',
           value: contentStats.pendingApproval,
           icon: 'Clock',
           color: 'orange',
-          description: contentStats.pendingApproval === 0 ? 'Nada a aguardar revisão' : 'Aguardam validação',
+          description:
+            contentStats.pendingApproval === 0
+              ? 'Nada a aguardar revisão'
+              : 'Aguardam validação',
         },
         {
           label: 'Necessitam Correção',
           value: contentStats.needsCorrection,
           icon: 'AlertCircle',
           color: 'red',
-          description: contentStats.needsCorrection === 0 ? 'Sem pedidos de correção' : 'Requerem actualização',
+          description:
+            contentStats.needsCorrection === 0
+              ? 'Sem pedidos de correção'
+              : 'Requerem actualização',
         },
       ],
       charts: this.buildCharts(contentStats),
       recentActivity,
-      topContributors: contentStats.total > 0 ? [
-        {
-          name: user?.name || 'Meu perfil',
-          role: user?.role,
-          count: contentStats.total,
-        },
-      ] : [],
+      topContributors:
+        contentStats.total > 0
+          ? [
+              {
+                name: user?.name || 'Meu perfil',
+                role: user?.role,
+                count: contentStats.total,
+              },
+            ]
+          : [],
       summary: {
         content: contentStats,
         details: {

@@ -26,9 +26,7 @@ describe('EventsController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [EventsController],
-      providers: [
-        { provide: EventsService, useValue: mockEventsService },
-      ],
+      providers: [{ provide: EventsService, useValue: mockEventsService }],
     }).compile();
 
     controller = module.get<EventsController>(EventsController);
@@ -39,7 +37,7 @@ describe('EventsController', () => {
   describe('create()', () => {
     it('should call service.create', async () => {
       const req = { user: { id: 'user-1' } };
-      await controller.create(req, { title: 'New Event' } as any);
+      await controller.create(req as any, { title: 'New Event' } as any);
       expect(service.create).toHaveBeenCalled();
     });
   });
@@ -47,17 +45,22 @@ describe('EventsController', () => {
   describe('findAll()', () => {
     it('should call service.findAll with period filters', async () => {
       const req = { user: { role: UserRole.ADMIN } };
-      const filters = { page: 1, limit: 10, period: 'upcoming', category: 'category' } as any;
-      await controller.findAll(req, filters);
+      const filters = {
+        page: 1,
+        limit: 10,
+        period: 'upcoming',
+        category: 'category',
+      } as any;
+      await controller.findAll(req as any, filters);
       expect(service.findAll).toHaveBeenCalledWith(
-        expect.objectContaining({ 
-          skip: 0, 
+        expect.objectContaining({
+          skip: 0,
           take: 10,
-          where: expect.objectContaining({ 
+          where: expect.objectContaining({
             category: 'category',
-            startDate: expect.any(Object)
-          })
-        })
+            startDate: expect.any(Object),
+          }),
+        }),
       );
     });
   });
@@ -65,11 +68,14 @@ describe('EventsController', () => {
   describe('updateStatus()', () => {
     it('should call update with cancelledAt if status is CANCELLED', async () => {
       await controller.updateStatus('event-1', EventStatus.CANCELLED, 'Rain');
-      expect(service.update).toHaveBeenCalledWith('event-1', expect.objectContaining({ 
-        status: EventStatus.CANCELLED,
-        cancelledAt: expect.any(Date),
-        cancellationReason: 'Rain'
-      }));
+      expect(service.update).toHaveBeenCalledWith(
+        'event-1',
+        expect.objectContaining({
+          status: EventStatus.CANCELLED,
+          cancelledAt: expect.any(Date),
+          cancellationReason: 'Rain',
+        }),
+      );
     });
   });
 });

@@ -28,18 +28,27 @@ describe('EventRegistrationsController', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [EventRegistrationsController],
       providers: [
-        { provide: EventRegistrationsService, useValue: mockRegistrationsService },
+        {
+          provide: EventRegistrationsService,
+          useValue: mockRegistrationsService,
+        },
       ],
     }).compile();
 
-    controller = module.get<EventRegistrationsController>(EventRegistrationsController);
+    controller = module.get<EventRegistrationsController>(
+      EventRegistrationsController,
+    );
     service = module.get(EventRegistrationsService);
     jest.clearAllMocks();
   });
 
   describe('create()', () => {
     it('should call service.create', async () => {
-      const dto = { eventId: 'event-1', name: 'John Doe', email: 'john@example.com' };
+      const dto = {
+        eventId: 'event-1',
+        name: 'John Doe',
+        email: 'john@example.com',
+      };
       await controller.create(dto);
       expect(service.create).toHaveBeenCalledWith(dto);
     });
@@ -54,15 +63,23 @@ describe('EventRegistrationsController', () => {
           skip: 0,
           take: 10,
           where: expect.objectContaining({ eventId: 'event-1' }),
-        })
+        }),
       );
     });
   });
 
   describe('updateStatus()', () => {
     it('should call service.updateStatus', async () => {
-      await controller.updateStatus('reg-1', RegistrationStatus.APPROVED, 'Confirmed');
-      expect(service.updateStatus).toHaveBeenCalledWith('reg-1', RegistrationStatus.APPROVED, 'Confirmed');
+      await controller.updateStatus(
+        'reg-1',
+        RegistrationStatus.APPROVED,
+        'Confirmed',
+      );
+      expect(service.updateStatus).toHaveBeenCalledWith(
+        'reg-1',
+        RegistrationStatus.APPROVED,
+        'Confirmed',
+      );
     });
   });
 });

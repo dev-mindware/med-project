@@ -80,7 +80,14 @@ function createPrismaMock() {
       findUnique: jest.fn().mockResolvedValue(null),
       create: jest.fn(async ({ data }) => makeTerm(data)),
       update: jest.fn(async ({ data }) => makeTerm(data)),
-      findMany: jest.fn().mockResolvedValue([makeTerm({ completionStatus: VonalpCompletionStatus.COMPLETE, missingFields: [] })]),
+      findMany: jest
+        .fn()
+        .mockResolvedValue([
+          makeTerm({
+            completionStatus: VonalpCompletionStatus.COMPLETE,
+            missingFields: [],
+          }),
+        ]),
       count: jest.fn().mockResolvedValue(1),
     },
   };
@@ -151,25 +158,33 @@ describe('VonalpService', () => {
   });
 
   it('blocks operators from saving incomplete VONALP terms', async () => {
-    prisma.vonalpTerm.findUnique.mockResolvedValueOnce(makeTerm({
-      pronunciation: null,
-      missingFields: ['pronunciation'],
-    }));
-
-    await expect(service.update('vonalp-1', { saveIncomplete: true }, operator)).rejects.toBeInstanceOf(
-      BadRequestException,
+    prisma.vonalpTerm.findUnique.mockResolvedValueOnce(
+      makeTerm({
+        pronunciation: null,
+        missingFields: ['pronunciation'],
+      }),
     );
+
+    await expect(
+      service.update('vonalp-1', { saveIncomplete: true }, operator),
+    ).rejects.toBeInstanceOf(BadRequestException);
 
     expect(prisma.vonalpTerm.update).not.toHaveBeenCalled();
   });
 
   it('allows admin to save an incomplete term and sets the original flag', async () => {
-    prisma.vonalpTerm.findUnique.mockResolvedValueOnce(makeTerm({
-      pronunciation: null,
-      missingFields: ['pronunciation'],
-    }));
+    prisma.vonalpTerm.findUnique.mockResolvedValueOnce(
+      makeTerm({
+        pronunciation: null,
+        missingFields: ['pronunciation'],
+      }),
+    );
 
-    const result = await service.update('vonalp-1', { saveIncomplete: true }, admin);
+    const result = await service.update(
+      'vonalp-1',
+      { saveIncomplete: true },
+      admin,
+    );
 
     expect(result.completionStatus).toBe(VonalpCompletionStatus.INCOMPLETE);
     expect(prisma.vonalpTerm.update).toHaveBeenCalledWith({

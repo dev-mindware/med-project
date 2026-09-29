@@ -29,27 +29,40 @@ export class PublicContentFilterDto {
   @IsString()
   q?: string;
 
-  @ApiPropertyOptional({ description: 'Alias de q, útil para compatibilidade com clientes existentes.' })
+  @ApiPropertyOptional({
+    description:
+      'Alias de q, útil para compatibilidade com clientes existentes.',
+  })
   @IsOptional()
   @IsString()
   search?: string;
 
-  @ApiPropertyOptional({ description: 'Categoria ou área editorial, quando aplicável.' })
+  @ApiPropertyOptional({
+    description: 'Categoria ou área editorial, quando aplicável.',
+  })
   @IsOptional()
   @IsString()
   category?: string;
 
-  @ApiPropertyOptional({ description: 'Categoria gramatical, usada em entradas, neologismos, estrangeirismos e VONALP.' })
+  @ApiPropertyOptional({
+    description:
+      'Categoria gramatical, usada em entradas, neologismos, estrangeirismos e VONALP.',
+  })
   @IsOptional()
   @IsString()
   grammaticalCategory?: string;
 
-  @ApiPropertyOptional({ description: 'Subcategoria gramatical, usada em entradas e neologismos.' })
+  @ApiPropertyOptional({
+    description: 'Subcategoria gramatical, usada em entradas e neologismos.',
+  })
   @IsOptional()
   @IsString()
   grammaticalSubcategory?: string;
 
-  @ApiPropertyOptional({ description: 'Código da língua, usado em entradas, neologismos e topónimos.' })
+  @ApiPropertyOptional({
+    description:
+      'Código da língua, usado em entradas, neologismos e topónimos.',
+  })
   @IsOptional()
   @IsString()
   languageCode?: string;
@@ -74,22 +87,31 @@ export class PublicContentFilterDto {
   @IsString()
   gender?: string;
 
-  @ApiPropertyOptional({ description: 'Lingua original, usada em estrangeirismos.' })
+  @ApiPropertyOptional({
+    description: 'Lingua original, usada em estrangeirismos.',
+  })
   @IsOptional()
   @IsString()
   originalLanguage?: string;
 
-  @ApiPropertyOptional({ description: 'Pais de origem, usado em estrangeirismos.' })
+  @ApiPropertyOptional({
+    description: 'Pais de origem, usado em estrangeirismos.',
+  })
   @IsOptional()
   @IsString()
   originCountry?: string;
 
-  @ApiPropertyOptional({ description: 'Area ou dominio, usado em estrangeirismos.' })
+  @ApiPropertyOptional({
+    description: 'Area ou dominio, usado em estrangeirismos.',
+  })
   @IsOptional()
   @IsString()
   field?: string;
 
-  @ApiPropertyOptional({ enum: PublicEventPeriod, description: 'Filtro temporal para eventos.' })
+  @ApiPropertyOptional({
+    enum: PublicEventPeriod,
+    description: 'Filtro temporal para eventos.',
+  })
   @IsOptional()
   @IsEnum(PublicEventPeriod)
   period?: PublicEventPeriod;

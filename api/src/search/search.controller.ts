@@ -16,11 +16,18 @@ export class SearchController {
       'Performs a simultaneous full-text search across Entries, Toponyms, Anthroponyms and Foreignisms. Only returns APPROVED content.',
   })
   @ApiQuery({ name: 'q', description: 'Search query', required: true })
-  @ApiQuery({ name: 'limit', description: 'Max results per resource type', required: false })
+  @ApiQuery({
+    name: 'limit',
+    description: 'Max results per resource type',
+    required: false,
+  })
   async search(@Query('q') q: string, @Query('limit') limit?: string) {
     if (!q || q.trim().length < 2) {
       throw new BadRequestException('Query must have at least 2 characters');
     }
-    return this.searchService.globalSearch(q.trim(), limit ? parseInt(limit, 10) : 10);
+    return this.searchService.globalSearch(
+      q.trim(),
+      limit ? parseInt(limit, 10) : 10,
+    );
   }
 }

@@ -38,9 +38,7 @@ describe('UsersController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [UsersController],
-      providers: [
-        { provide: UsersService, useValue: mockUsersService },
-      ],
+      providers: [{ provide: UsersService, useValue: mockUsersService }],
     }).compile();
 
     controller = module.get<UsersController>(UsersController);
@@ -51,24 +49,37 @@ describe('UsersController', () => {
   describe('findAll()', () => {
     it('should call service.findAll with pagination', async () => {
       const filters = { page: 1, limit: 10 } as any;
-      await controller.findAll(filters, { id: 'admin-1', role: UserRole.ADMIN });
-      expect(service.findAll).toHaveBeenCalledWith(expect.objectContaining({ skip: 0, take: 10 }));
+      await controller.findAll(filters, {
+        id: 'admin-1',
+        role: UserRole.ADMIN,
+      });
+      expect(service.findAll).toHaveBeenCalledWith(
+        expect.objectContaining({ skip: 0, take: 10 }),
+      );
     });
   });
 
   describe('create()', () => {
     it('should hash password if provided', async () => {
-      const data = { email: 'test@test.com', password: 'plain-password' };
+      const data = {
+        name: 'Test User',
+        email: 'test@test.com',
+        password: 'plain-password',
+      };
       await controller.create(data);
       expect(argon2.hash).toHaveBeenCalledWith('plain-password');
-      expect(service.create).toHaveBeenCalledWith(expect.objectContaining({ passwordHash: 'hashed-password' }));
+      expect(service.create).toHaveBeenCalledWith(
+        expect.objectContaining({ passwordHash: 'hashed-password' }),
+      );
     });
   });
 
   describe('updateRole()', () => {
     it('should call update with new role', async () => {
       await controller.updateRole('user-1', UserRole.ADMIN);
-      expect(service.update).toHaveBeenCalledWith('user-1', { role: UserRole.ADMIN });
+      expect(service.update).toHaveBeenCalledWith('user-1', {
+        role: UserRole.ADMIN,
+      });
     });
   });
 
@@ -88,8 +99,13 @@ describe('UsersController', () => {
 
   describe('assignManagedOperators()', () => {
     it('should assign operators to supervisor', async () => {
-      await controller.assignManagedOperators('supervisor-1', { operatorIds: ['operator-1'] });
-      expect(service.assignOperatorsToSupervisor).toHaveBeenCalledWith('supervisor-1', ['operator-1']);
+      await controller.assignManagedOperators('supervisor-1', {
+        operatorIds: ['operator-1'],
+      });
+      expect(service.assignOperatorsToSupervisor).toHaveBeenCalledWith(
+        'supervisor-1',
+        ['operator-1'],
+      );
     });
   });
 });

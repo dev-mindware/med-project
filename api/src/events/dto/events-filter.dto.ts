@@ -10,22 +10,26 @@ export enum EventPeriod {
 }
 
 export class EventsFilterDto extends GlobalFilterDto {
-  @ApiPropertyOptional({ 
+  @ApiPropertyOptional({
     enum: EventPeriod,
-    description: 'Filter events by time period: upcoming (future), ongoing (currently happening), or past (already ended)'
+    description:
+      'Filter events by time period: upcoming (future), ongoing (currently happening), or past (already ended)',
   })
   @IsOptional()
   @IsEnum(EventPeriod)
   period?: EventPeriod;
 
-  @ApiPropertyOptional({ description: 'Filter events by their assigned category' })
+  @ApiPropertyOptional({
+    description: 'Filter events by their assigned category',
+  })
   @IsOptional()
   @IsString()
   category?: string;
 
-  @ApiPropertyOptional({ 
+  @ApiPropertyOptional({
     enum: EventStatus,
-    description: 'Filter events by their current status: DRAFT (Internal only), PUBLISHED (Visible to public), CANCELLED (Event aborted), ARCHIVED (Historical record)'
+    description:
+      'Filter events by their current status: DRAFT (Internal only), PUBLISHED (Visible to public), CANCELLED (Event aborted), ARCHIVED (Historical record)',
   })
   @IsOptional()
   @IsEnum(EventStatus)

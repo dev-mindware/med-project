@@ -15,17 +15,22 @@ export class MailService {
   ) {
     const apiKey = this.configService.get<string>('RESEND_API_KEY')?.trim();
     this.enabled = Boolean(apiKey);
-    this.fromEmail = this.configService.get<string>('RESEND_FROM_EMAIL') ?? 'noreply@localhost';
+    this.fromEmail =
+      this.configService.get<string>('RESEND_FROM_EMAIL') ??
+      'noreply@localhost';
 
     if (this.enabled) {
       this.resend = new Resend(apiKey);
       return;
     }
 
-    this.logger.warn('RESEND_API_KEY not configured; email delivery is disabled', {
-      context: 'MailService',
-      action: 'EMAIL_DISABLED',
-    });
+    this.logger.warn(
+      'RESEND_API_KEY not configured; email delivery is disabled',
+      {
+        context: 'MailService',
+        action: 'EMAIL_DISABLED',
+      },
+    );
   }
 
   async sendEmail(to: string, subject: string, html: string) {
@@ -67,7 +72,11 @@ export class MailService {
       <a href="${resetUrl}">Redefinir Senha</a>
       <p>Este link expira em 1 hora.</p>
     `;
-    return this.sendEmail(to, 'Recuperação de Senha - Sistema Linguístico', html);
+    return this.sendEmail(
+      to,
+      'Recuperação de Senha - Sistema Linguístico',
+      html,
+    );
   }
 
   async sendEmailVerification(to: string, token: string) {
@@ -77,7 +86,11 @@ export class MailService {
       <p>Clique no link abaixo para verificar seu email:</p>
       <a href="${verifyUrl}">Verificar Email</a>
     `;
-    return this.sendEmail(to, 'Verificação de Email - Sistema Linguístico', html);
+    return this.sendEmail(
+      to,
+      'Verificação de Email - Sistema Linguístico',
+      html,
+    );
   }
 
   async sendUserInvitation(to: string, name: string) {
@@ -90,7 +103,11 @@ export class MailService {
     return this.sendEmail(to, 'Convite para o Sistema Linguístico', html);
   }
 
-  async sendContentApprovedEmail(to: string, contentType: string, title: string) {
+  async sendContentApprovedEmail(
+    to: string,
+    contentType: string,
+    title: string,
+  ) {
     const html = `
       <h1>Conteúdo Aprovado!</h1>
       <p>O seu registo de <strong>${contentType}</strong> ("${title}") foi aprovado e já está disponível no sistema.</p>
@@ -98,7 +115,12 @@ export class MailService {
     return this.sendEmail(to, 'Seu conteúdo foi aprovado!', html);
   }
 
-  async sendContentRejectedEmail(to: string, contentType: string, title: string, reason: string) {
+  async sendContentRejectedEmail(
+    to: string,
+    contentType: string,
+    title: string,
+    reason: string,
+  ) {
     const html = `
       <h1>Conteúdo Rejeitado</h1>
       <p>O seu registo de <strong>${contentType}</strong> ("${title}") foi rejeitado.</p>
@@ -107,7 +129,12 @@ export class MailService {
     return this.sendEmail(to, 'Seu conteúdo foi rejeitado', html);
   }
 
-  async sendCorrectionRequestedEmail(to: string, contentType: string, title: string, notes: string) {
+  async sendCorrectionRequestedEmail(
+    to: string,
+    contentType: string,
+    title: string,
+    notes: string,
+  ) {
     const html = `
       <h1>Correção Solicitada</h1>
       <p>O seu registo de <strong>${contentType}</strong> ("${title}") precisa de correções antes de ser aprovado.</p>
@@ -116,7 +143,14 @@ export class MailService {
     return this.sendEmail(to, 'Correção solicitada no seu conteúdo', html);
   }
 
-  async sendEventInvitationPass(to: string, name: string, eventTitle: string, eventDate: string, location: string, passId: string) {
+  async sendEventInvitationPass(
+    to: string,
+    name: string,
+    eventTitle: string,
+    eventDate: string,
+    location: string,
+    passId: string,
+  ) {
     const html = `
       <div style="font-family: sans-serif; max-width: 600px; margin: auto; border: 1px solid #ddd; padding: 20px; border-radius: 10px;">
         <h1 style="color: #2c3e50;">🎟️ Convite de Participação</h1>
@@ -134,7 +168,12 @@ export class MailService {
     return this.sendEmail(to, `🎟️ Seu Passe de Entrada: ${eventTitle}`, html);
   }
 
-  async sendEventRegistrationRejected(to: string, name: string, eventTitle: string, reason?: string) {
+  async sendEventRegistrationRejected(
+    to: string,
+    name: string,
+    eventTitle: string,
+    reason?: string,
+  ) {
     const html = `
       <div style="font-family: sans-serif; max-width: 600px; margin: auto; border: 1px solid #ddd; padding: 20px; border-radius: 10px;">
         <h1 style="color: #c0392b;">Inscrição Não Aprovada</h1>
@@ -145,6 +184,10 @@ export class MailService {
         <p style="margin-top: 30px;">Atenciosamente,<br><strong>Equipa do Sistema Linguístico</strong></p>
       </div>
     `;
-    return this.sendEmail(to, `Atualização sobre sua inscrição: ${eventTitle}`, html);
+    return this.sendEmail(
+      to,
+      `Atualização sobre sua inscrição: ${eventTitle}`,
+      html,
+    );
   }
 }

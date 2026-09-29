@@ -1,7 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import { IsEnum, IsOptional, IsString, Min } from 'class-validator';
-import { VonalpCompletionStatus, VonalpSourceType, VonalpVocabularyType } from '@prisma/client';
+import {
+  VonalpCompletionStatus,
+  VonalpSourceType,
+  VonalpVocabularyType,
+} from '@prisma/client';
 
 export class VonalpFilterDto {
   @ApiProperty({ enum: VonalpVocabularyType, required: false })

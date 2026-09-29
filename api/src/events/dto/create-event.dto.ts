@@ -1,5 +1,13 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsOptional, IsEnum, IsDateString, IsUrl, IsInt, Min } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsEnum,
+  IsDateString,
+  IsUrl,
+  IsInt,
+  Min,
+} from 'class-validator';
 import { EventStatus } from '@prisma/client';
 
 export class CreateEventDto {
@@ -38,22 +46,27 @@ export class CreateEventDto {
   @IsString()
   location: string;
 
-  @ApiPropertyOptional({ description: 'Initial registration count (usually 0)', default: 0 })
+  @ApiPropertyOptional({
+    description: 'Initial registration count (usually 0)',
+    default: 0,
+  })
   @IsOptional()
   @IsInt()
   @Min(0)
   registrationCount?: number;
 
-  @ApiPropertyOptional({ description: 'Maximum number of attendees allowed for this event' })
+  @ApiPropertyOptional({
+    description: 'Maximum number of attendees allowed for this event',
+  })
   @IsOptional()
   @IsInt()
   @Min(1)
   maxRegistrations?: number;
 
-  @ApiPropertyOptional({ 
-    enum: EventStatus, 
+  @ApiPropertyOptional({
+    enum: EventStatus,
     default: EventStatus.DRAFT,
-    description: 'Initial status: DRAFT (Hidden), PUBLISHED (Public)'
+    description: 'Initial status: DRAFT (Hidden), PUBLISHED (Public)',
   })
   @IsOptional()
   @IsEnum(EventStatus)

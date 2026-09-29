@@ -1,5 +1,23 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, Query, NotFoundException } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery, ApiBody } from '@nestjs/swagger';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  Request,
+  Query,
+  NotFoundException,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiQuery,
+  ApiBody,
+} from '@nestjs/swagger';
 import { EventsService } from './events.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -31,9 +49,20 @@ export class EventsController {
   @Get()
   @ApiOperation({ summary: 'List events for authenticated users' })
   findAll(@Request() req: AuthRequest, @Query() filters: EventsFilterDto) {
-    const { page = 1, limit = 20, orderBy, orderDirection, period, category, status, search, startDate, endDate } = filters;
+    const {
+      page = 1,
+      limit = 20,
+      orderBy,
+      orderDirection,
+      period,
+      category,
+      status,
+      search,
+      startDate,
+      endDate,
+    } = filters;
     const where: Prisma.EventWhereInput = {};
-    
+
     if (req.user?.role === UserRole.ADMIN && status) {
       where.status = status;
     }
@@ -53,7 +82,7 @@ export class EventsController {
       if (startDate) where.createdAt.gte = new Date(startDate);
       if (endDate) where.createdAt.lte = new Date(endDate);
     }
-  
+
     const now = new Date();
     if (period === EventPeriod.UPCOMING) {
       where.startDate = { gt: now };
@@ -63,21 +92,26 @@ export class EventsController {
     } else if (period === EventPeriod.PAST) {
       where.endDate = { lt: now };
     }
-  
-    return this.eventsService.findAll({ 
-      skip: (page - 1) * limit, 
-      take: limit, 
+
+    return this.eventsService.findAll({
+      skip: (page - 1) * limit,
+      take: limit,
       where,
-      orderBy: orderBy ? { [orderBy]: orderDirection } : { startDate: 'asc' as Prisma.SortOrder },
+      orderBy: orderBy
+        ? { [orderBy]: orderDirection }
+        : { startDate: 'asc' as Prisma.SortOrder },
     });
   }
 
   @Get(':idOrSlug')
   @ApiOperation({ summary: 'Get a specific event by ID or slug' })
-  async findOne(@Request() req: AuthRequest, @Param('idOrSlug') idOrSlug: string) {
+  async findOne(
+    @Request() req: AuthRequest,
+    @Param('idOrSlug') idOrSlug: string,
+  ) {
     const event = await this.eventsService.findOne(idOrSlug);
     if (!event) throw new NotFoundException();
-    
+
     return event;
   }
 
@@ -102,16 +136,19 @@ export class EventsController {
     schema: {
       type: 'object',
       properties: {
-        status: { type: 'string', enum: ['DRAFT', 'PUBLISHED', 'CANCELLED', 'COMPLETED'] },
-        reason: { type: 'string', description: 'Reason for cancellation' }
+        status: {
+          type: 'string',
+          enum: ['DRAFT', 'PUBLISHED', 'CANCELLED', 'COMPLETED'],
+        },
+        reason: { type: 'string', description: 'Reason for cancellation' },
       },
-      required: ['status']
+      required: ['status'],
     },
   })
   async updateStatus(
-    @Param('id') id: string, 
+    @Param('id') id: string,
     @Body('status') status: EventStatus,
-    @Body('reason') reason?: string
+    @Body('reason') reason?: string,
   ) {
     const data: Prisma.EventUpdateInput = { status };
     if (status === EventStatus.PUBLISHED) {

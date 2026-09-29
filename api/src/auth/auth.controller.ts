@@ -1,5 +1,19 @@
-import { Controller, Post, UseGuards, Request, Body, Get, Patch } from '@nestjs/common';
-import { IsEmail, IsOptional, IsString, IsUUID, MinLength } from 'class-validator';
+import {
+  Controller,
+  Post,
+  UseGuards,
+  Request,
+  Body,
+  Get,
+  Patch,
+} from '@nestjs/common';
+import {
+  IsEmail,
+  IsOptional,
+  IsString,
+  IsUUID,
+  MinLength,
+} from 'class-validator';
 import type { Request as ExpressRequest } from 'express';
 import type { User } from '@prisma/client';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiBody } from '@nestjs/swagger';
@@ -102,7 +116,10 @@ export class AuthController {
       },
     },
   })
-  updateProfile(@Request() req: ExpressRequest & { user: Pick<User, 'id'> }, @Body() body: { name?: string; profilePhotoUrl?: string }) {
+  updateProfile(
+    @Request() req: ExpressRequest & { user: Pick<User, 'id'> },
+    @Body() body: { name?: string; profilePhotoUrl?: string },
+  ) {
     return this.authService.updateProfile(req.user.id, body);
   }
 
@@ -119,7 +136,10 @@ export class AuthController {
       required: ['email'],
     },
   })
-  updateEmail(@Request() req: ExpressRequest & { user: Pick<User, 'id'> }, @Body('email') email: string) {
+  updateEmail(
+    @Request() req: ExpressRequest & { user: Pick<User, 'id'> },
+    @Body('email') email: string,
+  ) {
     return this.authService.updateEmail(req.user.id, email);
   }
 
@@ -137,7 +157,10 @@ export class AuthController {
       required: ['currentPassword', 'newPassword'],
     },
   })
-  updatePassword(@Request() req: ExpressRequest & { user: Pick<User, 'id'> }, @Body() body: { currentPassword: string; newPassword: string }) {
+  updatePassword(
+    @Request() req: ExpressRequest & { user: Pick<User, 'id'> },
+    @Body() body: { currentPassword: string; newPassword: string },
+  ) {
     return this.authService.updatePassword(req.user.id, body);
   }
 }

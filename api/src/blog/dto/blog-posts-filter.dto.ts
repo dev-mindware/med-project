@@ -4,9 +4,10 @@ import { GlobalFilterDto } from '../../common/dto/global-filter.dto';
 import { PostStatus } from '@prisma/client';
 
 export class BlogPostsFilterDto extends GlobalFilterDto {
-  @ApiPropertyOptional({ 
+  @ApiPropertyOptional({
     enum: PostStatus,
-    description: 'Filter posts by status: DRAFT (Hidden), PUBLISHED (Live), ARCHIVED (Legacy/Hidden)'
+    description:
+      'Filter posts by status: DRAFT (Hidden), PUBLISHED (Live), ARCHIVED (Legacy/Hidden)',
   })
   @IsOptional()
   @IsEnum(PostStatus)

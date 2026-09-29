@@ -134,7 +134,12 @@ describe('EntriesService', () => {
   describe('importRows()', () => {
     it('should import valid rows and return created summary', async () => {
       const result = await service.importRows(
-        [{ rowNumber: 2, data: { entry: 'Casa', firstDefinition: 'Lugar de habitacao' } }],
+        [
+          {
+            rowNumber: 2,
+            data: { entry: 'Casa', firstDefinition: 'Lugar de habitacao' },
+          },
+        ],
         'user-uuid-1',
       );
 
@@ -169,8 +174,14 @@ describe('EntriesService', () => {
     it('should reject duplicate terms inside the same file', async () => {
       const result = await service.importRows(
         [
-          { rowNumber: 2, data: { entry: 'Casa', firstDefinition: 'Lugar de habitacao' } },
-          { rowNumber: 3, data: { entry: ' casa ', firstDefinition: 'Duplicado' } },
+          {
+            rowNumber: 2,
+            data: { entry: 'Casa', firstDefinition: 'Lugar de habitacao' },
+          },
+          {
+            rowNumber: 3,
+            data: { entry: ' casa ', firstDefinition: 'Duplicado' },
+          },
         ],
         'user-uuid-1',
       );
@@ -190,7 +201,12 @@ describe('EntriesService', () => {
       prisma.entry.findFirst.mockResolvedValueOnce({ id: 'existing-entry' });
 
       const result = await service.importRows(
-        [{ rowNumber: 2, data: { entry: 'Casa', firstDefinition: 'Lugar de habitacao' } }],
+        [
+          {
+            rowNumber: 2,
+            data: { entry: 'Casa', firstDefinition: 'Lugar de habitacao' },
+          },
+        ],
         'user-uuid-1',
       );
 

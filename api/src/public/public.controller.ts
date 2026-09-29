@@ -11,19 +11,26 @@ export class PublicController {
   constructor(private readonly publicService: PublicService) {}
 
   @Get('stats')
-  @ApiOperation({ summary: 'Estatísticas públicas calculadas a partir de conteúdos aprovados e publicados.' })
+  @ApiOperation({
+    summary:
+      'Estatísticas públicas calculadas a partir de conteúdos aprovados e publicados.',
+  })
   publicStats() {
     return this.publicService.stats();
   }
 
   @Get('search')
-  @ApiOperation({ summary: 'Pesquisa global pública em conteúdos aprovados/publicados.' })
+  @ApiOperation({
+    summary: 'Pesquisa global pública em conteúdos aprovados/publicados.',
+  })
   globalSearch(@Query() filters: PublicContentFilterDto) {
     return this.publicService.search(filters);
   }
 
   @Get('dictionary')
-  @ApiOperation({ summary: 'Listar entradas lexicais aprovadas para o dicionário público.' })
+  @ApiOperation({
+    summary: 'Listar entradas lexicais aprovadas para o dicionário público.',
+  })
   dictionarySearch(@Query() filters: PublicContentFilterDto) {
     return this.publicService.dictionary(filters);
   }
@@ -89,9 +96,14 @@ export class PublicController {
   }
 
   @Get('vocabularies/vonalpep')
-  @ApiOperation({ summary: 'Listar vocábulos VONALP-EP completos e publicados.' })
+  @ApiOperation({
+    summary: 'Listar vocábulos VONALP-EP completos e publicados.',
+  })
   publicVonalpEp(@Query() filters: PublicContentFilterDto) {
-    return this.publicService.vocabulary(VonalpVocabularyType.VONALP_EP, filters);
+    return this.publicService.vocabulary(
+      VonalpVocabularyType.VONALP_EP,
+      filters,
+    );
   }
 
   @Get('vocabularies/volna')
@@ -108,14 +120,20 @@ export class PublicController {
 
   @Get('events/:idOrSlug')
   @ApiOperation({ summary: 'Detalhar um evento publicado por ID ou slug.' })
-  @ApiParam({ name: 'idOrSlug', description: 'ID UUID ou slug público do evento.' })
+  @ApiParam({
+    name: 'idOrSlug',
+    description: 'ID UUID ou slug público do evento.',
+  })
   publicEventDetails(@Param('idOrSlug') idOrSlug: string) {
     return this.publicService.eventDetails(idOrSlug);
   }
 
   @Post('events/:idOrSlug/registrations')
   @ApiOperation({ summary: 'Criar inscrição pública num evento publicado.' })
-  @ApiParam({ name: 'idOrSlug', description: 'ID UUID ou slug público do evento.' })
+  @ApiParam({
+    name: 'idOrSlug',
+    description: 'ID UUID ou slug público do evento.',
+  })
   @ApiBody({ type: PublicEventRegistrationDto })
   registerForEvent(
     @Param('idOrSlug') idOrSlug: string,
@@ -131,8 +149,13 @@ export class PublicController {
   }
 
   @Get('blog-posts/:idOrSlug')
-  @ApiOperation({ summary: 'Detalhar uma publicação publicada por ID ou slug.' })
-  @ApiParam({ name: 'idOrSlug', description: 'ID UUID ou slug público da publicação.' })
+  @ApiOperation({
+    summary: 'Detalhar uma publicação publicada por ID ou slug.',
+  })
+  @ApiParam({
+    name: 'idOrSlug',
+    description: 'ID UUID ou slug público da publicação.',
+  })
   publicBlogPostDetails(@Param('idOrSlug') idOrSlug: string) {
     return this.publicService.blogPostDetails(idOrSlug);
   }

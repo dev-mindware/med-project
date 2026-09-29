@@ -4,17 +4,26 @@ import { PrismaService } from '../prisma/prisma.service';
 
 const mockPrismaService = {
   entry: {
-    findMany: jest.fn().mockResolvedValue([
-      { id: 'e1', entry: 'Mukanda', firstDefinition: 'Carta', createdAt: new Date() },
-    ]),
+    findMany: jest
+      .fn()
+      .mockResolvedValue([
+        {
+          id: 'e1',
+          entry: 'Mukanda',
+          firstDefinition: 'Carta',
+          createdAt: new Date(),
+        },
+      ]),
   },
   neologism: {
     findMany: jest.fn().mockResolvedValue([]),
   },
   toponym: {
-    findMany: jest.fn().mockResolvedValue([
-      { id: 't1', toponym: 'Luanda', meaning: 'Capital', province: 'Luanda' },
-    ]),
+    findMany: jest
+      .fn()
+      .mockResolvedValue([
+        { id: 't1', toponym: 'Luanda', meaning: 'Capital', province: 'Luanda' },
+      ]),
   },
   anthroponym: {
     findMany: jest.fn().mockResolvedValue([]),
@@ -75,7 +84,10 @@ describe('SearchService', () => {
       const result = await service.globalSearch('luanda');
       expect(result.results.entries.items[0]).toHaveProperty('_type', 'entry');
       expect(result.results.entries.items[0]).toHaveProperty('_url');
-      expect(result.results.toponyms.items[0]).toHaveProperty('_type', 'toponym');
+      expect(result.results.toponyms.items[0]).toHaveProperty(
+        '_type',
+        'toponym',
+      );
     });
 
     it('should respect custom limit parameter', async () => {

@@ -9,7 +9,6 @@ import { VonalpModule } from '../vonalp/vonalp.module';
 import { VolnaModule } from '../volna/volna.module';
 import { PublicService } from './public.service';
 
-
 @Module({
   imports: [
     EntriesModule,
@@ -19,7 +18,6 @@ import { PublicService } from './public.service';
     EventsModule,
     VonalpModule,
     VolnaModule,
-
   ],
   controllers: [PublicController],
   providers: [PublicService],

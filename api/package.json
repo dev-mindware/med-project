@@ -25,7 +25,7 @@
     "db:setup:demo": "prisma migrate deploy && prisma db push && FORCE_DEMO_SEED=true prisma db seed",
     "typecheck": "tsc --noEmit",
     "prisma:validate": "prisma validate",
-    "verify": "pnpm lint && pnpm typecheck && pnpm prisma:validate && pnpm test -- --runInBand",
+    "verify": "pnpm lint && pnpm typecheck && pnpm prisma:validate && pnpm test",
     "prisma:generate": "prisma generate"
   },
   "dependencies": {

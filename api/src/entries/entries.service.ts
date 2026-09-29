@@ -1,6 +1,11 @@
 import { ConflictException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { ApprovalStatus, Prisma, Entry, VonalpSourceType } from '@prisma/client';
+import {
+  ApprovalStatus,
+  Prisma,
+  Entry,
+  VonalpSourceType,
+} from '@prisma/client';
 import { CreateEntryDto } from './dto/create-entry.dto';
 import {
   buildBulkImportResult,
@@ -11,7 +16,10 @@ import {
   importKey,
   validateBulkImportData,
 } from '../common/bulk-import';
-import { attachVonalpStatus, attachVonalpStatuses } from '../common/vonalp-status';
+import {
+  attachVonalpStatus,
+  attachVonalpStatuses,
+} from '../common/vonalp-status';
 
 @Injectable()
 export class EntriesService {
@@ -32,7 +40,11 @@ export class EntriesService {
     const seen = new Set<string>();
 
     for (const row of rows) {
-      const validation = await validateBulkImportData(CreateEntryDto, row.data, row.rowNumber);
+      const validation = await validateBulkImportData(
+        CreateEntryDto,
+        row.data,
+        row.rowNumber,
+      );
       if (validation.errors.length > 0) {
         errors.push(...validation.errors);
         continue;
@@ -58,7 +70,11 @@ export class EntriesService {
           createdBy: { connect: { id: userId } },
           approvalStatus: ApprovalStatus.DRAFT,
         });
-        created.push({ rowNumber: row.rowNumber, id: item.id, label: item.entry });
+        created.push({
+          rowNumber: row.rowNumber,
+          id: item.id,
+          label: item.entry,
+        });
       } catch (error) {
         errors.push({
           rowNumber: row.rowNumber,
@@ -113,7 +129,10 @@ export class EntriesService {
 
     if (typeof data.entry === 'string') {
       data.entry = data.entry.trim();
-      await this.ensureUniqueEntry(data.entry, typeof where.id === 'string' ? where.id : undefined);
+      await this.ensureUniqueEntry(
+        data.entry,
+        typeof where.id === 'string' ? where.id : undefined,
+      );
     }
 
     return this.prisma.entry.update({
@@ -128,15 +147,22 @@ export class EntriesService {
     });
   }
 
-  async search(query: string, params: {
-    skip?: number;
-    take?: number;
-    where?: Prisma.EntryWhereInput;
-    orderBy?: Prisma.EntryOrderByWithRelationInput;
-  }) {
-    const searchQuery = query.trim().split(/\s+/).map(w => `${w}:*`).join(' | ');
+  async search(
+    query: string,
+    params: {
+      skip?: number;
+      take?: number;
+      where?: Prisma.EntryWhereInput;
+      orderBy?: Prisma.EntryOrderByWithRelationInput;
+    },
+  ) {
+    const searchQuery = query
+      .trim()
+      .split(/\s+/)
+      .map((w) => `${w}:*`)
+      .join(' | ');
     const { skip, take, where: filters, orderBy } = params;
-    
+
     const items = await this.prisma.entry.findMany({
       skip,
       take,

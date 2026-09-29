@@ -1,4 +1,13 @@
-import { Controller, Get, Param, Patch, Query, Request, UseGuards, NotFoundException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Query,
+  Request,
+  UseGuards,
+  NotFoundException,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AuthRequest } from '../auth/types/auth-request';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -14,7 +23,11 @@ export class NotificationsController {
 
   @Get()
   @ApiOperation({ summary: 'List current user notifications' })
-  findAll(@Request() req: AuthRequest, @Query('limit') limit = '10', @Query('unreadOnly') unreadOnly?: string) {
+  findAll(
+    @Request() req: AuthRequest,
+    @Query('limit') limit = '10',
+    @Query('unreadOnly') unreadOnly?: string,
+  ) {
     return this.notificationsService.findAll(req.user.id, {
       take: Number(limit) || 10,
       unreadOnly: unreadOnly === 'true',
@@ -30,8 +43,12 @@ export class NotificationsController {
   @Get(':id')
   @ApiOperation({ summary: 'Get a notification detail' })
   async findOne(@Request() req: AuthRequest, @Param('id') id: string) {
-    const notification = await this.notificationsService.findOne(req.user.id, id);
-    if (!notification) throw new NotFoundException('Notificação não encontrada');
+    const notification = await this.notificationsService.findOne(
+      req.user.id,
+      id,
+    );
+    if (!notification)
+      throw new NotFoundException('Notificação não encontrada');
     return notification;
   }
 

@@ -4,7 +4,6 @@ import { EventRegistrationsController } from './event-registrations.controller';
 import { PrismaModule } from '../prisma/prisma.module';
 import { MailModule } from '../common/mail/mail.module';
 
-
 @Module({
   imports: [PrismaModule, MailModule],
 

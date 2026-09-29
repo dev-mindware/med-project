@@ -24,7 +24,11 @@ const ENTRY_COLUMNS: ColumnConfig[] = [
   { label: 'Terceira definição', key: 'thirdDefinition', width: 40 },
   { label: 'Exemplo de uso', key: 'usageExample', width: 40 },
   { label: 'Categoria gramatical', key: 'grammaticalCategory', width: 24 },
-  { label: 'Subcategoria gramatical', key: 'grammaticalSubcategory', width: 28 },
+  {
+    label: 'Subcategoria gramatical',
+    key: 'grammaticalSubcategory',
+    width: 28,
+  },
   { label: 'Código da língua', key: 'languageCode', width: 18 },
   { label: 'É VONALP?', key: 'isVocabulary', width: 16 },
   { label: 'É VONALP-EP?', key: 'isVocabularyEP', width: 16 },
@@ -93,8 +97,18 @@ export class VocabularyExcelService {
     this.addSummary(workbook, data);
     this.addDataSheet(workbook, 'Entradas', ENTRY_COLUMNS, data.entries);
     this.addDataSheet(workbook, 'Topónimos', TOPONYM_COLUMNS, data.toponyms);
-    this.addDataSheet(workbook, 'Antropónimos', ANTHROPONYM_COLUMNS, data.anthroponyms);
-    this.addDataSheet(workbook, 'Estrangeirismos', FOREIGNISM_COLUMNS, data.foreignisms);
+    this.addDataSheet(
+      workbook,
+      'Antropónimos',
+      ANTHROPONYM_COLUMNS,
+      data.anthroponyms,
+    );
+    this.addDataSheet(
+      workbook,
+      'Estrangeirismos',
+      FOREIGNISM_COLUMNS,
+      data.foreignisms,
+    );
     this.addWarnings(workbook, data);
     this.addInstructions(workbook);
 
@@ -102,8 +116,13 @@ export class VocabularyExcelService {
     return Buffer.from(buffer);
   }
 
-  private addSummary(workbook: ExcelJS.Workbook, data: ManualVocabularyWorkbookData) {
-    const sheet = workbook.addWorksheet('Resumo', { views: [{ state: 'frozen', ySplit: 1 }] });
+  private addSummary(
+    workbook: ExcelJS.Workbook,
+    data: ManualVocabularyWorkbookData,
+  ) {
+    const sheet = workbook.addWorksheet('Resumo', {
+      views: [{ state: 'frozen', ySplit: 1 }],
+    });
     sheet.columns = [
       { header: 'Métrica', key: 'metric', width: 32 },
       { header: 'Valor', key: 'value', width: 18 },
@@ -122,25 +141,49 @@ export class VocabularyExcelService {
     this.styleRows(sheet);
   }
 
-  private addDataSheet(workbook: ExcelJS.Workbook, name: string, columns: ColumnConfig[], rows: Record<string, unknown>[]) {
-    const sheet = workbook.addWorksheet(name, { views: [{ state: 'frozen', ySplit: 1 }] });
-    sheet.columns = columns.map((column) => ({ header: column.label, key: column.key, width: column.width }));
+  private addDataSheet(
+    workbook: ExcelJS.Workbook,
+    name: string,
+    columns: ColumnConfig[],
+    rows: Record<string, unknown>[],
+  ) {
+    const sheet = workbook.addWorksheet(name, {
+      views: [{ state: 'frozen', ySplit: 1 }],
+    });
+    sheet.columns = columns.map((column) => ({
+      header: column.label,
+      key: column.key,
+      width: column.width,
+    }));
     this.styleHeader(sheet);
 
     rows.forEach((row) => {
       sheet.addRow(
         Object.fromEntries(
-          columns.map((column) => [column.key, Array.isArray(row[column.key]) ? (row[column.key] as unknown[]).join('; ') : row[column.key] ?? '']),
+          columns.map((column) => [
+            column.key,
+            Array.isArray(row[column.key])
+              ? (row[column.key] as unknown[]).join('; ')
+              : (row[column.key] ?? ''),
+          ]),
         ),
       );
     });
 
     this.styleRows(sheet);
-    sheet.autoFilter = { from: { row: 1, column: 1 }, to: { row: 1, column: columns.length } };
+    sheet.autoFilter = {
+      from: { row: 1, column: 1 },
+      to: { row: 1, column: columns.length },
+    };
   }
 
-  private addWarnings(workbook: ExcelJS.Workbook, data: ManualVocabularyWorkbookData) {
-    const sheet = workbook.addWorksheet('Avisos', { views: [{ state: 'frozen', ySplit: 1 }] });
+  private addWarnings(
+    workbook: ExcelJS.Workbook,
+    data: ManualVocabularyWorkbookData,
+  ) {
+    const sheet = workbook.addWorksheet('Avisos', {
+      views: [{ state: 'frozen', ySplit: 1 }],
+    });
     sheet.columns = [
       { header: 'Modelo', key: 'sourceModel', width: 18 },
       { header: 'Linha', key: 'rowNumber', width: 12 },
@@ -172,9 +215,19 @@ export class VocabularyExcelService {
     row.height = 24;
     row.eachCell((cell) => {
       cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
-      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: PRIMARY } };
-      cell.border = { bottom: { style: 'thin', color: { argb: PRIMARY_DARK } } };
-      cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+      cell.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: PRIMARY },
+      };
+      cell.border = {
+        bottom: { style: 'thin', color: { argb: PRIMARY_DARK } },
+      };
+      cell.alignment = {
+        vertical: 'middle',
+        horizontal: 'center',
+        wrapText: true,
+      };
     });
   }
 
@@ -189,7 +242,11 @@ export class VocabularyExcelService {
           bottom: { style: 'thin', color: { argb: BORDER } },
         };
         if (rowNumber % 2 === 0) {
-          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: PRIMARY_SOFT } };
+          cell.fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: PRIMARY_SOFT },
+          };
         }
       });
     });

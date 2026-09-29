@@ -24,9 +24,7 @@ describe('MediaController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [MediaController],
-      providers: [
-        { provide: MediaService, useValue: mockMediaService },
-      ],
+      providers: [{ provide: MediaService, useValue: mockMediaService }],
     }).compile();
 
     controller = module.get<MediaController>(MediaController);
@@ -38,8 +36,13 @@ describe('MediaController', () => {
     it('should call service.uploadFile', async () => {
       const mockFile = { originalname: 'test.jpg' } as any;
       const req = { user: { id: 'user-1' } };
-      await controller.uploadFile(mockFile, req, 'entries', 'entry-1');
-      expect(service.uploadFile).toHaveBeenCalledWith(mockFile, 'user-1', 'entries', 'entry-1');
+      await controller.uploadFile(mockFile, req as any, 'entries', 'entry-1');
+      expect(service.uploadFile).toHaveBeenCalledWith(
+        mockFile,
+        'user-1',
+        'entries',
+        'entry-1',
+      );
     });
   });
 
@@ -47,14 +50,18 @@ describe('MediaController', () => {
     it('should call service.findAll with pagination', async () => {
       const filters = { page: 1, limit: 10 } as any;
       await controller.findAll(filters);
-      expect(service.findAll).toHaveBeenCalledWith(expect.objectContaining({ skip: 0, take: 10 }));
+      expect(service.findAll).toHaveBeenCalledWith(
+        expect.objectContaining({ skip: 0, take: 10 }),
+      );
     });
   });
 
   describe('findOne()', () => {
     it('should throw NotFoundException if asset not found', async () => {
       service.findOne.mockResolvedValueOnce(null);
-      await expect(controller.findOne('ghost')).rejects.toThrow(NotFoundException);
+      await expect(controller.findOne('ghost')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 });

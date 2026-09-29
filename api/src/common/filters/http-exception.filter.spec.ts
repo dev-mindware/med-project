@@ -28,7 +28,10 @@ describe('AllExceptionsFilter', () => {
   });
 
   it('logs client errors as warn with request context', () => {
-    filter.catch(new BadRequestException({ message: 'Invalid input', password: 'secret' }), host());
+    filter.catch(
+      new BadRequestException({ message: 'Invalid input', password: 'secret' }),
+      host(),
+    );
 
     expect(logger.warn).toHaveBeenCalledWith(
       'Request rejected',

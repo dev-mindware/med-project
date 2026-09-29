@@ -7,53 +7,83 @@ type AuthUser = {
   role: UserRole;
 };
 
-export function applySupervisorEntryScope(user: AuthUser, where: Prisma.EntryWhereInput) {
+export function applySupervisorEntryScope(
+  user: AuthUser,
+  where: Prisma.EntryWhereInput,
+) {
   if (user.role === UserRole.OPERATOR) {
     where.createdById = user.id;
   }
 
   if (user.role === UserRole.SUPERVISOR) {
-    where.OR = [{ createdById: user.id }, { createdBy: { supervisorId: user.id } }];
+    where.OR = [
+      { createdById: user.id },
+      { createdBy: { supervisorId: user.id } },
+    ];
   }
 }
 
-export function applySupervisorNeologismScope(user: AuthUser, where: Prisma.NeologismWhereInput) {
+export function applySupervisorNeologismScope(
+  user: AuthUser,
+  where: Prisma.NeologismWhereInput,
+) {
   if (user.role === UserRole.OPERATOR) {
     where.createdById = user.id;
   }
 
   if (user.role === UserRole.SUPERVISOR) {
-    where.OR = [{ createdById: user.id }, { createdBy: { supervisorId: user.id } }];
+    where.OR = [
+      { createdById: user.id },
+      { createdBy: { supervisorId: user.id } },
+    ];
   }
 }
 
-export function applySupervisorToponymScope(user: AuthUser, where: Prisma.ToponymWhereInput) {
+export function applySupervisorToponymScope(
+  user: AuthUser,
+  where: Prisma.ToponymWhereInput,
+) {
   if (user.role === UserRole.OPERATOR) {
     where.createdById = user.id;
   }
 
   if (user.role === UserRole.SUPERVISOR) {
-    where.OR = [{ createdById: user.id }, { createdBy: { supervisorId: user.id } }];
+    where.OR = [
+      { createdById: user.id },
+      { createdBy: { supervisorId: user.id } },
+    ];
   }
 }
 
-export function applySupervisorAnthroponymScope(user: AuthUser, where: Prisma.AnthroponymWhereInput) {
+export function applySupervisorAnthroponymScope(
+  user: AuthUser,
+  where: Prisma.AnthroponymWhereInput,
+) {
   if (user.role === UserRole.OPERATOR) {
     where.createdById = user.id;
   }
 
   if (user.role === UserRole.SUPERVISOR) {
-    where.OR = [{ createdById: user.id }, { createdBy: { supervisorId: user.id } }];
+    where.OR = [
+      { createdById: user.id },
+      { createdBy: { supervisorId: user.id } },
+    ];
   }
 }
 
-export function applySupervisorForeignismScope(user: AuthUser, where: Prisma.ForeignismWhereInput) {
+export function applySupervisorForeignismScope(
+  user: AuthUser,
+  where: Prisma.ForeignismWhereInput,
+) {
   if (user.role === UserRole.OPERATOR) {
     where.createdById = user.id;
   }
 
   if (user.role === UserRole.SUPERVISOR) {
-    where.OR = [{ createdById: user.id }, { createdBy: { supervisorId: user.id } }];
+    where.OR = [
+      { createdById: user.id },
+      { createdBy: { supervisorId: user.id } },
+    ];
   }
 }
 
@@ -70,7 +100,12 @@ export async function ensureSupervisorCanAccessCreator(
     throw new ForbiddenException('Supervisor management scope is unavailable');
   }
 
-  if (!createdById || !(await usersService.isOperatorManagedBySupervisor(user.id, createdById))) {
-    throw new ForbiddenException('Supervisor can only manage assigned operators');
+  if (
+    !createdById ||
+    !(await usersService.isOperatorManagedBySupervisor(user.id, createdById))
+  ) {
+    throw new ForbiddenException(
+      'Supervisor can only manage assigned operators',
+    );
   }
 }

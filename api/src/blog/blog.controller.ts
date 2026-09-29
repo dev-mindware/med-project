@@ -1,4 +1,16 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, Query, NotFoundException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  Request,
+  Query,
+  NotFoundException,
+} from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiBody } from '@nestjs/swagger';
 import { BlogService } from './blog.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -31,11 +43,23 @@ export class BlogController {
 
   @Public()
   @Get()
-  @ApiOperation({ summary: 'List blog posts (Public see only PUBLISHED, Admin see all)' })
+  @ApiOperation({
+    summary: 'List blog posts (Public see only PUBLISHED, Admin see all)',
+  })
   findAll(@Request() req: AuthRequest, @Query() filters: BlogPostsFilterDto) {
-    const { page = 1, limit = 20, orderBy, orderDirection, category, status, search, startDate, endDate } = filters;
+    const {
+      page = 1,
+      limit = 20,
+      orderBy,
+      orderDirection,
+      category,
+      status,
+      search,
+      startDate,
+      endDate,
+    } = filters;
     const where: Prisma.BlogPostWhereInput = {};
-  
+
     // Safety: Public only see PUBLISHED
     if (!req.user || req.user.role !== UserRole.ADMIN) {
       where.status = PostStatus.PUBLISHED;
@@ -58,12 +82,14 @@ export class BlogController {
       if (startDate) where.createdAt.gte = new Date(startDate);
       if (endDate) where.createdAt.lte = new Date(endDate);
     }
-  
-    return this.blogService.findAll({ 
-      skip: (page - 1) * limit, 
-      take: limit, 
+
+    return this.blogService.findAll({
+      skip: (page - 1) * limit,
+      take: limit,
       where,
-      orderBy: orderBy ? { [orderBy]: orderDirection } : { createdAt: 'desc' as Prisma.SortOrder },
+      orderBy: orderBy
+        ? { [orderBy]: orderDirection }
+        : { createdAt: 'desc' as Prisma.SortOrder },
     });
   }
 
@@ -75,10 +101,13 @@ export class BlogController {
     if (!post) throw new NotFoundException();
 
     // Safety: Public only see PUBLISHED
-    if (post.status !== PostStatus.PUBLISHED && (!req.user || req.user.role !== UserRole.ADMIN)) {
+    if (
+      post.status !== PostStatus.PUBLISHED &&
+      (!req.user || req.user.role !== UserRole.ADMIN)
+    ) {
       throw new NotFoundException();
     }
-    
+
     return post;
   }
 
@@ -103,12 +132,15 @@ export class BlogController {
     schema: {
       type: 'object',
       properties: {
-        status: { type: 'string', enum: ['DRAFT', 'PUBLISHED', 'ARCHIVED'] }
+        status: { type: 'string', enum: ['DRAFT', 'PUBLISHED', 'ARCHIVED'] },
       },
-      required: ['status']
+      required: ['status'],
     },
   })
-  async updateStatus(@Param('id') id: string, @Body('status') status: PostStatus) {
+  async updateStatus(
+    @Param('id') id: string,
+    @Body('status') status: PostStatus,
+  ) {
     const data: Prisma.BlogPostUpdateInput = { status };
     if (status === PostStatus.PUBLISHED) {
       data.publishedAt = new Date();

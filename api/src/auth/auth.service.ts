@@ -1,4 +1,9 @@
-import { ConflictException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as argon2 from 'argon2';
@@ -8,7 +13,12 @@ import { AppLogger } from '../common/logger/app-logger.service';
 import { UserRole } from '@prisma/client';
 
 type AuthUser = Awaited<ReturnType<UsersService['findById']>>;
-type AuthCredentials = { email: string; name: string; password: string; role?: UserRole };
+type AuthCredentials = {
+  email: string;
+  name: string;
+  password: string;
+  role?: UserRole;
+};
 type PublicUser = Omit<NonNullable<AuthUser>, 'passwordHash'>;
 
 @Injectable()
@@ -44,15 +54,19 @@ export class AuthService {
 
   async login(user: NonNullable<AuthUser>) {
     const payload = { email: user.email, sub: user.id, role: user.role };
-    
+
     const accessToken = await this.jwtService.signAsync(payload, {
       secret: this.configService.getOrThrow<string>('jwt.accessSecret'),
-      expiresIn: this.configService.getOrThrow<string>('jwt.accessExpiresIn'),
+      expiresIn: this.configService.getOrThrow<string>(
+        'jwt.accessExpiresIn',
+      ) as any,
     });
 
     const refreshToken = await this.jwtService.signAsync(payload, {
       secret: this.configService.getOrThrow<string>('jwt.refreshSecret'),
-      expiresIn: this.configService.getOrThrow<string>('jwt.refreshExpiresIn'),
+      expiresIn: this.configService.getOrThrow<string>(
+        'jwt.refreshExpiresIn',
+      ) as any,
     });
 
     await this.updateRefreshToken(user.id, refreshToken);
@@ -77,10 +91,15 @@ export class AuthService {
     return this.toPublicUser(user);
   }
 
-  async updateProfile(userId: string, data: { name?: string; profilePhotoUrl?: string }) {
+  async updateProfile(
+    userId: string,
+    data: { name?: string; profilePhotoUrl?: string },
+  ) {
     const user = await this.usersService.update(userId, {
       ...(typeof data.name === 'string' ? { name: data.name.trim() } : {}),
-      ...(typeof data.profilePhotoUrl === 'string' ? { profilePhotoUrl: data.profilePhotoUrl } : {}),
+      ...(typeof data.profilePhotoUrl === 'string'
+        ? { profilePhotoUrl: data.profilePhotoUrl }
+        : {}),
     });
     return this.toPublicUser(user);
   }
@@ -92,15 +111,23 @@ export class AuthService {
       throw new ConflictException('Email already in use');
     }
 
-    const user = await this.usersService.update(userId, { email: normalizedEmail });
+    const user = await this.usersService.update(userId, {
+      email: normalizedEmail,
+    });
     return this.toPublicUser(user);
   }
 
-  async updatePassword(userId: string, data: { currentPassword: string; newPassword: string }) {
+  async updatePassword(
+    userId: string,
+    data: { currentPassword: string; newPassword: string },
+  ) {
     const user = await this.usersService.findById(userId);
     if (!user) throw new NotFoundException('User not found');
 
-    const isCurrentPasswordValid = await argon2.verify(user.passwordHash, data.currentPassword);
+    const isCurrentPasswordValid = await argon2.verify(
+      user.passwordHash,
+      data.currentPassword,
+    );
     if (!isCurrentPasswordValid) {
       throw new UnauthorizedException('Current password is incorrect');
     }
@@ -132,12 +159,17 @@ export class AuthService {
   async refreshTokens(refreshToken: string) {
     let payload: { sub?: string };
     try {
-      payload = await this.jwtService.verifyAsync<{ sub?: string }>(refreshToken, {
-        secret: this.configService.getOrThrow<string>('jwt.refreshSecret'),
-      });
+      payload = await this.jwtService.verifyAsync<{ sub?: string }>(
+        refreshToken,
+        {
+          secret: this.configService.getOrThrow<string>('jwt.refreshSecret'),
+        },
+      );
     } catch (error) {
       this.logger.warn('Refresh token verification failed', {
-        context: 'AuthService', action: 'REFRESH_TOKEN_VERIFICATION_FAILED', error,
+        context: 'AuthService',
+        action: 'REFRESH_TOKEN_VERIFICATION_FAILED',
+        error,
       });
       throw new UnauthorizedException('Invalid or expired refresh token');
     }
@@ -159,7 +191,8 @@ export class AuthService {
       }
     }
 
-    if (!matchedToken) throw new UnauthorizedException('Refresh token not recognized');
+    if (!matchedToken)
+      throw new UnauthorizedException('Refresh token not recognized');
 
     if (matchedToken.revokedAt || matchedToken.expiresAt <= new Date()) {
       await this.prisma.refreshToken.updateMany({
@@ -167,18 +200,30 @@ export class AuthService {
         data: { revokedAt: new Date() },
       });
       this.logger.warn('Refresh token reuse detected', {
-        context: 'AuthService', action: 'REFRESH_TOKEN_REUSE_DETECTED', userId: user.id,
+        context: 'AuthService',
+        action: 'REFRESH_TOKEN_REUSE_DETECTED',
+        userId: user.id,
       });
       throw new UnauthorizedException('Refresh token is no longer valid');
     }
 
     const accessToken = await this.jwtService.signAsync(
       { email: user.email, sub: user.id, role: user.role },
-      { secret: this.configService.getOrThrow<string>('jwt.accessSecret'), expiresIn: this.configService.getOrThrow<string>('jwt.accessExpiresIn') },
+      {
+        secret: this.configService.getOrThrow<string>('jwt.accessSecret'),
+        expiresIn: this.configService.getOrThrow<string>(
+          'jwt.accessExpiresIn',
+        ) as any,
+      },
     );
     const nextRefreshToken = await this.jwtService.signAsync(
       { email: user.email, sub: user.id, role: user.role },
-      { secret: this.configService.getOrThrow<string>('jwt.refreshSecret'), expiresIn: this.configService.getOrThrow<string>('jwt.refreshExpiresIn') },
+      {
+        secret: this.configService.getOrThrow<string>('jwt.refreshSecret'),
+        expiresIn: this.configService.getOrThrow<string>(
+          'jwt.refreshExpiresIn',
+        ) as any,
+      },
     );
     const nextHash = await argon2.hash(nextRefreshToken);
 
@@ -188,7 +233,11 @@ export class AuthService {
         data: { revokedAt: new Date(), replacedByTokenHash: nextHash },
       }),
       this.prisma.refreshToken.create({
-        data: { userId: user.id, tokenHash: nextHash, expiresAt: this.getRefreshTokenExpiry() },
+        data: {
+          userId: user.id,
+          tokenHash: nextHash,
+          expiresAt: this.getRefreshTokenExpiry(),
+        },
       }),
     ]);
 
@@ -200,11 +249,17 @@ export class AuthService {
   }
 
   private getRefreshTokenExpiry(): Date {
-    const configured = this.configService.get<string>('jwt.refreshExpiresIn') ?? '7d';
+    const configured =
+      this.configService.get<string>('jwt.refreshExpiresIn') ?? '7d';
     const match = /^(\\d+)([smhd])$/.exec(configured);
     if (!match) return new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
     const value = Number(match[1]);
-    const multipliers: Record<string, number> = { s: 1000, m: 60_000, h: 3_600_000, d: 86_400_000 };
+    const multipliers: Record<string, number> = {
+      s: 1000,
+      m: 60_000,
+      h: 3_600_000,
+      d: 86_400_000,
+    };
     return new Date(Date.now() + value * (multipliers[match[2]] ?? 86_400_000));
   }
 

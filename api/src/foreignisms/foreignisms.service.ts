@@ -1,6 +1,11 @@
 import { ConflictException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { ApprovalStatus, Prisma, Foreignism, VonalpSourceType } from '@prisma/client';
+import {
+  ApprovalStatus,
+  Prisma,
+  Foreignism,
+  VonalpSourceType,
+} from '@prisma/client';
 import { CreateForeignismDto } from './dto/create-foreignism.dto';
 import {
   buildBulkImportResult,
@@ -11,7 +16,10 @@ import {
   importKey,
   validateBulkImportData,
 } from '../common/bulk-import';
-import { attachVonalpStatus, attachVonalpStatuses } from '../common/vonalp-status';
+import {
+  attachVonalpStatus,
+  attachVonalpStatuses,
+} from '../common/vonalp-status';
 
 @Injectable()
 export class ForeignismsService {
@@ -37,7 +45,11 @@ export class ForeignismsService {
         approvedBy: { select: { id: true, name: true } },
       },
     });
-    return attachVonalpStatuses(this.prisma, VonalpSourceType.FOREIGNISM, items);
+    return attachVonalpStatuses(
+      this.prisma,
+      VonalpSourceType.FOREIGNISM,
+      items,
+    );
   }
 
   async importRows(rows: BulkImportRow[], userId: string) {
@@ -46,7 +58,11 @@ export class ForeignismsService {
     const seen = new Set<string>();
 
     for (const row of rows) {
-      const validation = await validateBulkImportData(CreateForeignismDto, row.data, row.rowNumber);
+      const validation = await validateBulkImportData(
+        CreateForeignismDto,
+        row.data,
+        row.rowNumber,
+      );
       if (validation.errors.length > 0) {
         errors.push(...validation.errors);
         continue;
@@ -72,7 +88,11 @@ export class ForeignismsService {
           createdBy: { connect: { id: userId } },
           approvalStatus: ApprovalStatus.DRAFT,
         });
-        created.push({ rowNumber: row.rowNumber, id: item.id, label: item.term });
+        created.push({
+          rowNumber: row.rowNumber,
+          id: item.id,
+          label: item.term,
+        });
       } catch (error) {
         errors.push({
           rowNumber: row.rowNumber,
@@ -86,7 +106,9 @@ export class ForeignismsService {
     return buildBulkImportResult(rows.length, created, errors);
   }
 
-  async findOne(where: Prisma.ForeignismWhereUniqueInput): Promise<Foreignism | null> {
+  async findOne(
+    where: Prisma.ForeignismWhereUniqueInput,
+  ): Promise<Foreignism | null> {
     const item = await this.prisma.foreignism.findUnique({
       where,
       include: {
@@ -105,7 +127,10 @@ export class ForeignismsService {
 
     if (typeof data.term === 'string') {
       data.term = data.term.trim();
-      await this.ensureUniqueForeignism(data.term, typeof where.id === 'string' ? where.id : undefined);
+      await this.ensureUniqueForeignism(
+        data.term,
+        typeof where.id === 'string' ? where.id : undefined,
+      );
     }
 
     return this.prisma.foreignism.update(params);
@@ -115,15 +140,22 @@ export class ForeignismsService {
     return this.prisma.foreignism.delete({ where });
   }
 
-  async search(query: string, params: {
-    skip?: number;
-    take?: number;
-    where?: Prisma.ForeignismWhereInput;
-    orderBy?: Prisma.ForeignismOrderByWithRelationInput;
-  }): Promise<Foreignism[]> {
-    const searchQuery = query.trim().split(/\s+/).map(w => `${w}:*`).join(' | ');
+  async search(
+    query: string,
+    params: {
+      skip?: number;
+      take?: number;
+      where?: Prisma.ForeignismWhereInput;
+      orderBy?: Prisma.ForeignismOrderByWithRelationInput;
+    },
+  ): Promise<Foreignism[]> {
+    const searchQuery = query
+      .trim()
+      .split(/\s+/)
+      .map((w) => `${w}:*`)
+      .join(' | ');
     const { skip, take, where: filters, orderBy } = params;
-    
+
     const items = await this.prisma.foreignism.findMany({
       skip,
       take,
@@ -147,7 +179,11 @@ export class ForeignismsService {
         approvedBy: { select: { id: true, name: true } },
       },
     });
-    return attachVonalpStatuses(this.prisma, VonalpSourceType.FOREIGNISM, items);
+    return attachVonalpStatuses(
+      this.prisma,
+      VonalpSourceType.FOREIGNISM,
+      items,
+    );
   }
 
   private async ensureUniqueForeignism(term: string, currentId?: string) {
@@ -160,7 +196,9 @@ export class ForeignismsService {
     });
 
     if (existing) {
-      throw new ConflictException('Já existe um estrangeirismo com este vocábulo');
+      throw new ConflictException(
+        'Já existe um estrangeirismo com este vocábulo',
+      );
     }
   }
 }

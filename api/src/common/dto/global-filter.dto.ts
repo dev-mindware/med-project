@@ -8,7 +8,10 @@ export enum OrderDirection {
 }
 
 export class GlobalFilterDto {
-  @ApiPropertyOptional({ description: 'Page number for pagination', default: 1 })
+  @ApiPropertyOptional({
+    description: 'Page number for pagination',
+    default: 1,
+  })
   @IsOptional()
   @Type(() => Number)
   @IsInt()
@@ -27,10 +30,11 @@ export class GlobalFilterDto {
   @IsString()
   orderBy?: string;
 
-  @ApiPropertyOptional({ 
-    enum: OrderDirection, 
+  @ApiPropertyOptional({
+    enum: OrderDirection,
     default: OrderDirection.DESC,
-    description: 'Sort direction: ASC (Ascending/Oldest first), DESC (Descending/Newest first)'
+    description:
+      'Sort direction: ASC (Ascending/Oldest first), DESC (Descending/Newest first)',
   })
   @IsOptional()
   @IsEnum(OrderDirection)

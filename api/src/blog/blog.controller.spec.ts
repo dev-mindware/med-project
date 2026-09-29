@@ -26,9 +26,7 @@ describe('BlogController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [BlogController],
-      providers: [
-        { provide: BlogService, useValue: mockBlogService },
-      ],
+      providers: [{ provide: BlogService, useValue: mockBlogService }],
     }).compile();
 
     controller = module.get<BlogController>(BlogController);
@@ -39,7 +37,7 @@ describe('BlogController', () => {
   describe('create()', () => {
     it('should call service.create', async () => {
       const req = { user: { id: 'user-1' } };
-      await controller.create(req, { title: 'New Post' } as any);
+      await controller.create(req as any, { title: 'New Post' } as any);
       expect(service.create).toHaveBeenCalled();
     });
   });
@@ -47,14 +45,22 @@ describe('BlogController', () => {
   describe('findAll()', () => {
     it('should call service.findAll with filters', async () => {
       const req = { user: { role: UserRole.ADMIN } };
-      const filters = { page: 1, limit: 10, status: PostStatus.PUBLISHED, category: 'category' } as any;
-      await controller.findAll(req, filters);
+      const filters = {
+        page: 1,
+        limit: 10,
+        status: PostStatus.PUBLISHED,
+        category: 'category',
+      } as any;
+      await controller.findAll(req as any, filters);
       expect(service.findAll).toHaveBeenCalledWith(
-        expect.objectContaining({ 
-          skip: 0, 
+        expect.objectContaining({
+          skip: 0,
           take: 10,
-          where: expect.objectContaining({ status: PostStatus.PUBLISHED, category: 'category' })
-        })
+          where: expect.objectContaining({
+            status: PostStatus.PUBLISHED,
+            category: 'category',
+          }),
+        }),
       );
     });
   });
@@ -62,17 +68,22 @@ describe('BlogController', () => {
   describe('findOne()', () => {
     it('should throw NotFoundException if post not found', async () => {
       service.findOne.mockResolvedValueOnce(null);
-      await expect(controller.findOne({}, 'ghost')).rejects.toThrow(NotFoundException);
+      await expect(controller.findOne({} as any, 'ghost')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
   describe('updateStatus()', () => {
     it('should call service.update with publishedAt if status is PUBLISHED', async () => {
       await controller.updateStatus('post-1', PostStatus.PUBLISHED);
-      expect(service.update).toHaveBeenCalledWith('post-1', expect.objectContaining({ 
-        status: PostStatus.PUBLISHED,
-        publishedAt: expect.any(Date)
-      }));
+      expect(service.update).toHaveBeenCalledWith(
+        'post-1',
+        expect.objectContaining({
+          status: PostStatus.PUBLISHED,
+          publishedAt: expect.any(Date),
+        }),
+      );
     });
   });
 });

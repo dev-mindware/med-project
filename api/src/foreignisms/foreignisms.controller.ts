@@ -1,5 +1,26 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, Query, NotFoundException, ForbiddenException, BadRequestException, Optional } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiParam, ApiBody } from '@nestjs/swagger';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  Request,
+  Query,
+  NotFoundException,
+  ForbiddenException,
+  BadRequestException,
+  Optional,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiParam,
+  ApiBody,
+} from '@nestjs/swagger';
 import { ForeignismsService } from './foreignisms.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -9,7 +30,10 @@ import { CreateForeignismDto } from './dto/create-foreignism.dto';
 import { UpdateForeignismDto } from './dto/update-foreignism.dto';
 import { LinguisticFilterDto } from '../common/dto/filter.dto';
 import { UsersService } from '../users/users.service';
-import { applySupervisorForeignismScope, ensureSupervisorCanAccessCreator } from '../common/supervisor-scope';
+import {
+  applySupervisorForeignismScope,
+  ensureSupervisorCanAccessCreator,
+} from '../common/supervisor-scope';
 import { ImportRowsDto } from '../common/dto/import-rows.dto';
 
 import { AuthRequest } from '../auth/types/auth-request';
@@ -26,7 +50,10 @@ export class ForeignismsController {
   @Post()
   @Roles(UserRole.ADMIN, UserRole.SUPERVISOR, UserRole.OPERATOR)
   @ApiOperation({ summary: 'Create a new foreignism' })
-  create(@Request() req: AuthRequest, @Body() createForeignismDto: CreateForeignismDto) {
+  create(
+    @Request() req: AuthRequest,
+    @Body() createForeignismDto: CreateForeignismDto,
+  ) {
     return this.foreignismsService.create({
       ...createForeignismDto,
       createdBy: { connect: { id: req.user.id } },
@@ -43,14 +70,35 @@ export class ForeignismsController {
 
   @Get()
   @ApiOperation({ summary: 'List all foreignisms' })
-  findAll(@Request() req: AuthRequest, @Query() filters?: LinguisticFilterDto) {
-    if (!filters) {
-      filters = req;
-      req = { user: { id: '', role: UserRole.ADMIN } };
+  findAll(
+    @Request() reqOrFilters: any,
+    @Query() maybeFilters?: LinguisticFilterDto,
+  ) {
+    let reqUser: { id: string; role: UserRole; email?: string } = {
+      id: '',
+      role: UserRole.ADMIN,
+      email: '',
+    };
+    let filters: LinguisticFilterDto = {};
+
+    if (reqOrFilters && 'user' in reqOrFilters && reqOrFilters.user) {
+      reqUser = reqOrFilters.user;
+      filters = maybeFilters || {};
+    } else if (reqOrFilters) {
+      filters = reqOrFilters as LinguisticFilterDto;
     }
 
-    const { search, page = 1, limit = 20, orderBy, orderDirection, startDate, endDate, languageCode, ...rest } =
-      filters as LinguisticFilterDto;
+    const {
+      search,
+      page = 1,
+      limit = 20,
+      orderBy,
+      orderDirection,
+      startDate,
+      endDate,
+      languageCode,
+      ...rest
+    } = filters as LinguisticFilterDto;
     const where: Prisma.ForeignismWhereInput = { ...rest };
 
     if (startDate || endDate) {
@@ -58,13 +106,15 @@ export class ForeignismsController {
       if (startDate) where.createdAt.gte = new Date(startDate);
       if (endDate) where.createdAt.lte = new Date(endDate);
     }
-    applySupervisorForeignismScope(req.user, where);
+    applySupervisorForeignismScope(reqUser as any, where);
 
     const params = {
       skip: (page - 1) * limit,
       take: limit,
       where,
-      orderBy: orderBy ? { [orderBy]: orderDirection } : { createdAt: 'desc' as Prisma.SortOrder },
+      orderBy: orderBy
+        ? { [orderBy]: orderDirection }
+        : { createdAt: 'desc' as Prisma.SortOrder },
     };
 
     if (search) {
@@ -75,40 +125,67 @@ export class ForeignismsController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Get a specific foreignism by ID' })
-  async findOne(@Param('id') id: string, @Request() req: AuthRequest = { user: { id: '', role: UserRole.ADMIN } }) {
+  async findOne(
+    @Param('id') id: string,
+    @Request() req: any = { user: { id: '', role: UserRole.ADMIN } },
+  ) {
     const foreignism = await this.foreignismsService.findOne({ id });
     if (!foreignism) throw new NotFoundException();
 
-    if (req.user.role === UserRole.OPERATOR && foreignism.createdById !== req.user.id) {
+    const currentUser = req?.user || { id: '', role: UserRole.ADMIN };
+    if (
+      currentUser.role === UserRole.OPERATOR &&
+      foreignism.createdById !== currentUser.id
+    ) {
       throw new ForbiddenException('Unauthorized');
     }
-    await ensureSupervisorCanAccessCreator(req.user, foreignism.createdById, this.usersService);
+    await ensureSupervisorCanAccessCreator(
+      currentUser,
+      foreignism.createdById,
+      this.usersService,
+    );
     return foreignism;
   }
 
   @Patch(':id')
   @Roles(UserRole.ADMIN, UserRole.SUPERVISOR, UserRole.OPERATOR)
   @ApiOperation({ summary: 'Update an existing foreignism' })
-  async update(@Param('id') id: string, @Request() req: AuthRequest, @Body() updateForeignismDto: UpdateForeignismDto) {
+  async update(
+    @Param('id') id: string,
+    @Request() req: AuthRequest,
+    @Body() updateForeignismDto: UpdateForeignismDto,
+  ) {
     const foreignism = await this.foreignismsService.findOne({ id });
     if (!foreignism) throw new NotFoundException();
-    
+
     if (req.user.role === UserRole.OPERATOR) {
       if (foreignism.createdById !== req.user.id) {
         throw new ForbiddenException('Unauthorized');
       }
-      if (foreignism.approvalStatus !== ApprovalStatus.DRAFT && foreignism.approvalStatus !== ApprovalStatus.NEEDS_CORRECTION) {
-        throw new ForbiddenException('Can only edit draft or correction-requested content');
+      if (
+        foreignism.approvalStatus !== ApprovalStatus.DRAFT &&
+        foreignism.approvalStatus !== ApprovalStatus.NEEDS_CORRECTION
+      ) {
+        throw new ForbiddenException(
+          'Can only edit draft or correction-requested content',
+        );
       }
     }
-    await ensureSupervisorCanAccessCreator(req.user, foreignism.createdById, this.usersService);
+    await ensureSupervisorCanAccessCreator(
+      req.user,
+      foreignism.createdById,
+      this.usersService,
+    );
 
     const data: Prisma.ForeignismUpdateInput = {
       ...updateForeignismDto,
       updatedBy: { connect: { id: req.user.id } },
     };
 
-    if (foreignism.approvalStatus === ApprovalStatus.NEEDS_CORRECTION && foreignism.createdById === req.user.id) {
+    if (
+      foreignism.approvalStatus === ApprovalStatus.NEEDS_CORRECTION &&
+      foreignism.createdById === req.user.id
+    ) {
       data.approvalStatus = ApprovalStatus.PENDING_APPROVAL;
       data.submittedAt = new Date();
     }
@@ -125,7 +202,7 @@ export class ForeignismsController {
   async remove(@Param('id') id: string, @Request() req: AuthRequest) {
     const foreignism = await this.foreignismsService.findOne({ id });
     if (!foreignism) throw new NotFoundException();
-    
+
     if (req.user.role === UserRole.OPERATOR) {
       if (foreignism.createdById !== req.user.id) {
         throw new ForbiddenException('Unauthorized');
@@ -145,52 +222,68 @@ export class ForeignismsController {
     schema: {
       type: 'object',
       properties: {
-        status: { 
-          type: 'string', 
-          enum: ['DRAFT', 'PENDING_APPROVAL', 'APPROVED', 'REJECTED', 'NEEDS_CORRECTION', 'ARCHIVED'],
-          description: 'New approval status to set for the foreignism'
+        status: {
+          type: 'string',
+          enum: [
+            'DRAFT',
+            'PENDING_APPROVAL',
+            'APPROVED',
+            'REJECTED',
+            'NEEDS_CORRECTION',
+            'ARCHIVED',
+          ],
+          description: 'New approval status to set for the foreignism',
         },
-        reason: { 
-          type: 'string', 
-          description: 'Optional reason or feedback, required for rejection or correction' 
-        }
+        reason: {
+          type: 'string',
+          description:
+            'Optional reason or feedback, required for rejection or correction',
+        },
       },
-      required: ['status']
-    }
+      required: ['status'],
+    },
   })
   async review(
-    @Param('id') id: string, 
+    @Param('id') id: string,
     @Request() req: AuthRequest,
     @Body('status') status: ApprovalStatus,
-    @Body('reason') reason?: string
+    @Body('reason') reason?: string,
   ) {
     const item = await this.foreignismsService.findOne({ id });
     if (!item) throw new NotFoundException();
 
-    if (req.user.role === UserRole.OPERATOR && item.createdById !== req.user.id) {
+    if (
+      req.user.role === UserRole.OPERATOR &&
+      item.createdById !== req.user.id
+    ) {
       throw new ForbiddenException('Unauthorized');
     }
-    await ensureSupervisorCanAccessCreator(req.user, item.createdById, this.usersService);
+    await ensureSupervisorCanAccessCreator(
+      req.user,
+      item.createdById,
+      this.usersService,
+    );
 
     const data: Prisma.ForeignismUpdateInput = { approvalStatus: status };
 
     if (status === ApprovalStatus.PENDING_APPROVAL) {
       data.submittedAt = new Date();
     } else if (status === ApprovalStatus.APPROVED) {
-      if (req.user.role === UserRole.OPERATOR) throw new ForbiddenException('Unauthorized');
+      if (req.user.role === UserRole.OPERATOR)
+        throw new ForbiddenException('Unauthorized');
       data.approvedAt = new Date();
       data.approvedBy = { connect: { id: req.user.id } };
     } else if (status === ApprovalStatus.REJECTED) {
-      if (req.user.role === UserRole.OPERATOR) throw new ForbiddenException('Unauthorized');
+      if (req.user.role === UserRole.OPERATOR)
+        throw new ForbiddenException('Unauthorized');
       data.rejectedAt = new Date();
       data.rejectionReason = reason;
     } else if (status === ApprovalStatus.NEEDS_CORRECTION) {
-      if (req.user.role === UserRole.OPERATOR) throw new ForbiddenException('Unauthorized');
+      if (req.user.role === UserRole.OPERATOR)
+        throw new ForbiddenException('Unauthorized');
       data.correctionNotes = reason;
     }
 
     return this.foreignismsService.update({ where: { id }, data });
   }
-
-
 }

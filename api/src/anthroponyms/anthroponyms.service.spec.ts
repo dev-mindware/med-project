@@ -59,7 +59,11 @@ describe('AnthroponymsService', () => {
     });
 
     it('should propagate filters to prisma', async () => {
-      await service.findAll({ skip: 10, take: 5, where: { gender: 'MASCULINE' } });
+      await service.findAll({
+        skip: 10,
+        take: 5,
+        where: { gender: 'MASCULINE' },
+      });
       expect(prisma.anthroponym.findMany).toHaveBeenCalledWith(
         expect.objectContaining({ skip: 10, take: 5 }),
       );

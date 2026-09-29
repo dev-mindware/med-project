@@ -27,10 +27,7 @@ export class EventsService {
   async findOne(idOrSlug: string): Promise<Event | null> {
     return this.prisma.event.findFirst({
       where: {
-        OR: [
-          { id: idOrSlug },
-          { slug: idOrSlug },
-        ],
+        OR: [{ id: idOrSlug }, { slug: idOrSlug }],
       },
       include: {
         createdBy: { select: { id: true, name: true } },

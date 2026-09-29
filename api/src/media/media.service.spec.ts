@@ -36,14 +36,17 @@ const mockPrismaService = {
 };
 
 const mockConfigService = {
-  getOrThrow: jest.fn((key: string) => ({
-    'storage.r2Endpoint': 'http://r2.endpoint',
-    'storage.r2AccessKeyId': 'access-key',
-    'storage.r2SecretAccessKey': 'secret-key',
-    'storage.r2BucketName': 'test-bucket',
-    'storage.r2PublicUrl': 'http://public.url',
-    'app.mediaMaxFileMb': 10,
-  })[key]),
+  getOrThrow: jest.fn(
+    (key: string) =>
+      ({
+        'storage.r2Endpoint': 'http://r2.endpoint',
+        'storage.r2AccessKeyId': 'access-key',
+        'storage.r2SecretAccessKey': 'secret-key',
+        'storage.r2BucketName': 'test-bucket',
+        'storage.r2PublicUrl': 'http://public.url',
+        'app.mediaMaxFileMb': 10,
+      })[key],
+  ),
 };
 
 describe('MediaService', () => {
@@ -74,11 +77,16 @@ describe('MediaService', () => {
         originalname: 'test.jpg',
         mimetype: 'image/jpeg',
         size: 500,
-        buffer: Buffer.from('test'),
+        buffer: Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46, 0x49, 0x46]),
       } as Express.Multer.File;
 
-      const result = await service.uploadFile(mockFile, 'user-1', 'entries', 'entry-1');
-      
+      const result = await service.uploadFile(
+        mockFile,
+        'user-1',
+        'entries',
+        'entry-1',
+      );
+
       expect(result).toEqual(mockMediaAsset);
       expect(prisma.mediaAsset.create).toHaveBeenCalledWith(
         expect.objectContaining({

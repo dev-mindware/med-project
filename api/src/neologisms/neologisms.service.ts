@@ -29,7 +29,11 @@ export class NeologismsService {
     const seen = new Set<string>();
 
     for (const row of rows) {
-      const validation = await validateBulkImportData(CreateNeologismDto, row.data, row.rowNumber);
+      const validation = await validateBulkImportData(
+        CreateNeologismDto,
+        row.data,
+        row.rowNumber,
+      );
       if (validation.errors.length > 0) {
         errors.push(...validation.errors);
         continue;
@@ -55,7 +59,11 @@ export class NeologismsService {
           createdBy: { connect: { id: userId } },
           approvalStatus: ApprovalStatus.DRAFT,
         });
-        created.push({ rowNumber: row.rowNumber, id: item.id, label: item.entry });
+        created.push({
+          rowNumber: row.rowNumber,
+          id: item.id,
+          label: item.entry,
+        });
       } catch (error) {
         errors.push({
           rowNumber: row.rowNumber,
@@ -90,7 +98,9 @@ export class NeologismsService {
     });
   }
 
-  async findOne(where: Prisma.NeologismWhereUniqueInput): Promise<Neologism | null> {
+  async findOne(
+    where: Prisma.NeologismWhereUniqueInput,
+  ): Promise<Neologism | null> {
     return this.prisma.neologism.findUnique({
       where,
       include: {
@@ -108,7 +118,10 @@ export class NeologismsService {
 
     if (typeof data.entry === 'string') {
       data.entry = data.entry.trim();
-      await this.ensureUniqueNeologism(data.entry, typeof where.id === 'string' ? where.id : undefined);
+      await this.ensureUniqueNeologism(
+        data.entry,
+        typeof where.id === 'string' ? where.id : undefined,
+      );
     }
 
     return this.prisma.neologism.update({ where, data });
@@ -118,13 +131,20 @@ export class NeologismsService {
     return this.prisma.neologism.delete({ where });
   }
 
-  async search(query: string, params: {
-    skip?: number;
-    take?: number;
-    where?: Prisma.NeologismWhereInput;
-    orderBy?: Prisma.NeologismOrderByWithRelationInput;
-  }) {
-    const searchQuery = query.trim().split(/\s+/).map((word) => `${word}:*`).join(' | ');
+  async search(
+    query: string,
+    params: {
+      skip?: number;
+      take?: number;
+      where?: Prisma.NeologismWhereInput;
+      orderBy?: Prisma.NeologismOrderByWithRelationInput;
+    },
+  ) {
+    const searchQuery = query
+      .trim()
+      .split(/\s+/)
+      .map((word) => `${word}:*`)
+      .join(' | ');
     const { skip, take, where: filters, orderBy } = params;
 
     return this.prisma.neologism.findMany({

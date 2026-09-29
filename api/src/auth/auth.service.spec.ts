@@ -10,7 +10,7 @@ import { AppLogger } from '../common/logger/app-logger.service';
 
 jest.mock('argon2');
 
-const mockUser = {
+const mockUser: any = {
   id: 'user-uuid-1',
   email: 'admin@med.com',
   name: 'Admin User',
@@ -32,17 +32,31 @@ const mockJwtService = {
 };
 
 const mockConfigService = {
-  get: jest.fn((key: string) => key.includes('ExpiresIn') ? '7d' : 'mock-secret'),
-  getOrThrow: jest.fn((key: string) => key.includes('ExpiresIn') ? '7d' : 'mock-secret'),
+  get: jest.fn((key: string) =>
+    key.includes('ExpiresIn') ? '7d' : 'mock-secret',
+  ),
+  getOrThrow: jest.fn((key: string) =>
+    key.includes('ExpiresIn') ? '7d' : 'mock-secret',
+  ),
 };
 
 const mockPrismaService = {
+  $transaction: jest.fn((promises) => Array.isArray(promises) ? Promise.all(promises) : promises()),
   refreshToken: {
     deleteMany: jest.fn().mockResolvedValue({ count: 1 }),
     updateMany: jest.fn().mockResolvedValue({ count: 1 }),
     update: jest.fn().mockResolvedValue({ id: 'rt-1' }),
     create: jest.fn().mockResolvedValue({ id: 'rt-1' }),
-    findMany: jest.fn().mockResolvedValue([{ id: 'rt-1', tokenHash: 'hashed_rt', revokedAt: null, expiresAt: new Date(Date.now() + 86400000) }]),
+    findMany: jest
+      .fn()
+      .mockResolvedValue([
+        {
+          id: 'rt-1',
+          tokenHash: 'hashed_rt',
+          revokedAt: null,
+          expiresAt: new Date(Date.now() + 86400000),
+        },
+      ]),
   },
 };
 
@@ -74,9 +88,12 @@ describe('AuthService', () => {
     it('should return user data (without passwordHash) on valid credentials', async () => {
       (argon2.verify as jest.Mock).mockResolvedValueOnce(true);
       mockUsersService.findByEmail.mockResolvedValueOnce(mockUser);
-      const result = await service.validateUser('admin@med.com', 'correct_pass');
+      const result = await service.validateUser(
+        'admin@med.com',
+        'correct_pass',
+      );
       expect(result).not.toHaveProperty('passwordHash');
-      expect(result.email).toBe('admin@med.com');
+      expect(result!.email).toBe('admin@med.com');
     });
 
     it('should return null on invalid password', async () => {
@@ -109,7 +126,11 @@ describe('AuthService', () => {
 
     it('should default role to OPERATOR when not provided', async () => {
       (argon2.hash as jest.Mock).mockResolvedValueOnce('hash');
-      await service.register({ email: 'op@med.com', name: 'Op', password: 'pass' });
+      await service.register({
+        email: 'op@med.com',
+        name: 'Op',
+        password: 'pass',
+      });
       expect(mockUsersService.create).toHaveBeenCalledWith(
         expect.objectContaining({ role: 'OPERATOR' }),
       );
@@ -120,7 +141,9 @@ describe('AuthService', () => {
   describe('login()', () => {
     it('should return access_token, refresh_token and user info', async () => {
       mockJwtService.signAsync.mockResolvedValue('signed.token');
-      mockPrismaService.refreshToken.updateMany.mockResolvedValueOnce({ count: 0 });
+      mockPrismaService.refreshToken.updateMany.mockResolvedValueOnce({
+        count: 0,
+      });
       mockPrismaService.refreshToken.create.mockResolvedValueOnce({});
       (argon2.hash as jest.Mock).mockResolvedValueOnce('hash');
 
@@ -165,8 +188,17 @@ describe('AuthService', () => {
 
     it('should reject a refresh token reuse', async () => {
       (argon2.verify as jest.Mock).mockResolvedValueOnce(true);
-      mockPrismaService.refreshToken.findMany.mockResolvedValueOnce([{ id: 'rt-1', tokenHash: 'hashed_rt', revokedAt: new Date(), expiresAt: new Date(Date.now() + 86400000) }]);
-      await expect(service.refreshTokens('token')).rejects.toThrow(UnauthorizedException);
+      mockPrismaService.refreshToken.findMany.mockResolvedValueOnce([
+        {
+          id: 'rt-1',
+          tokenHash: 'hashed_rt',
+          revokedAt: new Date(),
+          expiresAt: new Date(Date.now() + 86400000),
+        },
+      ]);
+      await expect(service.refreshTokens('token')).rejects.toThrow(
+        UnauthorizedException,
+      );
       expect(mockPrismaService.refreshToken.updateMany).toHaveBeenCalled();
     });
 
@@ -181,7 +213,10 @@ describe('AuthService', () => {
 
   describe('profile settings', () => {
     it('should update current user profile', async () => {
-      await service.updateProfile('user-uuid-1', { name: 'Updated', profilePhotoUrl: 'https://avatar.test' });
+      await service.updateProfile('user-uuid-1', {
+        name: 'Updated',
+        profilePhotoUrl: 'https://avatar.test',
+      });
       expect(mockUsersService.update).toHaveBeenCalledWith('user-uuid-1', {
         name: 'Updated',
         profilePhotoUrl: 'https://avatar.test',
@@ -189,17 +224,24 @@ describe('AuthService', () => {
     });
 
     it('should reject an email already used by another user', async () => {
-      mockUsersService.findByEmail.mockResolvedValueOnce({ ...mockUser, id: 'other-id' });
-      await expect(service.updateEmail('user-uuid-1', 'admin@med.com')).rejects.toThrow();
+      mockUsersService.findByEmail.mockResolvedValueOnce({
+        ...mockUser,
+        id: 'other-id',
+      });
+      await expect(
+        service.updateEmail('user-uuid-1', 'admin@med.com'),
+      ).rejects.toThrow();
     });
 
     it('should reject wrong current password', async () => {
       mockUsersService.findById.mockResolvedValueOnce(mockUser);
       (argon2.verify as jest.Mock).mockResolvedValueOnce(false);
-      await expect(service.updatePassword('user-uuid-1', {
-        currentPassword: 'wrong',
-        newPassword: 'new-pass',
-      })).rejects.toThrow(UnauthorizedException);
+      await expect(
+        service.updatePassword('user-uuid-1', {
+          currentPassword: 'wrong',
+          newPassword: 'new-pass',
+        }),
+      ).rejects.toThrow(UnauthorizedException);
     });
 
     it('should update password hash and lastPasswordChangeAt', async () => {
@@ -210,10 +252,13 @@ describe('AuthService', () => {
         currentPassword: 'correct',
         newPassword: 'new-pass',
       });
-      expect(mockUsersService.update).toHaveBeenCalledWith('user-uuid-1', expect.objectContaining({
-        passwordHash: 'new-hash',
-        lastPasswordChangeAt: expect.any(Date),
-      }));
+      expect(mockUsersService.update).toHaveBeenCalledWith(
+        'user-uuid-1',
+        expect.objectContaining({
+          passwordHash: 'new-hash',
+          lastPasswordChangeAt: expect.any(Date),
+        }),
+      );
     });
   });
 });

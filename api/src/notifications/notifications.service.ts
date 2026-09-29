@@ -25,7 +25,10 @@ const publicNotificationSelect = {
 export class NotificationsService {
   constructor(private prisma: PrismaService) {}
 
-  findAll(userId: string, params: { skip?: number; take?: number; unreadOnly?: boolean }) {
+  findAll(
+    userId: string,
+    params: { skip?: number; take?: number; unreadOnly?: boolean },
+  ) {
     return this.prisma.notification.findMany({
       where: {
         userId,
@@ -70,7 +73,10 @@ export class NotificationsService {
     return this.prisma.notification.create({ data });
   }
 
-  async createForRoles(roles: UserRole[], data: Omit<CreateNotificationInput, 'userId'>) {
+  async createForRoles(
+    roles: UserRole[],
+    data: Omit<CreateNotificationInput, 'userId'>,
+  ) {
     const users = await this.prisma.user.findMany({
       where: { role: { in: roles }, isActive: true },
       select: { id: true },

@@ -1,4 +1,8 @@
-import { VonalpCompletionStatus, VonalpSourceType, VonalpVocabularyType } from '@prisma/client';
+import {
+  VonalpCompletionStatus,
+  VonalpSourceType,
+  VonalpVocabularyType,
+} from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 
 type WithId = { id: string };
@@ -27,10 +31,13 @@ export async function attachVonalpStatuses<T extends WithId>(
     },
   });
 
-  const statusBySource = new Map<string, {
-    vonalpCompletionStatus?: VonalpCompletionStatus;
-    vonalpEpCompletionStatus?: VonalpCompletionStatus;
-  }>();
+  const statusBySource = new Map<
+    string,
+    {
+      vonalpCompletionStatus?: VonalpCompletionStatus;
+      vonalpEpCompletionStatus?: VonalpCompletionStatus;
+    }
+  >();
 
   for (const term of terms) {
     const status = statusBySource.get(term.sourceId) || {};

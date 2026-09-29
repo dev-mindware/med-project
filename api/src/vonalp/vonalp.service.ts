@@ -42,6 +42,8 @@ type SourceRecord = {
   grammaticalSubcategory?: string | null;
   syllabicDivision?: string | null;
   etymology?: string | null;
+  firstDefinition?: string | null;
+  secondDefinition?: string | null;
   definition?: string | null;
   meaning?: string | null;
   toponym?: string | null;
@@ -79,7 +81,10 @@ const REQUIRED_FIELDS: Array<keyof VonalpFields> = [
   'origin',
 ];
 
-const SOURCE_CONFIG: Record<VonalpSourceType, Omit<SourceConfig, 'vocabularyFlag'>> = {
+const SOURCE_CONFIG: Record<
+  VonalpSourceType,
+  Omit<SourceConfig, 'vocabularyFlag'>
+> = {
   ENTRY: { delegateName: 'entry', origin: 'Dicionário' },
   TOPONYM: { delegateName: 'toponym', origin: 'Topónimo' },
   ANTHROPONYM: { delegateName: 'anthroponym', origin: 'Antropónimo' },
@@ -104,33 +109,48 @@ export class VonalpService {
       },
     });
 
-    if (existing && existing.completionStatus !== VonalpCompletionStatus.ARCHIVED) {
+    if (
+      existing &&
+      existing.completionStatus !== VonalpCompletionStatus.ARCHIVED
+    ) {
       const missingFields = this.getMissingFields(existing);
-      const completionStatus = missingFields.length === 0
-        ? VonalpCompletionStatus.COMPLETE
-        : VonalpCompletionStatus.INCOMPLETE;
-      const term = completionStatus !== existing.completionStatus || missingFields.join('|') !== existing.missingFields.join('|')
-        ? await this.prisma.vonalpTerm.update({
-            where: { id: existing.id },
-            data: {
-              missingFields,
-              completionStatus,
-              completedAt: completionStatus === VonalpCompletionStatus.COMPLETE ? new Date() : existing.completedAt,
-            },
-          })
-        : existing;
+      const completionStatus =
+        missingFields.length === 0
+          ? VonalpCompletionStatus.COMPLETE
+          : VonalpCompletionStatus.INCOMPLETE;
+      const term =
+        completionStatus !== existing.completionStatus ||
+        missingFields.join('|') !== existing.missingFields.join('|')
+          ? await this.prisma.vonalpTerm.update({
+              where: { id: existing.id },
+              data: {
+                missingFields,
+                completionStatus,
+                completedAt:
+                  completionStatus === VonalpCompletionStatus.COMPLETE
+                    ? new Date()
+                    : existing.completedAt,
+              },
+            })
+          : existing;
 
       if (term.completionStatus === VonalpCompletionStatus.COMPLETE) {
-        await this.setSourceVocabularyFlag(dto.sourceType, dto.sourceId, dto.vocabularyType, true);
+        await this.setSourceVocabularyFlag(
+          dto.sourceType,
+          dto.sourceId,
+          dto.vocabularyType,
+          true,
+        );
       }
       return this.withWorkflowMetadata(term, user);
     }
 
     const copiedFields = this.mapSourceToVonalpFields(dto.sourceType, source);
     const missingFields = this.getMissingFields(copiedFields);
-    const completionStatus = missingFields.length === 0
-      ? VonalpCompletionStatus.COMPLETE
-      : VonalpCompletionStatus.INCOMPLETE;
+    const completionStatus =
+      missingFields.length === 0
+        ? VonalpCompletionStatus.COMPLETE
+        : VonalpCompletionStatus.INCOMPLETE;
 
     const payload = {
       ...copiedFields,
@@ -140,17 +160,28 @@ export class VonalpService {
       sourceCreatedById: source.createdById,
       missingFields,
       completionStatus,
-      completedAt: completionStatus === VonalpCompletionStatus.COMPLETE ? new Date() : null,
+      completedAt:
+        completionStatus === VonalpCompletionStatus.COMPLETE
+          ? new Date()
+          : null,
       createdById: existing?.createdById || user.id,
       updatedById: user.id,
     };
 
     const term = existing
-      ? await this.prisma.vonalpTerm.update({ where: { id: existing.id }, data: payload })
+      ? await this.prisma.vonalpTerm.update({
+          where: { id: existing.id },
+          data: payload,
+        })
       : await this.prisma.vonalpTerm.create({ data: payload });
 
     if (completionStatus === VonalpCompletionStatus.COMPLETE) {
-      await this.setSourceVocabularyFlag(dto.sourceType, dto.sourceId, dto.vocabularyType, true);
+      await this.setSourceVocabularyFlag(
+        dto.sourceType,
+        dto.sourceId,
+        dto.vocabularyType,
+        true,
+      );
     }
 
     return this.withWorkflowMetadata(term, user);
@@ -169,7 +200,8 @@ export class VonalpService {
       term: dto.term ?? term.term,
       pronunciation: dto.pronunciation ?? term.pronunciation,
       grammaticalCategory: dto.grammaticalCategory ?? term.grammaticalCategory,
-      grammaticalSubcategory: dto.grammaticalSubcategory ?? term.grammaticalSubcategory,
+      grammaticalSubcategory:
+        dto.grammaticalSubcategory ?? term.grammaticalSubcategory,
       syllabicDivision: dto.syllabicDivision ?? term.syllabicDivision,
       etymology: dto.etymology ?? term.etymology,
       firstDefinition: dto.firstDefinition ?? term.firstDefinition,
@@ -179,7 +211,10 @@ export class VonalpService {
     const missingFields = this.getMissingFields(nextFields);
     const canSaveIncomplete = user.role !== UserRole.OPERATOR;
 
-    if (missingFields.length > 0 && (!dto.saveIncomplete || !canSaveIncomplete)) {
+    if (
+      missingFields.length > 0 &&
+      (!dto.saveIncomplete || !canSaveIncomplete)
+    ) {
       throw new BadRequestException({
         message: canSaveIncomplete
           ? 'Preencha todos os campos obrigatórios ou guarde como incompleto'
@@ -188,9 +223,10 @@ export class VonalpService {
       });
     }
 
-    const completionStatus = missingFields.length === 0
-      ? VonalpCompletionStatus.COMPLETE
-      : VonalpCompletionStatus.INCOMPLETE;
+    const completionStatus =
+      missingFields.length === 0
+        ? VonalpCompletionStatus.COMPLETE
+        : VonalpCompletionStatus.INCOMPLETE;
 
     const updated = await this.prisma.vonalpTerm.update({
       where: { id },
@@ -198,12 +234,20 @@ export class VonalpService {
         ...nextFields,
         missingFields,
         completionStatus,
-        completedAt: completionStatus === VonalpCompletionStatus.COMPLETE ? new Date() : null,
+        completedAt:
+          completionStatus === VonalpCompletionStatus.COMPLETE
+            ? new Date()
+            : null,
         updatedById: user.id,
       },
     });
 
-    await this.setSourceVocabularyFlag(term.sourceType, term.sourceId, term.vocabularyType, true);
+    await this.setSourceVocabularyFlag(
+      term.sourceType,
+      term.sourceId,
+      term.vocabularyType,
+      true,
+    );
 
     return this.withWorkflowMetadata(updated, user);
   }
@@ -232,7 +276,12 @@ export class VonalpService {
       });
     }
 
-    await this.setSourceVocabularyFlag(dto.sourceType, dto.sourceId, dto.vocabularyType, false);
+    await this.setSourceVocabularyFlag(
+      dto.sourceType,
+      dto.sourceId,
+      dto.vocabularyType,
+      false,
+    );
 
     return { success: true };
   }
@@ -241,12 +290,16 @@ export class VonalpService {
     const page = Number(filters.page || 1);
     const limit = Number(filters.limit || 20);
     const where: Prisma.VonalpTermWhereInput = {
-      ...(filters.vocabularyType ? { vocabularyType: filters.vocabularyType } : {}),
+      ...(filters.vocabularyType
+        ? { vocabularyType: filters.vocabularyType }
+        : {}),
       ...(filters.sourceType ? { sourceType: filters.sourceType } : {}),
       ...(filters.completionStatus
         ? { completionStatus: filters.completionStatus }
         : { completionStatus: { not: VonalpCompletionStatus.ARCHIVED } }),
-      ...(filters.search ? { term: { contains: filters.search, mode: 'insensitive' } } : {}),
+      ...(filters.search
+        ? { term: { contains: filters.search, mode: 'insensitive' } }
+        : {}),
     };
 
     if (user.role === UserRole.OPERATOR) {
@@ -267,9 +320,15 @@ export class VonalpService {
         take: limit,
         orderBy: { updatedAt: 'desc' },
         include: {
-          createdBy: { select: { id: true, name: true, email: true, role: true } },
-          updatedBy: { select: { id: true, name: true, email: true, role: true } },
-          sourceCreatedBy: { select: { id: true, name: true, email: true, role: true } },
+          createdBy: {
+            select: { id: true, name: true, email: true, role: true },
+          },
+          updatedBy: {
+            select: { id: true, name: true, email: true, role: true },
+          },
+          sourceCreatedBy: {
+            select: { id: true, name: true, email: true, role: true },
+          },
         },
       }),
       this.prisma.vonalpTerm.count({ where }),
@@ -313,14 +372,27 @@ export class VonalpService {
         origin: term.origin,
       }));
 
-    const existingKeys = new Set(termItems.map((term) => this.sourceKey(term.sourceType, term.sourceId)));
-    const markedItems = await this.findPublicMarkedSources(vocabularyType, existingKeys);
+    const existingKeys = new Set(
+      termItems.map((term) => this.sourceKey(term.sourceType, term.sourceId)),
+    );
+    const markedItems = await this.findPublicMarkedSources(
+      vocabularyType,
+      existingKeys,
+    );
 
-    return [...termItems, ...markedItems].sort((a, b) => String(a.term || '').localeCompare(String(b.term || ''), 'pt'));
+    return [...termItems, ...markedItems].sort((a, b) =>
+      String(a.term || '').localeCompare(String(b.term || ''), 'pt'),
+    );
   }
 
-  private async findPublicMarkedSources(vocabularyType: VonalpVocabularyType, existingKeys: Set<string>) {
-    const flag = vocabularyType === VonalpVocabularyType.VONALP ? 'isVocabulary' : 'isVocabularyEP';
+  private async findPublicMarkedSources(
+    vocabularyType: VonalpVocabularyType,
+    existingKeys: Set<string>,
+  ) {
+    const flag =
+      vocabularyType === VonalpVocabularyType.VONALP
+        ? 'isVocabulary'
+        : 'isVocabularyEP';
 
     const [entries, toponyms, anthroponyms, foreignisms] = await Promise.all([
       this.prisma.entry.findMany({
@@ -378,14 +450,37 @@ export class VonalpService {
     ]);
 
     return [
-      ...entries.map((source) => this.publicSourceTerm(vocabularyType, VonalpSourceType.ENTRY, source)),
-      ...toponyms.map((source) => this.publicSourceTerm(vocabularyType, VonalpSourceType.TOPONYM, source)),
-      ...anthroponyms.map((source) => this.publicSourceTerm(vocabularyType, VonalpSourceType.ANTHROPONYM, source)),
-      ...foreignisms.map((source) => this.publicSourceTerm(vocabularyType, VonalpSourceType.FOREIGNISM, source)),
-    ].filter((term) => !existingKeys.has(this.sourceKey(term.sourceType, term.sourceId)));
+      ...entries.map((source) =>
+        this.publicSourceTerm(vocabularyType, VonalpSourceType.ENTRY, source),
+      ),
+      ...toponyms.map((source) =>
+        this.publicSourceTerm(vocabularyType, VonalpSourceType.TOPONYM, source),
+      ),
+      ...anthroponyms.map((source) =>
+        this.publicSourceTerm(
+          vocabularyType,
+          VonalpSourceType.ANTHROPONYM,
+          source,
+        ),
+      ),
+      ...foreignisms.map((source) =>
+        this.publicSourceTerm(
+          vocabularyType,
+          VonalpSourceType.FOREIGNISM,
+          source,
+        ),
+      ),
+    ].filter(
+      (term) =>
+        !existingKeys.has(this.sourceKey(term.sourceType, term.sourceId)),
+    );
   }
 
-  private publicSourceTerm(vocabularyType: VonalpVocabularyType, sourceType: VonalpSourceType, source: SourceRecord) {
+  private publicSourceTerm(
+    vocabularyType: VonalpVocabularyType,
+    sourceType: VonalpSourceType,
+    source: SourceRecord,
+  ) {
     const fields = this.mapSourceToVonalpFields(sourceType, source);
 
     return {
@@ -406,20 +501,43 @@ export class VonalpService {
     return `${sourceType}:${sourceId}`;
   }
 
-  private async getSource(sourceType: VonalpSourceType, sourceId: string): Promise<SourceRecord> {
+  private async getSource(
+    sourceType: VonalpSourceType,
+    sourceId: string,
+  ): Promise<SourceRecord> {
     const include = {
       createdBy: { select: { id: true, supervisorId: true } },
     } as const;
 
     switch (sourceType) {
       case VonalpSourceType.ENTRY:
-        return this.requireSource(await this.prisma.entry.findUnique({ where: { id: sourceId }, include }));
+        return this.requireSource(
+          await this.prisma.entry.findUnique({
+            where: { id: sourceId },
+            include,
+          }),
+        );
       case VonalpSourceType.TOPONYM:
-        return this.requireSource(await this.prisma.toponym.findUnique({ where: { id: sourceId }, include }));
+        return this.requireSource(
+          await this.prisma.toponym.findUnique({
+            where: { id: sourceId },
+            include,
+          }),
+        );
       case VonalpSourceType.ANTHROPONYM:
-        return this.requireSource(await this.prisma.anthroponym.findUnique({ where: { id: sourceId }, include }));
+        return this.requireSource(
+          await this.prisma.anthroponym.findUnique({
+            where: { id: sourceId },
+            include,
+          }),
+        );
       case VonalpSourceType.FOREIGNISM:
-        return this.requireSource(await this.prisma.foreignism.findUnique({ where: { id: sourceId }, include }));
+        return this.requireSource(
+          await this.prisma.foreignism.findUnique({
+            where: { id: sourceId },
+            include,
+          }),
+        );
     }
   }
 
@@ -445,35 +563,45 @@ export class VonalpService {
       const isOwner = source.createdById === user.id;
       const managesCreator = source.createdBy?.supervisorId === user.id;
       if (!isOwner && !managesCreator) {
-        throw new ForbiddenException('Supervisor só pode gerir os seus operadores atribuídos');
+        throw new ForbiddenException(
+          'Supervisor só pode gerir os seus operadores atribuídos',
+        );
       }
     }
   }
 
-  private mapSourceToVonalpFields(sourceType: VonalpSourceType, source: SourceRecord): VonalpFields {
+  private mapSourceToVonalpFields(
+    sourceType: VonalpSourceType,
+    source: SourceRecord,
+  ): VonalpFields {
     if (sourceType === VonalpSourceType.ENTRY) {
       return this.normalizeFields({
-        term: source.entry,
-        pronunciation: source.pronunciation,
-        grammaticalCategory: source.grammaticalCategory,
-        grammaticalSubcategory: source.grammaticalSubcategory,
-        syllabicDivision: source.syllabicDivision,
-        etymology: source.etymology,
-        firstDefinition: source.firstDefinition,
-        secondDefinition: source.secondDefinition,
+        term: source.entry ?? null,
+        pronunciation: source.pronunciation ?? null,
+        grammaticalCategory: source.grammaticalCategory ?? null,
+        grammaticalSubcategory: source.grammaticalSubcategory ?? null,
+        syllabicDivision: source.syllabicDivision ?? null,
+        etymology: source.etymology ?? null,
+        firstDefinition: source.firstDefinition ?? null,
+        secondDefinition: source.secondDefinition ?? null,
         origin: SOURCE_CONFIG[sourceType].origin,
       });
     }
 
     if (sourceType === VonalpSourceType.TOPONYM) {
       return this.normalizeFields({
-        term: source.toponym,
-        pronunciation: source.pronunciation,
+        term: source.toponym ?? null,
+        pronunciation: source.pronunciation ?? null,
         grammaticalCategory: null,
         grammaticalSubcategory: null,
         syllabicDivision: null,
+<<<<<<< Updated upstream
         etymology: source.toponymProvenance ?? source.toponymHistory ?? null,
         firstDefinition: source.meaning,
+=======
+        etymology: source.toponymProvenance || source.toponymHistory || null,
+        firstDefinition: source.meaning ?? null,
+>>>>>>> Stashed changes
         secondDefinition: null,
         origin: SOURCE_CONFIG[sourceType].origin,
       });
@@ -481,26 +609,31 @@ export class VonalpService {
 
     if (sourceType === VonalpSourceType.ANTHROPONYM) {
       return this.normalizeFields({
-        term: source.name,
+        term: source.name ?? null,
         pronunciation: null,
         grammaticalCategory: null,
-        grammaticalSubcategory: source.gender,
+        grammaticalSubcategory: source.gender ?? null,
         syllabicDivision: null,
-        etymology: source.etymology,
-        firstDefinition: source.meaning,
+        etymology: source.etymology ?? null,
+        firstDefinition: source.meaning ?? null,
         secondDefinition: null,
         origin: SOURCE_CONFIG[sourceType].origin,
       });
     }
 
     return this.normalizeFields({
-      term: source.term,
-      pronunciation: source.pronunciation,
-      grammaticalCategory: source.grammaticalCategory,
+      term: source.term ?? null,
+      pronunciation: source.pronunciation ?? null,
+      grammaticalCategory: source.grammaticalCategory ?? null,
       grammaticalSubcategory: null,
       syllabicDivision: null,
+<<<<<<< Updated upstream
       etymology: this.buildForeignismEtymology(source),
       firstDefinition: source.definition ?? source.meaning ?? null,
+=======
+      etymology: this.buildForeignismEtymology(source) || null,
+      firstDefinition: source.definition || source.meaning || null,
+>>>>>>> Stashed changes
       secondDefinition: null,
       origin: SOURCE_CONFIG[sourceType].origin,
     });
@@ -510,14 +643,16 @@ export class VonalpService {
     return Object.fromEntries(
       Object.entries(fields).map(([key, value]) => [
         key,
-        typeof value === 'string' ? value.trim() || null : value ?? null,
+        typeof value === 'string' ? value.trim() || null : (value ?? null),
       ]),
     ) as VonalpFields;
   }
 
   private buildForeignismEtymology(source: SourceRecord) {
     const parts = [
-      source.originalLanguage ? `Idioma original: ${source.originalLanguage}` : '',
+      source.originalLanguage
+        ? `Idioma original: ${source.originalLanguage}`
+        : '',
       source.originCountry ? `País de origem: ${source.originCountry}` : '',
     ].filter(Boolean);
 
@@ -529,7 +664,11 @@ export class VonalpService {
   }
 
   private isEmpty(value: unknown) {
-    return value === null || value === undefined || (typeof value === 'string' && value.trim() === '');
+    return (
+      value === null ||
+      value === undefined ||
+      (typeof value === 'string' && value.trim() === '')
+    );
   }
 
   private async setSourceVocabularyFlag(
@@ -556,10 +695,16 @@ export class VonalpService {
     }
   }
 
-  private getSourceConfig(sourceType: VonalpSourceType, vocabularyType: VonalpVocabularyType): SourceConfig {
+  private getSourceConfig(
+    sourceType: VonalpSourceType,
+    vocabularyType: VonalpVocabularyType,
+  ): SourceConfig {
     return {
       ...SOURCE_CONFIG[sourceType],
-      vocabularyFlag: vocabularyType === VonalpVocabularyType.VONALP ? 'isVocabulary' : 'isVocabularyEP',
+      vocabularyFlag:
+        vocabularyType === VonalpVocabularyType.VONALP
+          ? 'isVocabulary'
+          : 'isVocabularyEP',
     };
   }
 
@@ -577,19 +722,31 @@ export class VonalpService {
 
     const [entries, toponyms, anthroponyms, foreignisms] = await Promise.all([
       this.prisma.entry.findMany({
-        where: { id: { in: Array.from(idsByType.ENTRY) }, approvalStatus: ApprovalStatus.APPROVED },
+        where: {
+          id: { in: Array.from(idsByType.ENTRY) },
+          approvalStatus: ApprovalStatus.APPROVED,
+        },
         select: { id: true },
       }),
       this.prisma.toponym.findMany({
-        where: { id: { in: Array.from(idsByType.TOPONYM) }, approvalStatus: ApprovalStatus.APPROVED },
+        where: {
+          id: { in: Array.from(idsByType.TOPONYM) },
+          approvalStatus: ApprovalStatus.APPROVED,
+        },
         select: { id: true },
       }),
       this.prisma.anthroponym.findMany({
-        where: { id: { in: Array.from(idsByType.ANTHROPONYM) }, approvalStatus: ApprovalStatus.APPROVED },
+        where: {
+          id: { in: Array.from(idsByType.ANTHROPONYM) },
+          approvalStatus: ApprovalStatus.APPROVED,
+        },
         select: { id: true },
       }),
       this.prisma.foreignism.findMany({
-        where: { id: { in: Array.from(idsByType.FOREIGNISM) }, approvalStatus: ApprovalStatus.APPROVED },
+        where: {
+          id: { in: Array.from(idsByType.FOREIGNISM) },
+          approvalStatus: ApprovalStatus.APPROVED,
+        },
         select: { id: true },
       }),
     ]);
@@ -597,8 +754,12 @@ export class VonalpService {
     return {
       [VonalpSourceType.ENTRY]: new Set(entries.map((item) => item.id)),
       [VonalpSourceType.TOPONYM]: new Set(toponyms.map((item) => item.id)),
-      [VonalpSourceType.ANTHROPONYM]: new Set(anthroponyms.map((item) => item.id)),
-      [VonalpSourceType.FOREIGNISM]: new Set(foreignisms.map((item) => item.id)),
+      [VonalpSourceType.ANTHROPONYM]: new Set(
+        anthroponyms.map((item) => item.id),
+      ),
+      [VonalpSourceType.FOREIGNISM]: new Set(
+        foreignisms.map((item) => item.id),
+      ),
     };
   }
 
@@ -607,7 +768,9 @@ export class VonalpService {
     return {
       ...term,
       missingFields,
-      requiresModal: term.completionStatus !== VonalpCompletionStatus.COMPLETE && missingFields.length > 0,
+      requiresModal:
+        term.completionStatus !== VonalpCompletionStatus.COMPLETE &&
+        missingFields.length > 0,
       canSaveIncomplete: user.role !== UserRole.OPERATOR,
     };
   }

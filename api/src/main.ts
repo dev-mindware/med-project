@@ -30,7 +30,10 @@ async function bootstrap() {
   );
 
   app.enableCors({
-    origin: (config.get<string[]>('app.frontendUrls') ?? []).length > 0 ? config.get<string[]>('app.frontendUrls') : false,
+    origin:
+      (config.get<string[]>('app.frontendUrls') ?? []).length > 0
+        ? config.get<string[]>('app.frontendUrls')
+        : false,
     methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-Id'],
     credentials: true,
@@ -48,7 +51,9 @@ async function bootstrap() {
 
   const swaggerConfig = new DocumentBuilder()
     .setTitle('Linguistic API')
-    .setDescription('Sistema Linguístico - API completa com busca global, relatórios e gestão de conteúdo')
+    .setDescription(
+      'Sistema Linguístico - API completa com busca global, relatórios e gestão de conteúdo',
+    )
     .setVersion('2.0')
     .addBearerAuth()
     .addTag('search', 'Busca global cross-resource')
@@ -64,20 +69,30 @@ async function bootstrap() {
     .addTag('stats', 'Estatísticas')
     .addTag('event-registrations', 'Inscrições em Eventos')
     .addTag('audit-logs', 'Auditoria')
-    .addTag('manual-vocabulary', 'Extração inteligente de vocabulário a partir de PDFs')
+    .addTag(
+      'manual-vocabulary',
+      'Extração inteligente de vocabulário a partir de PDFs',
+    )
     .addTag('users', 'Utilizadores')
     .addTag('auth', 'Autenticação')
     .build();
 
   const document = SwaggerModule.createDocument(app, swaggerConfig);
-  app.getHttpAdapter().getInstance().get('/api/openapi.json', (_req: Request, res: Response) => res.json(document));
+  app
+    .getHttpAdapter()
+    .getInstance()
+    .get('/api/openapi.json', (_req: Request, res: Response) =>
+      res.json(document),
+    );
   app.use(
-    '/api/reference',
+    ['/api/reference', '/reference', '/scalar'],
     apiReference({
-      url: '/api/openapi.json',
+      spec: {
+        content: document,
+      },
       theme: 'purple',
       darkMode: true,
-      pageTitle: 'Linguistic API Reference',
+      pageTitle: 'Linguistic API Reference (Scalar)',
     }),
   );
   SwaggerModule.setup('api/docs', app, document, {

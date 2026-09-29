@@ -1,4 +1,15 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query, NotFoundException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  Query,
+  NotFoundException,
+} from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiBody } from '@nestjs/swagger';
 import { EventRegistrationsService } from './event-registrations.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -11,7 +22,9 @@ import { RegistrationFilterDto } from './dto/registration-filter.dto';
 @ApiTags('event-registrations')
 @Controller('event-registrations')
 export class EventRegistrationsController {
-  constructor(private readonly registrationsService: EventRegistrationsService) {}
+  constructor(
+    private readonly registrationsService: EventRegistrationsService,
+  ) {}
 
   @Post()
   @ApiOperation({ summary: 'Register for an event (Public)' })
@@ -25,7 +38,17 @@ export class EventRegistrationsController {
   @Roles(UserRole.ADMIN, UserRole.SUPERVISOR)
   @ApiOperation({ summary: 'List all registrations (Admin/Supervisor)' })
   findAll(@Query() filters: RegistrationFilterDto) {
-    const { page = 1, limit = 20, orderBy, orderDirection, eventId, status, search, startDate, endDate } = filters;
+    const {
+      page = 1,
+      limit = 20,
+      orderBy,
+      orderDirection,
+      eventId,
+      status,
+      search,
+      startDate,
+      endDate,
+    } = filters;
     const where: Prisma.EventRegistrationWhereInput = {};
 
     if (eventId) where.eventId = eventId;
@@ -47,7 +70,9 @@ export class EventRegistrationsController {
       skip: (page - 1) * limit,
       take: limit,
       where,
-      orderBy: orderBy ? { [orderBy]: orderDirection } : { createdAt: 'desc' as Prisma.SortOrder },
+      orderBy: orderBy
+        ? { [orderBy]: orderDirection }
+        : { createdAt: 'desc' as Prisma.SortOrder },
     });
   }
 
@@ -64,16 +89,24 @@ export class EventRegistrationsController {
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.SUPERVISOR)
-  @ApiOperation({ summary: 'Update registration status and notify user by email' })
+  @ApiOperation({
+    summary: 'Update registration status and notify user by email',
+  })
   @ApiBody({
     schema: {
       type: 'object',
       properties: {
-        status: { type: 'string', enum: ['PENDING', 'APPROVED', 'REJECTED', 'CANCELLED'] },
-        notes: { type: 'string', description: 'Optional notes/reason for rejection' }
+        status: {
+          type: 'string',
+          enum: ['PENDING', 'APPROVED', 'REJECTED', 'CANCELLED'],
+        },
+        notes: {
+          type: 'string',
+          description: 'Optional notes/reason for rejection',
+        },
       },
-      required: ['status']
-    }
+      required: ['status'],
+    },
   })
   updateStatus(
     @Param('id') id: string,
@@ -92,10 +125,10 @@ export class EventRegistrationsController {
     schema: {
       type: 'object',
       properties: {
-        attended: { type: 'boolean' }
+        attended: { type: 'boolean' },
       },
-      required: ['attended']
-    }
+      required: ['attended'],
+    },
   })
   markAttendance(@Param('id') id: string, @Body('attended') attended: boolean) {
     return this.registrationsService.markAttendance(id, attended);

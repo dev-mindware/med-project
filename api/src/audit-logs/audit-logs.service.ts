@@ -38,7 +38,10 @@ export class AuditLogsService {
     });
   }
 
-  async generatePdfReport(period: AuditReportPeriod = 'daily', referenceDate = new Date()): Promise<AuditReportResult> {
+  async generatePdfReport(
+    period: AuditReportPeriod = 'daily',
+    referenceDate = new Date(),
+  ): Promise<AuditReportResult> {
     const { start, end, label } = this.getPeriodRange(period, referenceDate);
     const logs = await this.prisma.auditLog.findMany({
       where: { createdAt: { gte: start, lte: end } },
@@ -106,19 +109,29 @@ export class AuditLogsService {
       const pageLines = lines.slice(i, i + usableLines);
       const commands: string[] = [];
       commands.push('0.145 0.388 0.922 rg 0 535 842 60 re f');
-      commands.push(`BT /F1 16 Tf 1 1 1 rg ${margin} 558 Td (${this.pdfText(pageLines[0] || 'Relatorio de Auditoria')}) Tj ET`);
+      commands.push(
+        `BT /F1 16 Tf 1 1 1 rg ${margin} 558 Td (${this.pdfText(pageLines[0] || 'Relatorio de Auditoria')}) Tj ET`,
+      );
       pageLines.slice(i === 0 ? 1 : 0).forEach((line, index) => {
         const y = 510 - index * lineHeight;
-        commands.push(`BT /F1 9 Tf 0.12 0.16 0.23 rg ${margin} ${y} Td (${this.pdfText(this.truncate(line, 145))}) Tj ET`);
+        commands.push(
+          `BT /F1 9 Tf 0.12 0.16 0.23 rg ${margin} ${y} Td (${this.pdfText(this.truncate(line, 145))}) Tj ET`,
+        );
       });
-      commands.push(`BT /F1 8 Tf 0.45 0.50 0.58 rg ${margin} 28 Td (${this.pdfText(`MedProject | Pagina ${pages.length + 1}`)}) Tj ET`);
+      commands.push(
+        `BT /F1 8 Tf 0.45 0.50 0.58 rg ${margin} 28 Td (${this.pdfText(`MedProject | Pagina ${pages.length + 1}`)}) Tj ET`,
+      );
       pages.push(commands.join('\n'));
     }
 
     return this.composePdf(pages, pageWidth, pageHeight);
   }
 
-  private composePdf(pageContents: string[], pageWidth: number, pageHeight: number): Buffer {
+  private composePdf(
+    pageContents: string[],
+    pageWidth: number,
+    pageHeight: number,
+  ): Buffer {
     const objects: string[] = [];
     const addObject = (content: string) => {
       objects.push(content);
@@ -126,18 +139,25 @@ export class AuditLogsService {
     };
     const catalogId = addObject('');
     const pagesId = addObject('');
-    const fontId = addObject('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>');
+    const fontId = addObject(
+      '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>',
+    );
     const pageIds: number[] = [];
 
     pageContents.forEach((content) => {
       const stream = Buffer.from(content, 'latin1');
-      const contentId = addObject(`<< /Length ${stream.length} >>\nstream\n${content}\nendstream`);
-      const pageId = addObject(`<< /Type /Page /Parent ${pagesId} 0 R /MediaBox [0 0 ${pageWidth} ${pageHeight}] /Resources << /Font << /F1 ${fontId} 0 R >> >> /Contents ${contentId} 0 R >>`);
+      const contentId = addObject(
+        `<< /Length ${stream.length} >>\nstream\n${content}\nendstream`,
+      );
+      const pageId = addObject(
+        `<< /Type /Page /Parent ${pagesId} 0 R /MediaBox [0 0 ${pageWidth} ${pageHeight}] /Resources << /Font << /F1 ${fontId} 0 R >> >> /Contents ${contentId} 0 R >>`,
+      );
       pageIds.push(pageId);
     });
 
     objects[catalogId - 1] = `<< /Type /Catalog /Pages ${pagesId} 0 R >>`;
-    objects[pagesId - 1] = `<< /Type /Pages /Kids [${pageIds.map((id) => `${id} 0 R`).join(' ')}] /Count ${pageIds.length} >>`;
+    objects[pagesId - 1] =
+      `<< /Type /Pages /Kids [${pageIds.map((id) => `${id} 0 R`).join(' ')}] /Count ${pageIds.length} >>`;
 
     let pdf = '%PDF-1.4\n';
     const offsets = [0];
@@ -154,13 +174,18 @@ export class AuditLogsService {
     return Buffer.from(pdf, 'latin1');
   }
 
-  private buildDescription(log: AuditLog & { actor?: { name: string | null } | null }) {
+  private buildDescription(
+    log: AuditLog & { actor?: { name: string | null } | null },
+  ) {
     const actor = log.actor?.name || 'Sistema';
     return `${actor} executou ${this.translateAction(log.action).toLowerCase()} em ${this.translateEntity(log.entity)}.`;
   }
 
   private pdfText(value: string) {
-    return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[()\\]/g, (match) => `\\${match}`);
+    return value
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[()\\]/g, (match) => `\\${match}`);
   }
 
   private truncate(value: string, max: number) {
@@ -168,35 +193,57 @@ export class AuditLogsService {
   }
 
   private formatDateTime(date: Date) {
-    return new Intl.DateTimeFormat('pt-PT', { dateStyle: 'short', timeStyle: 'short' }).format(date);
+    return new Intl.DateTimeFormat('pt-PT', {
+      dateStyle: 'short',
+      timeStyle: 'short',
+    }).format(date);
   }
 
   private formatDate(date: Date) {
-    return new Intl.DateTimeFormat('pt-PT', { dateStyle: 'short' }).format(date);
+    return new Intl.DateTimeFormat('pt-PT', { dateStyle: 'short' }).format(
+      date,
+    );
   }
 
   private formatMonth(date: Date) {
-    return new Intl.DateTimeFormat('pt-PT', { month: 'long', year: 'numeric' }).format(date);
+    return new Intl.DateTimeFormat('pt-PT', {
+      month: 'long',
+      year: 'numeric',
+    }).format(date);
   }
 
   private translateAction(action: string) {
-    return { CREATE: 'Criacao', UPDATE: 'Atualizacao', DELETE: 'Exclusao', LOGIN: 'Login', OTHER: 'Outra acao' }[action] || action;
+    return (
+      {
+        CREATE: 'Criacao',
+        UPDATE: 'Atualizacao',
+        DELETE: 'Exclusao',
+        LOGIN: 'Login',
+        OTHER: 'Outra acao',
+      }[action] || action
+    );
   }
 
   private translateEntity(entity: string) {
-    return {
-      Entry: 'Entrada',
-      Toponym: 'Toponimo',
-      Anthroponym: 'Antroponimo',
-      Foreignism: 'Estrangeirismo',
-      Event: 'Evento',
-      User: 'Utilizador',
-      Auth: 'Autenticacao',
-      MediaAsset: 'Midia',
-    }[entity] || entity;
+    return (
+      {
+        Entry: 'Entrada',
+        Toponym: 'Toponimo',
+        Anthroponym: 'Antroponimo',
+        Foreignism: 'Estrangeirismo',
+        Event: 'Evento',
+        User: 'Utilizador',
+        Auth: 'Autenticacao',
+        MediaAsset: 'Midia',
+      }[entity] || entity
+    );
   }
 
   private translateStatus(status: string) {
-    return { SUCCESS: 'Sucesso', FAILED: 'Falhou', COMPLETED: 'Concluido' }[status] || status;
+    return (
+      { SUCCESS: 'Sucesso', FAILED: 'Falhou', COMPLETED: 'Concluido' }[
+        status
+      ] || status
+    );
   }
 }

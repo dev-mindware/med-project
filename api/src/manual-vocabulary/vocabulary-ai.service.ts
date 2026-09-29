@@ -39,13 +39,41 @@ export class VocabularyAiService {
   ) {}
 
   async extractVocabulary(text: string): Promise<ManualVocabularyRawItem[]> {
-    const apiKey = this.configService.get<string>('OPENAI_API_KEY');
+    const apiKey =
+      this.configService.get<string>('GEMINI_API_KEY') ||
+      this.configService.get<string>('ai.geminiApiKey') ||
+      this.configService.get<string>('OPENAI_API_KEY') ||
+      this.configService.get<string>('ai.openaiApiKey');
+
     if (!apiKey) {
-      throw new BadGatewayException('OPENAI_API_KEY nao configurada');
+      throw new BadGatewayException(
+        'Chave de API de IA (GEMINI_API_KEY / OPENAI_API_KEY) nao configurada',
+      );
     }
 
-    const model = this.configService.get<string>('OPENAI_MODEL') || 'gpt-4.1-mini';
-    const client = new OpenAI({ apiKey });
+    const model =
+      this.configService.get<string>('GEMINI_MODEL') ||
+      this.configService.get<string>('AI_MODEL') ||
+      this.configService.get<string>('ai.geminiModel') ||
+      this.configService.get<string>('OPENAI_MODEL') ||
+      'gemini-2.5-flash';
+
+    const isGemini =
+      model.toLowerCase().includes('gemini') ||
+      Boolean(this.configService.get<string>('GEMINI_API_KEY'));
+
+    const baseURL =
+      this.configService.get<string>('AI_BASE_URL') ||
+      this.configService.get<string>('OPENAI_BASE_URL') ||
+      (isGemini
+        ? 'https://generativelanguage.googleapis.com/v1beta/openai/'
+        : undefined);
+
+    const client = new OpenAI({
+      apiKey,
+      baseURL,
+    });
+
     const chunks = this.splitText(text);
     const allItems: ManualVocabularyRawItem[] = [];
 
@@ -72,7 +100,9 @@ export class VocabularyAiService {
             chunkLength: chunk.length,
           },
         });
-        throw new BadGatewayException(`Falha ao analisar vocabulario com IA: ${this.errorMessage(error)}`);
+        throw new BadGatewayException(
+          `Falha ao analisar vocabulario com IA: ${this.errorMessage(error)}`,
+        );
       }
     }
 
@@ -81,7 +111,9 @@ export class VocabularyAiService {
 
   private splitText(text: string) {
     const words = text.split(/\s+/).filter(Boolean);
-    const chunkWords = Number(this.configService.get<string>('VOCABULARY_CHUNK_WORDS') || 2200);
+    const chunkWords = Number(
+      this.configService.get<string>('VOCABULARY_CHUNK_WORDS') || 2200,
+    );
     const chunks: string[] = [];
 
     for (let index = 0; index < words.length; index += chunkWords) {
@@ -93,17 +125,24 @@ export class VocabularyAiService {
 
   private parseItems(content: string): ManualVocabularyRawItem[] {
     const raw = content.trim();
-    const json = raw.startsWith('[') ? raw : raw.match(/\[[\s\S]*\]/)?.[0] || '[]';
+    const json = raw.startsWith('[')
+      ? raw
+      : raw.match(/\[[\s\S]*\]/)?.[0] || '[]';
     const parsed = JSON.parse(json) as ManualVocabularyRawItem[];
 
-    return parsed.filter((item) =>
-      ['ENTRY', 'TOPONYM', 'ANTHROPONYM', 'FOREIGNISM'].includes(item.sourceModel) &&
-      item.data &&
-      typeof item.data === 'object',
+    return parsed.filter(
+      (item) =>
+        ['ENTRY', 'TOPONYM', 'ANTHROPONYM', 'FOREIGNISM'].includes(
+          item.sourceModel,
+        ) &&
+        item.data &&
+        typeof item.data === 'object',
     );
   }
 
   private errorMessage(error: unknown) {
-    return error instanceof Error && error.message ? error.message : 'servico IA indisponivel';
+    return error instanceof Error && error.message
+      ? error.message
+      : 'servico IA indisponivel';
   }
 }

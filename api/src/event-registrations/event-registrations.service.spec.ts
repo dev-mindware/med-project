@@ -5,7 +5,6 @@ import { RegistrationStatus } from '@prisma/client';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { MailService } from '../common/mail/mail.service';
 
-
 const mockEvent = {
   id: 'event-1',
   title: 'Test Event',
@@ -25,7 +24,6 @@ const mockRegistration = {
     location: 'Test Location',
   },
 };
-
 
 const mockPrismaService: any = {
   event: {
@@ -47,7 +45,6 @@ const mockMailService = {
   sendEventRegistrationRejected: jest.fn().mockResolvedValue(null),
 };
 
-
 describe('EventRegistrationsService', () => {
   let service: EventRegistrationsService;
   let prisma: typeof mockPrismaService;
@@ -59,7 +56,6 @@ describe('EventRegistrationsService', () => {
         { provide: PrismaService, useValue: mockPrismaService },
         { provide: MailService, useValue: mockMailService },
       ],
-
     }).compile();
 
     service = module.get<EventRegistrationsService>(EventRegistrationsService);
@@ -84,20 +80,26 @@ describe('EventRegistrationsService', () => {
         ...mockEvent,
         _count: { registrations: 10 },
       });
-      await expect(service.create({
-        eventId: 'event-1',
-        name: 'John Doe',
-        email: 'john@example.com',
-      })).rejects.toThrow(BadRequestException);
+      await expect(
+        service.create({
+          eventId: 'event-1',
+          name: 'John Doe',
+          email: 'john@example.com',
+        }),
+      ).rejects.toThrow(BadRequestException);
     });
 
     it('should throw BadRequestException if already registered', async () => {
-      prisma.eventRegistration.findUnique.mockResolvedValueOnce(mockRegistration);
-      await expect(service.create({
-        eventId: 'event-1',
-        name: 'John Doe',
-        email: 'john@example.com',
-      })).rejects.toThrow(BadRequestException);
+      prisma.eventRegistration.findUnique.mockResolvedValueOnce(
+        mockRegistration,
+      );
+      await expect(
+        service.create({
+          eventId: 'event-1',
+          name: 'John Doe',
+          email: 'john@example.com',
+        }),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 
@@ -108,5 +110,4 @@ describe('EventRegistrationsService', () => {
       expect(mockMailService.sendEventInvitationPass).toHaveBeenCalled();
     });
   });
-
 });

@@ -1,5 +1,12 @@
 import { Type } from 'class-transformer';
-import { ArrayMaxSize, IsArray, IsInt, IsObject, Min, ValidateNested } from 'class-validator';
+import {
+  ArrayMaxSize,
+  IsArray,
+  IsInt,
+  IsObject,
+  Min,
+  ValidateNested,
+} from 'class-validator';
 
 export class ImportRowDto {
   @IsInt()

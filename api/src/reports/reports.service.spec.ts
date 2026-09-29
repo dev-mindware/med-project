@@ -5,14 +5,20 @@ import { NotFoundException } from '@nestjs/common';
 import { NotificationsService } from '../notifications/notifications.service';
 
 const mockPrismaService = {
-  user: { findMany: jest.fn().mockResolvedValue([]), count: jest.fn().mockResolvedValue(0) },
-  auditLog: { findMany: jest.fn().mockResolvedValue([]), count: jest.fn().mockResolvedValue(0) },
+  user: {
+    findMany: jest.fn().mockResolvedValue([]),
+    count: jest.fn().mockResolvedValue(0),
+  },
+  auditLog: {
+    findMany: jest.fn().mockResolvedValue([]),
+    count: jest.fn().mockResolvedValue(0),
+  },
   entry: { count: jest.fn().mockResolvedValue(0) },
   neologism: { count: jest.fn().mockResolvedValue(0) },
   toponym: { count: jest.fn().mockResolvedValue(0) },
   anthroponym: { count: jest.fn().mockResolvedValue(0) },
   foreignism: { count: jest.fn().mockResolvedValue(0) },
-  report: { 
+  report: {
     create: jest.fn().mockResolvedValue({}),
     findMany: jest.fn().mockResolvedValue([]),
   },
@@ -76,7 +82,9 @@ describe('ReportsService', () => {
     });
 
     it('should throw NotFoundException for invalid report type', async () => {
-      await expect(service.generateReport('invalid', 'user-1')).rejects.toThrow(NotFoundException);
+      await expect(service.generateReport('invalid', 'user-1')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 

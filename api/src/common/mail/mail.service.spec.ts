@@ -73,7 +73,11 @@ describe('MailService', () => {
   describe('sendContentApprovedEmail()', () => {
     it('should include content type and title in the email', async () => {
       const spy = jest.spyOn(service as any, 'sendEmail');
-      await service.sendContentApprovedEmail('op@med.com', 'Entrada', 'Mukanda');
+      await service.sendContentApprovedEmail(
+        'op@med.com',
+        'Entrada',
+        'Mukanda',
+      );
       const htmlArg = spy.mock.calls[0][2] as string;
       expect(htmlArg).toContain('Entrada');
       expect(htmlArg).toContain('Mukanda');
@@ -83,7 +87,12 @@ describe('MailService', () => {
   describe('sendContentRejectedEmail()', () => {
     it('should include rejection reason in the email', async () => {
       const spy = jest.spyOn(service as any, 'sendEmail');
-      await service.sendContentRejectedEmail('op@med.com', 'Topónimo', 'Luanda', 'Fonte inválida');
+      await service.sendContentRejectedEmail(
+        'op@med.com',
+        'Topónimo',
+        'Luanda',
+        'Fonte inválida',
+      );
       const htmlArg = spy.mock.calls[0][2] as string;
       expect(htmlArg).toContain('Fonte inválida');
     });
@@ -92,7 +101,12 @@ describe('MailService', () => {
   describe('sendCorrectionRequestedEmail()', () => {
     it('should include correction notes in the email', async () => {
       const spy = jest.spyOn(service as any, 'sendEmail');
-      await service.sendCorrectionRequestedEmail('op@med.com', 'Entrada', 'Soba', 'Falta etimologia');
+      await service.sendCorrectionRequestedEmail(
+        'op@med.com',
+        'Entrada',
+        'Soba',
+        'Falta etimologia',
+      );
       const htmlArg = spy.mock.calls[0][2] as string;
       expect(htmlArg).toContain('Falta etimologia');
     });
@@ -134,7 +148,9 @@ describe('MailService', () => {
       }).compile();
 
       const disabledService = module.get<MailService>(MailService);
-      await expect(disabledService.sendPasswordResetEmail('user@test.com', 'token')).resolves.toBeUndefined();
+      await expect(
+        disabledService.sendPasswordResetEmail('user@test.com', 'token'),
+      ).resolves.toBeUndefined();
       expect(disabledLogger.warn).toHaveBeenCalled();
     });
   });

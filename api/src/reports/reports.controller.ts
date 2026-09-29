@@ -1,5 +1,22 @@
-import { Body, Controller, Get, Param, Post, Query, Request, Res, UseGuards, NotFoundException } from '@nestjs/common';
-import { ApiBearerAuth, ApiBody, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Query,
+  Request,
+  Res,
+  UseGuards,
+  NotFoundException,
+} from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiOperation,
+  ApiParam,
+  ApiTags,
+} from '@nestjs/swagger';
 import { Response } from 'express';
 import { Prisma, UserRole } from '@prisma/client';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -20,17 +37,37 @@ export class ReportsController {
   @Get('generate/:type')
   @ApiOperation({ summary: 'Generate and download an Excel or PDF report' })
   @ApiParam({ name: 'type', enum: ['users', 'activity', 'summary'] })
-  async generateReport(@Param('type') type: string, @Query('format') format: 'xlsx' | 'pdf' = 'xlsx', @Request() req: AuthRequest, @Res() res: Response) {
-    const report = await this.reportsService.generateReport(type, req.user.id, format);
+  async generateReport(
+    @Param('type') type: string,
+    @Query('format') format: 'xlsx' | 'pdf' = 'xlsx',
+    @Request() req: AuthRequest,
+    @Res() res: Response,
+  ) {
+    const report = await this.reportsService.generateReport(
+      type,
+      req.user.id,
+      format,
+    );
     res.setHeader('Content-Type', report.contentType);
-    res.setHeader('Content-Disposition', `attachment; filename=${report.filename}`);
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename=${report.filename}`,
+    );
     res.send(report.buffer);
   }
 
   @Get('history')
   @ApiOperation({ summary: 'List generated reports history' })
   findAll(@Query() filters: GlobalFilterDto) {
-    const { page = 1, limit = 20, orderBy, orderDirection, search, startDate, endDate } = filters;
+    const {
+      page = 1,
+      limit = 20,
+      orderBy,
+      orderDirection,
+      search,
+      startDate,
+      endDate,
+    } = filters;
     const where: Prisma.ReportWhereInput = {};
     if (search) {
       where.OR = [
@@ -46,16 +83,32 @@ export class ReportsController {
     return this.reportsService.getHistory({
       skip: (page - 1) * limit,
       take: limit,
-      orderBy: orderBy ? { [orderBy]: orderDirection } : { createdAt: 'desc' as Prisma.SortOrder },
+      orderBy: orderBy
+        ? { [orderBy]: orderDirection }
+        : { createdAt: 'desc' as Prisma.SortOrder },
       where,
     });
   }
 
   @Post('schedule')
   @ApiOperation({ summary: 'Schedule a report generation' })
-  @ApiBody({ schema: { type: 'object', properties: { reportType: { type: 'string', example: 'users' }, frequency: { type: 'string', example: 'weekly' }, emailTo: { type: 'string', example: 'admin@example.com' } }, required: ['reportType'] } })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        reportType: { type: 'string', example: 'users' },
+        frequency: { type: 'string', example: 'weekly' },
+        emailTo: { type: 'string', example: 'admin@example.com' },
+      },
+      required: ['reportType'],
+    },
+  })
   scheduleReport(@Body() body: Record<string, unknown>) {
-    return { message: 'Report scheduled successfully. You will receive an email shortly.', data: body };
+    return {
+      message:
+        'Report scheduled successfully. You will receive an email shortly.',
+      data: body,
+    };
   }
 
   @Get('download/:id')

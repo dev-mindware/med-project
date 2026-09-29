@@ -7,10 +7,18 @@ const mockPrismaService = {
   user: {
     findUnique: jest.fn((args?: any) => {
       if (args?.where?.id === 'user-2') {
-        return Promise.resolve({ name: 'Operador Dois', role: 'OPERATOR', isActive: true });
+        return Promise.resolve({
+          name: 'Operador Dois',
+          role: 'OPERATOR',
+          isActive: true,
+        });
       }
 
-      return Promise.resolve({ name: 'Operador Teste', role: 'OPERATOR', isActive: true });
+      return Promise.resolve({
+        name: 'Operador Teste',
+        role: 'OPERATOR',
+        isActive: true,
+      });
     }),
     count: jest.fn((args?: any) => {
       if (!args) return Promise.resolve(10);
@@ -23,13 +31,15 @@ const mockPrismaService = {
   },
   entry: {
     findMany: jest.fn().mockResolvedValue([]),
-    groupBy: jest.fn().mockResolvedValue([
-      { createdById: 'user-1', _count: { _all: 3 } },
-    ]),
+    groupBy: jest
+      .fn()
+      .mockResolvedValue([{ createdById: 'user-1', _count: { _all: 3 } }]),
     count: jest.fn((args?: any) => {
       if (!args) return Promise.resolve(50);
-      if (args?.where?.approvalStatus === 'PENDING_APPROVAL') return Promise.resolve(5);
-      if (args?.where?.approvalStatus === 'APPROVED') return Promise.resolve(40);
+      if (args?.where?.approvalStatus === 'PENDING_APPROVAL')
+        return Promise.resolve(5);
+      if (args?.where?.approvalStatus === 'APPROVED')
+        return Promise.resolve(40);
       if (args?.where?.createdById) return Promise.resolve(20);
       return Promise.resolve(0);
     }),
@@ -37,30 +47,30 @@ const mockPrismaService = {
   anthroponym: {
     count: jest.fn().mockResolvedValue(30),
     findMany: jest.fn().mockResolvedValue([]),
-    groupBy: jest.fn().mockResolvedValue([
-      { createdById: 'user-1', _count: { _all: 2 } },
-    ]),
+    groupBy: jest
+      .fn()
+      .mockResolvedValue([{ createdById: 'user-1', _count: { _all: 2 } }]),
   },
   toponym: {
     count: jest.fn().mockResolvedValue(20),
     findMany: jest.fn().mockResolvedValue([]),
-    groupBy: jest.fn().mockResolvedValue([
-      { createdById: 'user-2', _count: { _all: 4 } },
-    ]),
+    groupBy: jest
+      .fn()
+      .mockResolvedValue([{ createdById: 'user-2', _count: { _all: 4 } }]),
   },
   foreignism: {
     count: jest.fn().mockResolvedValue(15),
     findMany: jest.fn().mockResolvedValue([]),
-    groupBy: jest.fn().mockResolvedValue([
-      { createdById: 'user-1', _count: { _all: 1 } },
-    ]),
+    groupBy: jest
+      .fn()
+      .mockResolvedValue([{ createdById: 'user-1', _count: { _all: 1 } }]),
   },
   neologism: {
     count: jest.fn().mockResolvedValue(7),
     findMany: jest.fn().mockResolvedValue([]),
-    groupBy: jest.fn().mockResolvedValue([
-      { createdById: 'user-2', _count: { _all: 3 } },
-    ]),
+    groupBy: jest
+      .fn()
+      .mockResolvedValue([{ createdById: 'user-2', _count: { _all: 3 } }]),
   },
   blogPost: {
     count: jest.fn((args?: any) => {
@@ -106,7 +116,9 @@ describe('StatsService', () => {
 
     it('users.inactive should equal total minus active', async () => {
       const result = await service.getDashboardGlobal();
-      expect(result.users.inactive).toBe(result.users.total - result.users.active);
+      expect(result.users.inactive).toBe(
+        result.users.total - result.users.active,
+      );
     });
 
     it('content.total should be sum of all linguistic types', async () => {
@@ -148,13 +160,19 @@ describe('StatsService', () => {
 
   describe('getUserDashboard()', () => {
     it('should return global stats for ADMIN role', async () => {
-      const result = await service.getUserDashboard('user-uuid-1', UserRole.ADMIN);
+      const result = await service.getUserDashboard(
+        'user-uuid-1',
+        UserRole.ADMIN,
+      );
       expect(result).toHaveProperty('users');
       expect(result).toHaveProperty('content');
     });
 
     it('should return personal stats for OPERATOR role', async () => {
-      const result = await service.getUserDashboard('user-uuid-op', UserRole.OPERATOR) as any;
+      const result = (await service.getUserDashboard(
+        'user-uuid-op',
+        UserRole.OPERATOR,
+      )) as any;
       expect(result).toHaveProperty('cards');
       expect(result).toHaveProperty('charts');
       expect(result).toHaveProperty('recentActivity');

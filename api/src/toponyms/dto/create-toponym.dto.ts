@@ -1,4 +1,11 @@
-import { IsString, IsOptional, IsBoolean, IsArray, IsNotEmpty, IsUrl } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsBoolean,
+  IsArray,
+  IsNotEmpty,
+  IsUrl,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateToponymDto {
@@ -88,7 +95,6 @@ export class CreateToponymDto {
   @IsBoolean()
   @IsOptional()
   isVocabularyEP?: boolean;
-
 
   @ApiProperty({ required: false })
   @IsBoolean()

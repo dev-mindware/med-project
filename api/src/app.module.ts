@@ -66,7 +66,6 @@ import { RequestContextMiddleware } from './common/middleware/request-context.mi
     VonalpModule,
     VolnaModule,
     ManualVocabularyModule,
-
   ],
   providers: [
     AppService,
@@ -75,7 +74,6 @@ import { RequestContextMiddleware } from './common/middleware/request-context.mi
     { provide: APP_INTERCEPTOR, useClass: AuditInterceptor },
   ],
   controllers: [AppController],
-
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

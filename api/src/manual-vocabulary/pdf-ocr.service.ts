@@ -15,7 +15,9 @@ export class PdfOcrService {
       throw new BadGatewayException('MISTRAL_API_KEY nao configurada');
     }
 
-    const model = this.configService.get<string>('MISTRAL_OCR_MODEL') || 'mistral-ocr-latest';
+    const model =
+      this.configService.get<string>('MISTRAL_OCR_MODEL') ||
+      'mistral-ocr-latest';
     const { Mistral } = await import('@mistralai/mistralai');
     const client = new Mistral({ apiKey });
     const base64Pdf = file.buffer.toString('base64');
@@ -32,7 +34,9 @@ export class PdfOcrService {
         tableFormat: 'markdown',
       });
 
-      return this.cleanText(result.pages.map((page) => page.markdown).join('\n\n'));
+      return this.cleanText(
+        result.pages.map((page) => page.markdown).join('\n\n'),
+      );
     } catch (error) {
       this.logger.error('Failed to extract text from PDF', {
         context: 'PdfOcrService',
@@ -44,7 +48,9 @@ export class PdfOcrService {
           model,
         },
       });
-      throw new BadGatewayException(`Falha ao extrair texto do PDF: ${this.errorMessage(error)}`);
+      throw new BadGatewayException(
+        `Falha ao extrair texto do PDF: ${this.errorMessage(error)}`,
+      );
     }
   }
 
@@ -58,6 +64,8 @@ export class PdfOcrService {
   }
 
   private errorMessage(error: unknown) {
-    return error instanceof Error && error.message ? error.message : 'servico OCR indisponivel';
+    return error instanceof Error && error.message
+      ? error.message
+      : 'servico OCR indisponivel';
   }
 }

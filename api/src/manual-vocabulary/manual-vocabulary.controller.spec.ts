@@ -34,28 +34,50 @@ describe('ManualVocabularyController', () => {
 
   it('rejects non-PDF files', async () => {
     const response = mockResponse();
-    const file = { mimetype: 'image/png', size: 1000, buffer: Buffer.from('not-pdf') } as Express.Multer.File;
+    const file = {
+      mimetype: 'image/png',
+      size: 1000,
+      buffer: Buffer.from('not-pdf'),
+    } as Express.Multer.File;
 
-    await expect(controller.extract(file, {}, {}, response as Response)).rejects.toBeInstanceOf(BadRequestException);
+    await expect(
+      controller.extract(file, {} as any, {}, response as any),
+    ).rejects.toBeInstanceOf(BadRequestException);
   });
 
   it('rejects a fake PDF with an incorrect signature', async () => {
     const response = mockResponse();
-    const file = { mimetype: 'application/pdf', size: 1000, buffer: Buffer.from('not-pdf') } as Express.Multer.File;
-    await expect(controller.extract(file, {}, {}, response as any)).rejects.toBeInstanceOf(BadRequestException);
+    const file = {
+      mimetype: 'application/pdf',
+      size: 1000,
+      buffer: Buffer.from('not-pdf'),
+    } as Express.Multer.File;
+    await expect(
+      controller.extract(file, {} as any, {}, response as any),
+    ).rejects.toBeInstanceOf(BadRequestException);
   });
 
   it('rejects an oversized PDF', async () => {
     const response = mockResponse();
-    const file = { mimetype: 'application/pdf', size: 21 * 1024 * 1024, buffer: Buffer.from('%PDF-1.7\nvalid\n%%EOF') } as Express.Multer.File;
-    await expect(controller.extract(file, {}, {}, response as any)).rejects.toBeInstanceOf(PayloadTooLargeException);
+    const file = {
+      mimetype: 'application/pdf',
+      size: 21 * 1024 * 1024,
+      buffer: Buffer.from('%PDF-1.7\nvalid\n%%EOF'),
+    } as Express.Multer.File;
+    await expect(
+      controller.extract(file, {} as any, {}, response as any),
+    ).rejects.toBeInstanceOf(PayloadTooLargeException);
   });
 
   it('sets Excel response headers', async () => {
     const response = mockResponse();
-    const file = { mimetype: 'application/pdf', size: 1000, buffer: Buffer.from('%PDF-1.7\nvalid\n%%EOF') } as Express.Multer.File;
+    const file = {
+      mimetype: 'application/pdf',
+      size: 1000,
+      buffer: Buffer.from('%PDF-1.7\nvalid\n%%EOF'),
+    } as Express.Multer.File;
 
-    await controller.extract(file, {}, {}, response as any);
+    await controller.extract(file, {} as any, {}, response as any);
 
     expect(response.setHeader).toHaveBeenCalledWith(
       'Content-Type',

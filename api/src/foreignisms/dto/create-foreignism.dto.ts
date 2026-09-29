@@ -96,5 +96,4 @@ export class CreateForeignismDto {
   @IsBoolean()
   @IsOptional()
   isVocabularyEP?: boolean;
-
 }

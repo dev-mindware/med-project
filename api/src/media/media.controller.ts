@@ -1,6 +1,25 @@
-import { Controller, Post, Get, Param, Delete, UseInterceptors, UploadedFile, UseGuards, Request, Query, NotFoundException, Body } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Param,
+  Delete,
+  UseInterceptors,
+  UploadedFile,
+  UseGuards,
+  Request,
+  Query,
+  NotFoundException,
+  Body,
+} from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiTags, ApiOperation, ApiConsumes, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiConsumes,
+  ApiBody,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { MediaService } from './media.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -18,7 +37,9 @@ export class MediaController {
 
   @Post('upload')
   @Roles(UserRole.ADMIN, UserRole.SUPERVISOR, UserRole.OPERATOR)
-  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 10 * 1024 * 1024 } }))
+  @UseInterceptors(
+    FileInterceptor('file', { limits: { fileSize: 10 * 1024 * 1024 } }),
+  )
   @ApiConsumes('multipart/form-data')
   @ApiOperation({ summary: 'Upload a file to Cloudflare R2' })
   @ApiBody({
@@ -47,8 +68,16 @@ export class MediaController {
   @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'List all media assets (Admin only)' })
   findAll(@Query() filters: GlobalFilterDto) {
-    const { page = 1, limit = 20, orderBy, orderDirection, search, startDate, endDate } = filters;
-    
+    const {
+      page = 1,
+      limit = 20,
+      orderBy,
+      orderDirection,
+      search,
+      startDate,
+      endDate,
+    } = filters;
+
     const where: Prisma.MediaAssetWhereInput = {};
 
     if (search) {
@@ -67,7 +96,9 @@ export class MediaController {
     return this.mediaService.findAll({
       skip: (page - 1) * limit,
       take: limit,
-      orderBy: orderBy ? { [orderBy]: orderDirection } : { createdAt: 'desc' as Prisma.SortOrder },
+      orderBy: orderBy
+        ? { [orderBy]: orderDirection }
+        : { createdAt: 'desc' as Prisma.SortOrder },
       where,
     });
   }

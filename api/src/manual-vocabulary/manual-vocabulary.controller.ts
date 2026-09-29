@@ -5,7 +5,7 @@ import {
   ParseFilePipe,
   PayloadTooLargeException,
   Post,
-  Request,
+  Req,
   Res,
   UploadedFile,
   UseGuards,
@@ -41,16 +41,22 @@ export class ManualVocabularyController {
 
   @Post('extract')
   @Roles(UserRole.ADMIN, UserRole.SUPERVISOR, UserRole.OPERATOR)
-  @UseInterceptors(FileInterceptor('file', {
-    storage: memoryStorage(),
-    limits: { fileSize: 20 * 1024 * 1024 },
-    fileFilter: (_req, file, callback) => {
-      callback(null, file.mimetype === 'application/pdf');
-    },
-  }))
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: memoryStorage(),
+      limits: { fileSize: 20 * 1024 * 1024 },
+      fileFilter: (_req, file, callback) => {
+        callback(null, file.mimetype === 'application/pdf');
+      },
+    }),
+  )
   @ApiConsumes('multipart/form-data')
-  @ApiProduces('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-  @ApiOperation({ summary: 'Extrair vocabulário de um manual PDF e gerar Excel revisável' })
+  @ApiProduces(
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  )
+  @ApiOperation({
+    summary: 'Extrair vocabulário de um manual PDF e gerar Excel revisável',
+  })
   @ApiBody({
     schema: {
       type: 'object',
@@ -67,7 +73,7 @@ export class ManualVocabularyController {
       }),
     )
     file: Express.Multer.File,
-    @Request() _req: Request,
+    @Req() _req: Request,
     @Body() _body: Record<string, unknown>,
     @Res() res: Response,
   ) {
@@ -76,12 +82,21 @@ export class ManualVocabularyController {
 
     const result = await this.manualVocabularyService.extract(file);
 
-    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    res.setHeader('Content-Disposition', `attachment; filename="${result.filename}"`);
+    res.setHeader(
+      'Content-Type',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    );
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="${result.filename}"`,
+    );
     res.setHeader('X-Total-Terms', String(result.stats.totalTerms));
     res.setHeader('X-Valid-Rows', String(result.stats.validRows));
     res.setHeader('X-Warnings', String(result.stats.warnings));
-    res.setHeader('X-Duplicates-Removed', String(result.stats.duplicatesRemoved));
+    res.setHeader(
+      'X-Duplicates-Removed',
+      String(result.stats.duplicatesRemoved),
+    );
     res.send(result.buffer);
   }
 
@@ -92,7 +107,9 @@ export class ManualVocabularyController {
 
     const signature = file.buffer.subarray(0, 5).toString('ascii');
     if (signature !== '%PDF-') {
-      throw new BadRequestException('O conteúdo do ficheiro não corresponde a um PDF válido');
+      throw new BadRequestException(
+        'O conteúdo do ficheiro não corresponde a um PDF válido',
+      );
     }
 
     const eof = file.buffer.lastIndexOf(Buffer.from('%%EOF'));
@@ -102,11 +119,15 @@ export class ManualVocabularyController {
   }
 
   private validateSize(file: Express.Multer.File) {
-    const maxMb = Number(this.configService.get<number>('ai.vocabularyMaxFileMb') ?? 20);
+    const maxMb = Number(
+      this.configService.get<number>('ai.vocabularyMaxFileMb') ?? 20,
+    );
     const maxBytes = maxMb * 1024 * 1024;
 
     if (file.size > maxBytes) {
-      throw new PayloadTooLargeException(`O ficheiro excede o limite de ${maxMb}MB`);
+      throw new PayloadTooLargeException(
+        `O ficheiro excede o limite de ${maxMb}MB`,
+      );
     }
   }
 }

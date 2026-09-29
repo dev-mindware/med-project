@@ -14,7 +14,9 @@ export class ManualVocabularyService {
     private readonly vocabularyExcelService: VocabularyExcelService,
   ) {}
 
-  async extract(file: Express.Multer.File): Promise<ManualVocabularyExtractionResult> {
+  async extract(
+    file: Express.Multer.File,
+  ): Promise<ManualVocabularyExtractionResult> {
     const text = await this.pdfOcrService.extractText(file);
     const rawItems = await this.vocabularyAiService.extractVocabulary(text);
     const workbookData = this.vocabularyProcessorService.process(rawItems);

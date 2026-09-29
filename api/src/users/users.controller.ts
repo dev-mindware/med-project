@@ -1,4 +1,14 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  Query,
+} from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiBody } from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -32,57 +42,70 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get()
-@Roles(UserRole.ADMIN, UserRole.SUPERVISOR)
-@ApiOperation({ summary: 'List all users' })
-async findAll(
-  @Query() filters: UserFilterDto,
-  @CurrentUser() currentUser: { id: string; role: UserRole },
-) {
-  const { page = 1, limit = 20, orderBy, orderDirection, search, startDate, endDate, role, isActive } = filters;
+  @Roles(UserRole.ADMIN, UserRole.SUPERVISOR)
+  @ApiOperation({ summary: 'List all users' })
+  async findAll(
+    @Query() filters: UserFilterDto,
+    @CurrentUser() currentUser: { id: string; role: UserRole },
+  ) {
+    const {
+      page = 1,
+      limit = 20,
+      orderBy,
+      orderDirection,
+      search,
+      startDate,
+      endDate,
+      role,
+      isActive,
+    } = filters;
 
-  const where: Prisma.UserWhereInput = {};
+    const where: Prisma.UserWhereInput = {};
 
-  // ✅ Se SUPERVISOR, restringir apenas aos seus operadores geridos
-  if (currentUser.role === UserRole.SUPERVISOR) {
-    const managedOperators = await this.usersService.listManagedOperators(currentUser.id);
-    const managedIds = managedOperators.map((op) => op.id);
-    where.id = { in: managedIds };
+    // ✅ Se SUPERVISOR, restringir apenas aos seus operadores geridos
+    if (currentUser.role === UserRole.SUPERVISOR) {
+      const managedOperators = await this.usersService.listManagedOperators(
+        currentUser.id,
+      );
+      const managedIds = managedOperators.map((op) => op.id);
+      where.id = { in: managedIds };
+    }
+
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { email: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    if (startDate || endDate) {
+      where.createdAt = {};
+      if (startDate) where.createdAt.gte = new Date(startDate);
+      if (endDate) where.createdAt.lte = new Date(endDate);
+    }
+
+    if (role) {
+      where.role = role;
+    }
+
+    if (isActive !== undefined && isActive !== null) {
+      where.isActive = isActive === 'true';
+    }
+
+    const [data, total] = await Promise.all([
+      this.usersService.findAll({
+        skip: (page - 1) * limit,
+        take: limit,
+        orderBy: orderBy
+          ? { [orderBy]: orderDirection }
+          : { createdAt: 'desc' as Prisma.SortOrder },
+        where,
+      }),
+      this.usersService.count(where),
+    ]);
+
+    return { data, total };
   }
-
-  if (search) {
-    where.OR = [
-      { name: { contains: search, mode: 'insensitive' } },
-      { email: { contains: search, mode: 'insensitive' } },
-    ];
-  }
-
-  if (startDate || endDate) {
-    where.createdAt = {};
-    if (startDate) where.createdAt.gte = new Date(startDate);
-    if (endDate) where.createdAt.lte = new Date(endDate);
-  }
-
-  if (role) {
-    where.role = role;
-  }
-
-  if (isActive !== undefined && isActive !== null) {
-    where.isActive = isActive === 'true';
-  }
-
-  const [data, total] = await Promise.all([
-    this.usersService.findAll({
-      skip: (page - 1) * limit,
-      take: limit,
-      orderBy: orderBy ? { [orderBy]: orderDirection } : { createdAt: 'desc' as Prisma.SortOrder },
-      where,
-    }),
-    this.usersService.count(where),
-  ]);
-
-  return { data, total };
-}
-
 
   @Post()
   @Roles(UserRole.ADMIN)
@@ -91,15 +114,26 @@ async findAll(
     schema: {
       type: 'object',
       properties: {
-        email: { type: 'string', description: 'Unique email address for the user' },
-        password: { type: 'string', description: 'Strong password for authentication' },
-        name: { type: 'string', description: 'Full name of the user' },
-        role: { 
-          type: 'string', 
-          enum: ['ADMIN', 'SUPERVISOR', 'OPERATOR'],
-          description: 'User role: ADMIN (Full access), SUPERVISOR (Reviewer), OPERATOR (Data entry)'
+        email: {
+          type: 'string',
+          description: 'Unique email address for the user',
         },
-        isActive: { type: 'boolean', description: 'Enable or disable the user account', default: true }
+        password: {
+          type: 'string',
+          description: 'Strong password for authentication',
+        },
+        name: { type: 'string', description: 'Full name of the user' },
+        role: {
+          type: 'string',
+          enum: ['ADMIN', 'SUPERVISOR', 'OPERATOR'],
+          description:
+            'User role: ADMIN (Full access), SUPERVISOR (Reviewer), OPERATOR (Data entry)',
+        },
+        isActive: {
+          type: 'boolean',
+          description: 'Enable or disable the user account',
+          default: true,
+        },
       },
       required: ['email', 'password', 'name'],
     },
@@ -131,13 +165,14 @@ async findAll(
         email: { type: 'string' },
         password: { type: 'string' },
         name: { type: 'string' },
-        role: { 
-          type: 'string', 
+        role: {
+          type: 'string',
           enum: ['ADMIN', 'SUPERVISOR', 'OPERATOR'],
-          description: 'User role: ADMIN (Full access), SUPERVISOR (Reviewer), OPERATOR (Data entry)'
+          description:
+            'User role: ADMIN (Full access), SUPERVISOR (Reviewer), OPERATOR (Data entry)',
         },
-        isActive: { type: 'boolean' }
-      }
+        isActive: { type: 'boolean' },
+      },
     },
   })
   async update(@Param('id') id: string, @Body() updateData: UpdateUserBody) {
@@ -158,13 +193,13 @@ async findAll(
     schema: {
       type: 'object',
       properties: {
-        role: { 
-          type: 'string', 
+        role: {
+          type: 'string',
           enum: ['ADMIN', 'SUPERVISOR', 'OPERATOR'],
-          description: 'New role for the user: ADMIN, SUPERVISOR, or OPERATOR'
-        }
+          description: 'New role for the user: ADMIN, SUPERVISOR, or OPERATOR',
+        },
       },
-      required: ['role']
+      required: ['role'],
     },
   })
   updateRole(@Param('id') id: string, @Body('role') role: UserRole) {
@@ -178,10 +213,10 @@ async findAll(
     schema: {
       type: 'object',
       properties: {
-        isActive: { type: 'boolean' }
+        isActive: { type: 'boolean' },
       },
-      required: ['isActive']
-    }
+      required: ['isActive'],
+    },
   })
   updateStatus(@Param('id') id: string, @Body('isActive') isActive: boolean) {
     return this.usersService.update(id, { isActive });
@@ -196,13 +231,18 @@ async findAll(
 
   @Patch(':id/operators')
   @Roles(UserRole.ADMIN)
-  @ApiOperation({ summary: 'Define which operators are managed by a supervisor' })
+  @ApiOperation({
+    summary: 'Define which operators are managed by a supervisor',
+  })
   @ApiBody({ type: AssignSupervisorOperatorsDto })
   assignManagedOperators(
     @Param('id') id: string,
     @Body() assignSupervisorOperatorsDto: AssignSupervisorOperatorsDto,
   ) {
-    return this.usersService.assignOperatorsToSupervisor(id, assignSupervisorOperatorsDto.operatorIds);
+    return this.usersService.assignOperatorsToSupervisor(
+      id,
+      assignSupervisorOperatorsDto.operatorIds,
+    );
   }
 
   @Delete(':id')

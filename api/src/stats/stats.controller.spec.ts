@@ -15,9 +15,7 @@ describe('StatsController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [StatsController],
-      providers: [
-        { provide: StatsService, useValue: mockStatsService },
-      ],
+      providers: [{ provide: StatsService, useValue: mockStatsService }],
     }).compile();
 
     controller = module.get<StatsController>(StatsController);
@@ -36,15 +34,21 @@ describe('StatsController', () => {
   describe('getMeDashboard()', () => {
     it('should call getUserDashboard with req.user info', async () => {
       const req = { user: { id: 'user-1', role: UserRole.OPERATOR } };
-      await controller.getMeDashboard(req);
-      expect(service.getUserDashboard).toHaveBeenCalledWith('user-1', UserRole.OPERATOR);
+      await controller.getMeDashboard(req as any);
+      expect(service.getUserDashboard).toHaveBeenCalledWith(
+        'user-1',
+        UserRole.OPERATOR,
+      );
     });
   });
 
   describe('getUserDashboard()', () => {
     it('should call getUserDashboard for a specific user', async () => {
       await controller.getUserDashboard('user-2');
-      expect(service.getUserDashboard).toHaveBeenCalledWith('user-2', UserRole.OPERATOR);
+      expect(service.getUserDashboard).toHaveBeenCalledWith(
+        'user-2',
+        UserRole.OPERATOR,
+      );
     });
   });
 });

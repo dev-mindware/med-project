@@ -1,4 +1,5 @@
-export type ManualVocabularySourceModel = 'ENTRY' | 'TOPONYM' | 'ANTHROPONYM' | 'FOREIGNISM';
+export type ManualVocabularySourceModel =
+  'ENTRY' | 'TOPONYM' | 'ANTHROPONYM' | 'FOREIGNISM';
 
 export type ManualVocabularyRawItem = {
   sourceModel: ManualVocabularySourceModel;

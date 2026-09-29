@@ -47,7 +47,9 @@ describe('UsersService', () => {
     it('should return a user by email', async () => {
       const result = await service.findByEmail('admin@med.com');
       expect(result).toEqual(mockUser);
-      expect(prisma.user.findUnique).toHaveBeenCalledWith({ where: { email: 'admin@med.com' } });
+      expect(prisma.user.findUnique).toHaveBeenCalledWith({
+        where: { email: 'admin@med.com' },
+      });
     });
 
     it('should return null when email does not exist', async () => {
@@ -61,7 +63,9 @@ describe('UsersService', () => {
     it('should return a user by id', async () => {
       const result = await service.findById('user-uuid-1');
       expect(result).toEqual(mockUser);
-      expect(prisma.user.findUnique).toHaveBeenCalledWith({ where: { id: 'user-uuid-1' } });
+      expect(prisma.user.findUnique).toHaveBeenCalledWith({
+        where: { id: 'user-uuid-1' },
+      });
     });
 
     it('should return null when id does not exist', async () => {
@@ -101,7 +105,9 @@ describe('UsersService', () => {
     it('should update and return the user', async () => {
       const updated = { ...mockUser, name: 'Updated Name' };
       prisma.user.update.mockResolvedValueOnce(updated);
-      const result = await service.update('user-uuid-1', { name: 'Updated Name' });
+      const result = await service.update('user-uuid-1', {
+        name: 'Updated Name',
+      });
       expect(result.name).toBe('Updated Name');
       expect(prisma.user.update).toHaveBeenCalledWith({
         where: { id: 'user-uuid-1' },
@@ -114,21 +120,30 @@ describe('UsersService', () => {
     it('should delete and return the deleted user', async () => {
       const result = await service.remove('user-uuid-1');
       expect(result).toEqual(mockUser);
-      expect(prisma.user.delete).toHaveBeenCalledWith({ where: { id: 'user-uuid-1' } });
+      expect(prisma.user.delete).toHaveBeenCalledWith({
+        where: { id: 'user-uuid-1' },
+      });
     });
   });
 
   describe('assignOperatorsToSupervisor()', () => {
     it('should replace the managed operators list', async () => {
-      prisma.user.findUnique.mockResolvedValueOnce({ id: 'supervisor-1', role: 'SUPERVISOR' });
-      prisma.user.findMany.mockResolvedValueOnce([{ id: 'operator-1', role: 'OPERATOR' }]);
+      prisma.user.findUnique.mockResolvedValueOnce({
+        id: 'supervisor-1',
+        role: 'SUPERVISOR',
+      });
+      prisma.user.findMany.mockResolvedValueOnce([
+        { id: 'operator-1', role: 'OPERATOR' },
+      ]);
 
       await service.assignOperatorsToSupervisor('supervisor-1', ['operator-1']);
 
-      expect(prisma.user.update).toHaveBeenCalledWith(expect.objectContaining({
-        where: { id: 'supervisor-1' },
-        data: { managedOperators: { set: [{ id: 'operator-1' }] } },
-      }));
+      expect(prisma.user.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'supervisor-1' },
+          data: { managedOperators: { set: [{ id: 'operator-1' }] } },
+        }),
+      );
     });
   });
 
@@ -136,7 +151,9 @@ describe('UsersService', () => {
     it('should return true when operator belongs to supervisor', async () => {
       prisma.user.findFirst.mockResolvedValueOnce({ id: 'operator-1' });
 
-      await expect(service.isOperatorManagedBySupervisor('supervisor-1', 'operator-1')).resolves.toBe(true);
+      await expect(
+        service.isOperatorManagedBySupervisor('supervisor-1', 'operator-1'),
+      ).resolves.toBe(true);
       expect(prisma.user.findFirst).toHaveBeenCalledWith({
         where: {
           id: 'operator-1',

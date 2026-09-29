@@ -9,17 +9,28 @@ describe('PublicController', () => {
 
   beforeEach(async () => {
     publicService = {
-      stats: jest.fn().mockResolvedValue({ dictionaryEntries: 0, lexicalTotal: 0 }),
+      stats: jest
+        .fn()
+        .mockResolvedValue({ dictionaryEntries: 0, lexicalTotal: 0 }),
       search: jest.fn().mockResolvedValue({ query: 'casa', entries: [] }),
       dictionary: jest.fn().mockResolvedValue({ data: [], meta: { total: 0 } }),
       dictionaryDetails: jest.fn().mockResolvedValue({ id: 'entry-1' }),
       toponyms: jest.fn().mockResolvedValue({ data: [], meta: { total: 0 } }),
       toponymDetails: jest.fn().mockResolvedValue({ id: 'toponym-1' }),
-      anthroponyms: jest.fn().mockResolvedValue({ data: [], meta: { total: 0 } }),
+      anthroponyms: jest
+        .fn()
+        .mockResolvedValue({ data: [], meta: { total: 0 } }),
       anthroponymDetails: jest.fn().mockResolvedValue({ id: 'anthroponym-1' }),
-      foreignisms: jest.fn().mockResolvedValue({ data: [], meta: { total: 0 } }),
+      foreignisms: jest
+        .fn()
+        .mockResolvedValue({ data: [], meta: { total: 0 } }),
       foreignismDetails: jest.fn().mockResolvedValue({ id: 'foreignism-1' }),
-      vocabulary: jest.fn().mockResolvedValue({ data: [{ id: 'vt-1', term: 'Casa' }], meta: { total: 1 } }),
+      vocabulary: jest
+        .fn()
+        .mockResolvedValue({
+          data: [{ id: 'vt-1', term: 'Casa' }],
+          meta: { total: 1 },
+        }),
       events: jest.fn().mockResolvedValue({ data: [], meta: { total: 0 } }),
       eventDetails: jest.fn().mockResolvedValue({ id: 'event-1' }),
       registerForEvent: jest.fn().mockResolvedValue({ id: 'registration-1' }),
@@ -51,20 +62,29 @@ describe('PublicController', () => {
     const result = await controller.publicVonalp(filters);
 
     expect(result.data).toHaveLength(1);
-    expect(publicService.vocabulary).toHaveBeenCalledWith(VonalpVocabularyType.VONALP, filters);
+    expect(publicService.vocabulary).toHaveBeenCalledWith(
+      VonalpVocabularyType.VONALP,
+      filters,
+    );
   });
 
   it('lists public VONALP-EP terms', async () => {
     const filters = { page: 1, limit: 10 };
     await controller.publicVonalpEp(filters);
 
-    expect(publicService.vocabulary).toHaveBeenCalledWith(VonalpVocabularyType.VONALP_EP, filters);
+    expect(publicService.vocabulary).toHaveBeenCalledWith(
+      VonalpVocabularyType.VONALP_EP,
+      filters,
+    );
   });
 
   it('registers a public user for an event', async () => {
     const body = { name: 'Jonatao Cardoso', email: 'jonatao@example.com' };
     await controller.registerForEvent('evento-x', body);
 
-    expect(publicService.registerForEvent).toHaveBeenCalledWith('evento-x', body);
+    expect(publicService.registerForEvent).toHaveBeenCalledWith(
+      'evento-x',
+      body,
+    );
   });
 });

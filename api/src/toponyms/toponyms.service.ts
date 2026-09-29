@@ -1,6 +1,11 @@
 import { ConflictException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { ApprovalStatus, Prisma, Toponym, VonalpSourceType } from '@prisma/client';
+import {
+  ApprovalStatus,
+  Prisma,
+  Toponym,
+  VonalpSourceType,
+} from '@prisma/client';
 import { CreateToponymDto } from './dto/create-toponym.dto';
 import {
   buildBulkImportResult,
@@ -11,7 +16,10 @@ import {
   importKey,
   validateBulkImportData,
 } from '../common/bulk-import';
-import { attachVonalpStatus, attachVonalpStatuses } from '../common/vonalp-status';
+import {
+  attachVonalpStatus,
+  attachVonalpStatuses,
+} from '../common/vonalp-status';
 
 @Injectable()
 export class ToponymsService {
@@ -32,7 +40,11 @@ export class ToponymsService {
     const seen = new Set<string>();
 
     for (const row of rows) {
-      const validation = await validateBulkImportData(CreateToponymDto, row.data, row.rowNumber);
+      const validation = await validateBulkImportData(
+        CreateToponymDto,
+        row.data,
+        row.rowNumber,
+      );
       if (validation.errors.length > 0) {
         errors.push(...validation.errors);
         continue;
@@ -58,7 +70,11 @@ export class ToponymsService {
           createdBy: { connect: { id: userId } },
           approvalStatus: ApprovalStatus.DRAFT,
         });
-        created.push({ rowNumber: row.rowNumber, id: item.id, label: item.toponym });
+        created.push({
+          rowNumber: row.rowNumber,
+          id: item.id,
+          label: item.toponym,
+        });
       } catch (error) {
         errors.push({
           rowNumber: row.rowNumber,
@@ -88,7 +104,9 @@ export class ToponymsService {
     return attachVonalpStatuses(this.prisma, VonalpSourceType.TOPONYM, items);
   }
 
-  async findOne(where: Prisma.ToponymWhereUniqueInput): Promise<Toponym | null> {
+  async findOne(
+    where: Prisma.ToponymWhereUniqueInput,
+  ): Promise<Toponym | null> {
     const item = await this.prisma.toponym.findUnique({
       where,
       include: {
@@ -107,7 +125,10 @@ export class ToponymsService {
 
     if (typeof data.toponym === 'string') {
       data.toponym = data.toponym.trim();
-      await this.ensureUniqueToponym(data.toponym, typeof where.id === 'string' ? where.id : undefined);
+      await this.ensureUniqueToponym(
+        data.toponym,
+        typeof where.id === 'string' ? where.id : undefined,
+      );
     }
 
     return this.prisma.toponym.update(params);
@@ -119,15 +140,22 @@ export class ToponymsService {
     });
   }
 
-  async search(query: string, params: {
-    skip?: number;
-    take?: number;
-    where?: Prisma.ToponymWhereInput;
-    orderBy?: Prisma.ToponymOrderByWithRelationInput;
-  }) {
-    const searchQuery = query.trim().split(/\s+/).map(w => `${w}:*`).join(' | ');
+  async search(
+    query: string,
+    params: {
+      skip?: number;
+      take?: number;
+      where?: Prisma.ToponymWhereInput;
+      orderBy?: Prisma.ToponymOrderByWithRelationInput;
+    },
+  ) {
+    const searchQuery = query
+      .trim()
+      .split(/\s+/)
+      .map((w) => `${w}:*`)
+      .join(' | ');
     const { skip, take, where: filters, orderBy } = params;
-    
+
     const items = await this.prisma.toponym.findMany({
       skip,
       take,

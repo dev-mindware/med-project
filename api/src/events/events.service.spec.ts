@@ -68,10 +68,7 @@ describe('EventsService', () => {
       expect(prisma.event.findFirst).toHaveBeenCalledWith(
         expect.objectContaining({
           where: {
-            OR: [
-              { id: 'event-1' },
-              { slug: 'event-1' },
-            ],
+            OR: [{ id: 'event-1' }, { slug: 'event-1' }],
           },
           include: { createdBy: expect.anything() },
         }),

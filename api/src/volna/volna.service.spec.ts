@@ -78,7 +78,10 @@ describe('VolnaService', () => {
     prisma.volnaTerm.findFirst.mockResolvedValueOnce({ id: 'existing' });
 
     await expect(
-      service.create({ term: 'kamba', language: 'Kimbundu', definition: 'Amigo.' }, operator),
+      service.create(
+        { term: 'kamba', language: 'Kimbundu', definition: 'Amigo.' },
+        operator,
+      ),
     ).rejects.toBeInstanceOf(ConflictException);
 
     expect(prisma.volnaTerm.create).not.toHaveBeenCalled();
@@ -89,7 +92,12 @@ describe('VolnaService', () => {
     prisma.volnaTerm.findMany.mockResolvedValueOnce([term]);
     prisma.volnaTerm.count.mockResolvedValueOnce(1);
 
-    const result = await service.findPublic({ search: 'kam', language: 'Kimbundu', page: 1, limit: 6 });
+    const result = await service.findPublic({
+      search: 'kam',
+      language: 'Kimbundu',
+      page: 1,
+      limit: 6,
+    });
 
     expect(result).toEqual({
       data: [term],
@@ -102,17 +110,21 @@ describe('VolnaService', () => {
         hasPreviousPage: false,
       },
     });
-    expect(prisma.volnaTerm.findMany).toHaveBeenCalledWith(expect.objectContaining({
-      where: expect.objectContaining({
-        approvalStatus: ApprovalStatus.APPROVED,
-        language: { equals: 'Kimbundu', mode: 'insensitive' },
+    expect(prisma.volnaTerm.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          approvalStatus: ApprovalStatus.APPROVED,
+          language: { equals: 'Kimbundu', mode: 'insensitive' },
+        }),
+        take: 6,
       }),
-      take: 6,
-    }));
+    );
   });
 
   it('impede operador de editar vocábulo aprovado', async () => {
-    prisma.volnaTerm.findUnique.mockResolvedValueOnce(makeTerm({ approvalStatus: ApprovalStatus.APPROVED }));
+    prisma.volnaTerm.findUnique.mockResolvedValueOnce(
+      makeTerm({ approvalStatus: ApprovalStatus.APPROVED }),
+    );
 
     await expect(
       service.update('volna-1', { definition: 'Nova definição.' }, operator),

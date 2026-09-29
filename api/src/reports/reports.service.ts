@@ -42,14 +42,19 @@ export class ReportsService {
     private notificationsService: NotificationsService,
   ) {}
 
-  async generateReport(type: string, userId?: string, format: ReportFormat = 'xlsx'): Promise<GeneratedReport> {
+  async generateReport(
+    type: string,
+    userId?: string,
+    format: ReportFormat = 'xlsx',
+  ): Promise<GeneratedReport> {
     const normalizedFormat = this.normalizeFormat(format);
     const report = await this.buildReportDefinition(type);
     const generatedAt = new Date();
     const filename = `${type}_report_${generatedAt.getTime()}.${normalizedFormat}`;
-    const buffer = normalizedFormat === 'pdf'
-      ? this.generatePdf(report, generatedAt)
-      : await this.generateExcel(report, generatedAt);
+    const buffer =
+      normalizedFormat === 'pdf'
+        ? this.generatePdf(report, generatedAt)
+        : await this.generateExcel(report, generatedAt);
 
     await this.prisma.report.create({
       data: {
@@ -85,9 +90,10 @@ export class ReportsService {
       buffer,
       filename,
       format: normalizedFormat,
-      contentType: normalizedFormat === 'pdf'
-        ? 'application/pdf'
-        : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      contentType:
+        normalizedFormat === 'pdf'
+          ? 'application/pdf'
+          : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     };
   }
 
@@ -104,7 +110,9 @@ export class ReportsService {
   }
 
   private async buildUsersReport(): Promise<ReportDefinition> {
-    const users = await this.prisma.user.findMany({ orderBy: { createdAt: 'desc' } });
+    const users = await this.prisma.user.findMany({
+      orderBy: { createdAt: 'desc' },
+    });
 
     return {
       type: 'users',
@@ -160,14 +168,15 @@ export class ReportsService {
   }
 
   private async buildSummaryReport(): Promise<ReportDefinition> {
-    const [entries, neologisms, toponyms, anthroponyms, foreignisms, users] = await Promise.all([
-      this.prisma.entry.count(),
-      this.prisma.neologism.count(),
-      this.prisma.toponym.count(),
-      this.prisma.anthroponym.count(),
-      this.prisma.foreignism.count(),
-      this.prisma.user.count(),
-    ]);
+    const [entries, neologisms, toponyms, anthroponyms, foreignisms, users] =
+      await Promise.all([
+        this.prisma.entry.count(),
+        this.prisma.neologism.count(),
+        this.prisma.toponym.count(),
+        this.prisma.anthroponym.count(),
+        this.prisma.foreignism.count(),
+        this.prisma.user.count(),
+      ]);
 
     return {
       type: 'summary',
@@ -188,7 +197,10 @@ export class ReportsService {
     };
   }
 
-  private async generateExcel(report: ReportDefinition, generatedAt: Date): Promise<Buffer> {
+  private async generateExcel(
+    report: ReportDefinition,
+    generatedAt: Date,
+  ): Promise<Buffer> {
     const workbook = new ExcelJS.Workbook();
     workbook.creator = 'Sistema Linguístico';
     workbook.company = 'MedProject';
@@ -198,7 +210,12 @@ export class ReportsService {
 
     const sheet = workbook.addWorksheet(report.title, {
       views: [{ state: 'frozen', ySplit: 6 }],
-      pageSetup: { orientation: 'landscape', fitToPage: true, fitToWidth: 1, fitToHeight: 0 },
+      pageSetup: {
+        orientation: 'landscape',
+        fitToPage: true,
+        fitToWidth: 1,
+        fitToHeight: 0,
+      },
     });
 
     const lastColumn = report.columns.length;
@@ -238,13 +255,19 @@ export class ReportsService {
     });
 
     report.rows.forEach((item, rowIndex) => {
-      const row = sheet.addRow(report.columns.map((column) => item[column.key] ?? '-'));
+      const row = sheet.addRow(
+        report.columns.map((column) => item[column.key] ?? '-'),
+      );
       row.height = 22;
       row.eachCell((cell) => {
         cell.fill = this.solidFill(rowIndex % 2 === 0 ? 'EFF6FF' : 'FFFFFF');
         cell.font = { color: { argb: `FF${TEXT}` }, size: 10 };
         cell.border = this.cellBorder();
-        cell.alignment = { vertical: 'middle', horizontal: 'left', wrapText: true };
+        cell.alignment = {
+          vertical: 'middle',
+          horizontal: 'left',
+          wrapText: true,
+        };
       });
     });
 
@@ -272,26 +295,41 @@ export class ReportsService {
     const headerHeight = 82;
     const rowHeight = 22;
     const tableTop = 142;
-    const rowsPerPage = Math.max(1, Math.floor((pageHeight - tableTop - 58) / rowHeight));
+    const rowsPerPage = Math.max(
+      1,
+      Math.floor((pageHeight - tableTop - 58) / rowHeight),
+    );
     const pages: string[] = [];
-    const columnWidths = this.getPdfColumnWidths(report.columns, pageWidth - margin * 2);
+    const columnWidths = this.getPdfColumnWidths(
+      report.columns,
+      pageWidth - margin * 2,
+    );
 
-    for (let pageIndex = 0; pageIndex < Math.max(1, Math.ceil(report.rows.length / rowsPerPage)); pageIndex++) {
-      const rows = report.rows.slice(pageIndex * rowsPerPage, (pageIndex + 1) * rowsPerPage);
-      pages.push(this.buildPdfPage({
-        report,
-        rows,
-        pageIndex,
-        pageCount: Math.max(1, Math.ceil(report.rows.length / rowsPerPage)),
-        generatedAt,
-        pageWidth,
-        pageHeight,
-        margin,
-        headerHeight,
-        tableTop,
-        rowHeight,
-        columnWidths,
-      }));
+    for (
+      let pageIndex = 0;
+      pageIndex < Math.max(1, Math.ceil(report.rows.length / rowsPerPage));
+      pageIndex++
+    ) {
+      const rows = report.rows.slice(
+        pageIndex * rowsPerPage,
+        (pageIndex + 1) * rowsPerPage,
+      );
+      pages.push(
+        this.buildPdfPage({
+          report,
+          rows,
+          pageIndex,
+          pageCount: Math.max(1, Math.ceil(report.rows.length / rowsPerPage)),
+          generatedAt,
+          pageWidth,
+          pageHeight,
+          margin,
+          headerHeight,
+          tableTop,
+          rowHeight,
+          columnWidths,
+        }),
+      );
     }
 
     return this.composePdf(pages, pageWidth, pageHeight);
@@ -311,42 +349,79 @@ export class ReportsService {
     rowHeight: number;
     columnWidths: number[];
   }) {
-    const { report, rows, pageIndex, pageCount, generatedAt, pageWidth, pageHeight, margin, headerHeight, tableTop, rowHeight, columnWidths } = params;
+    const {
+      report,
+      rows,
+      pageIndex,
+      pageCount,
+      generatedAt,
+      pageWidth,
+      pageHeight,
+      margin,
+      headerHeight,
+      tableTop,
+      rowHeight,
+      columnWidths,
+    } = params;
     const commands: string[] = [];
     const primary = this.hexToRgb(PRIMARY);
     const primaryDark = this.hexToRgb(PRIMARY_DARK);
     const primarySoft = this.hexToRgb('EFF6FF');
     const text = this.hexToRgb(TEXT);
 
-    commands.push(`${primary.r} ${primary.g} ${primary.b} rg 0 ${pageHeight - headerHeight} ${pageWidth} ${headerHeight} re f`);
-    commands.push(`${primaryDark.r} ${primaryDark.g} ${primaryDark.b} rg 0 ${pageHeight - headerHeight - 16} ${pageWidth} 16 re f`);
-    commands.push(`BT /F1 18 Tf 1 1 1 rg ${margin} ${pageHeight - 44} Td (${this.pdfText(report.title)}) Tj ET`);
-    commands.push(`BT /F1 10 Tf 1 1 1 rg ${margin} ${pageHeight - 64} Td (${this.pdfText(report.subtitle)}) Tj ET`);
-    commands.push(`BT /F1 9 Tf 1 1 1 rg ${margin} ${pageHeight - 94} Td (${this.pdfText(`Gerado em ${this.formatDateTime(generatedAt)} | ${report.rows.length} registos`)}) Tj ET`);
+    commands.push(
+      `${primary.r} ${primary.g} ${primary.b} rg 0 ${pageHeight - headerHeight} ${pageWidth} ${headerHeight} re f`,
+    );
+    commands.push(
+      `${primaryDark.r} ${primaryDark.g} ${primaryDark.b} rg 0 ${pageHeight - headerHeight - 16} ${pageWidth} 16 re f`,
+    );
+    commands.push(
+      `BT /F1 18 Tf 1 1 1 rg ${margin} ${pageHeight - 44} Td (${this.pdfText(report.title)}) Tj ET`,
+    );
+    commands.push(
+      `BT /F1 10 Tf 1 1 1 rg ${margin} ${pageHeight - 64} Td (${this.pdfText(report.subtitle)}) Tj ET`,
+    );
+    commands.push(
+      `BT /F1 9 Tf 1 1 1 rg ${margin} ${pageHeight - 94} Td (${this.pdfText(`Gerado em ${this.formatDateTime(generatedAt)} | ${report.rows.length} registos`)}) Tj ET`,
+    );
 
     let x = margin;
-    commands.push(`${primary.r} ${primary.g} ${primary.b} rg ${margin} ${pageHeight - tableTop} ${pageWidth - margin * 2} 24 re f`);
+    commands.push(
+      `${primary.r} ${primary.g} ${primary.b} rg ${margin} ${pageHeight - tableTop} ${pageWidth - margin * 2} 24 re f`,
+    );
     report.columns.forEach((column, index) => {
-      commands.push(`BT /F1 8 Tf 1 1 1 rg ${x + 6} ${pageHeight - tableTop + 8} Td (${this.pdfText(this.truncate(column.header, Math.floor(columnWidths[index] / 5)))}) Tj ET`);
+      commands.push(
+        `BT /F1 8 Tf 1 1 1 rg ${x + 6} ${pageHeight - tableTop + 8} Td (${this.pdfText(this.truncate(column.header, Math.floor(columnWidths[index] / 5)))}) Tj ET`,
+      );
       x += columnWidths[index];
     });
 
     rows.forEach((row, rowIndex) => {
       const y = pageHeight - tableTop - 24 - rowIndex * rowHeight;
       const fill = rowIndex % 2 === 0 ? primarySoft : { r: 1, g: 1, b: 1 };
-      commands.push(`${fill.r} ${fill.g} ${fill.b} rg ${margin} ${y} ${pageWidth - margin * 2} ${rowHeight} re f`);
+      commands.push(
+        `${fill.r} ${fill.g} ${fill.b} rg ${margin} ${y} ${pageWidth - margin * 2} ${rowHeight} re f`,
+      );
       x = margin;
       report.columns.forEach((column, colIndex) => {
-        commands.push(`BT /F1 7.5 Tf ${text.r} ${text.g} ${text.b} rg ${x + 6} ${y + 8} Td (${this.pdfText(this.truncate(String(row[column.key] ?? '-'), Math.floor(columnWidths[colIndex] / 4.6)))}) Tj ET`);
+        commands.push(
+          `BT /F1 7.5 Tf ${text.r} ${text.g} ${text.b} rg ${x + 6} ${y + 8} Td (${this.pdfText(this.truncate(String(row[column.key] ?? '-'), Math.floor(columnWidths[colIndex] / 4.6)))}) Tj ET`,
+        );
         x += columnWidths[colIndex];
       });
     });
 
-    commands.push(`BT /F1 8 Tf ${text.r} ${text.g} ${text.b} rg ${margin} 28 Td (${this.pdfText(`MedProject | Página ${pageIndex + 1} de ${pageCount}`)}) Tj ET`);
+    commands.push(
+      `BT /F1 8 Tf ${text.r} ${text.g} ${text.b} rg ${margin} 28 Td (${this.pdfText(`MedProject | Página ${pageIndex + 1} de ${pageCount}`)}) Tj ET`,
+    );
     return commands.join('\n');
   }
 
-  private composePdf(pageContents: string[], pageWidth: number, pageHeight: number): Buffer {
+  private composePdf(
+    pageContents: string[],
+    pageWidth: number,
+    pageHeight: number,
+  ): Buffer {
     const objects: string[] = [];
     const addObject = (content: string) => {
       objects.push(content);
@@ -355,18 +430,25 @@ export class ReportsService {
 
     const catalogId = addObject('');
     const pagesId = addObject('');
-    const fontId = addObject('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>');
+    const fontId = addObject(
+      '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>',
+    );
     const pageIds: number[] = [];
 
     pageContents.forEach((content) => {
       const stream = Buffer.from(content, 'latin1');
-      const contentId = addObject(`<< /Length ${stream.length} >>\nstream\n${content}\nendstream`);
-      const pageId = addObject(`<< /Type /Page /Parent ${pagesId} 0 R /MediaBox [0 0 ${pageWidth} ${pageHeight}] /Resources << /Font << /F1 ${fontId} 0 R >> >> /Contents ${contentId} 0 R >>`);
+      const contentId = addObject(
+        `<< /Length ${stream.length} >>\nstream\n${content}\nendstream`,
+      );
+      const pageId = addObject(
+        `<< /Type /Page /Parent ${pagesId} 0 R /MediaBox [0 0 ${pageWidth} ${pageHeight}] /Resources << /Font << /F1 ${fontId} 0 R >> >> /Contents ${contentId} 0 R >>`,
+      );
       pageIds.push(pageId);
     });
 
     objects[catalogId - 1] = `<< /Type /Catalog /Pages ${pagesId} 0 R >>`;
-    objects[pagesId - 1] = `<< /Type /Pages /Kids [${pageIds.map((id) => `${id} 0 R`).join(' ')}] /Count ${pageIds.length} >>`;
+    objects[pagesId - 1] =
+      `<< /Type /Pages /Kids [${pageIds.map((id) => `${id} 0 R`).join(' ')}] /Count ${pageIds.length} >>`;
 
     let pdf = '%PDF-1.4\n';
     const offsets = [0];
@@ -391,7 +473,11 @@ export class ReportsService {
   }
 
   private solidFill(color: string): ExcelJS.Fill {
-    return { type: 'pattern', pattern: 'solid', fgColor: { argb: `FF${color}` } };
+    return {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: `FF${color}` },
+    };
   }
 
   private cellBorder(): Partial<ExcelJS.Borders> {
@@ -431,31 +517,51 @@ export class ReportsService {
   }
 
   private translateRole(role: string) {
-    return { ADMIN: 'Administrador', SUPERVISOR: 'Supervisor', OPERATOR: 'Operador' }[role] || role;
+    return (
+      {
+        ADMIN: 'Administrador',
+        SUPERVISOR: 'Supervisor',
+        OPERATOR: 'Operador',
+      }[role] || role
+    );
   }
 
   private translateAction(action: string) {
-    return { CREATE: 'Criação', UPDATE: 'Atualização', DELETE: 'Exclusão', LOGIN: 'Login', OTHER: 'Outra ação' }[action] || action;
+    return (
+      {
+        CREATE: 'Criação',
+        UPDATE: 'Atualização',
+        DELETE: 'Exclusão',
+        LOGIN: 'Login',
+        OTHER: 'Outra ação',
+      }[action] || action
+    );
   }
 
   private translateEntity(entity: string) {
-    return {
-      Entry: 'Entrada',
-      Neologism: 'Neologismo',
-      Toponym: 'Topónimo',
-      Anthroponym: 'Antropónimo',
-      Foreignism: 'Estrangeirismo',
-      BlogPost: 'Publicação',
-      Event: 'Evento',
-      EventRegistration: 'Inscrição em evento',
-      User: 'Utilizador',
-      Auth: 'Autenticação',
-      MediaAsset: 'Mídia',
-    }[entity] || entity;
+    return (
+      {
+        Entry: 'Entrada',
+        Neologism: 'Neologismo',
+        Toponym: 'Topónimo',
+        Anthroponym: 'Antropónimo',
+        Foreignism: 'Estrangeirismo',
+        BlogPost: 'Publicação',
+        Event: 'Evento',
+        EventRegistration: 'Inscrição em evento',
+        User: 'Utilizador',
+        Auth: 'Autenticação',
+        MediaAsset: 'Mídia',
+      }[entity] || entity
+    );
   }
 
   private translateStatus(status: string) {
-    return { SUCCESS: 'Sucesso', FAILED: 'Falhou', COMPLETED: 'Concluído' }[status] || status;
+    return (
+      { SUCCESS: 'Sucesso', FAILED: 'Falhou', COMPLETED: 'Concluído' }[
+        status
+      ] || status
+    );
   }
 
   async getHistory(params: {

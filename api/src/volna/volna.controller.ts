@@ -1,4 +1,15 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query, Request, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  Request,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ApprovalStatus, UserRole } from '@prisma/client';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -41,7 +52,11 @@ export class VolnaController {
   @Patch(':id')
   @Roles(UserRole.ADMIN, UserRole.SUPERVISOR, UserRole.OPERATOR)
   @ApiOperation({ summary: 'Actualizar vocábulo VOLNA' })
-  update(@Request() req: AuthRequest, @Param('id') id: string, @Body() dto: UpdateVolnaTermDto) {
+  update(
+    @Request() req: AuthRequest,
+    @Param('id') id: string,
+    @Body() dto: UpdateVolnaTermDto,
+  ) {
     return this.volnaService.update(id, dto, req.user);
   }
 
@@ -52,7 +67,17 @@ export class VolnaController {
     schema: {
       type: 'object',
       properties: {
-        status: { type: 'string', enum: ['DRAFT', 'PENDING_APPROVAL', 'APPROVED', 'REJECTED', 'NEEDS_CORRECTION', 'ARCHIVED'] },
+        status: {
+          type: 'string',
+          enum: [
+            'DRAFT',
+            'PENDING_APPROVAL',
+            'APPROVED',
+            'REJECTED',
+            'NEEDS_CORRECTION',
+            'ARCHIVED',
+          ],
+        },
         reason: { type: 'string' },
       },
       required: ['status'],

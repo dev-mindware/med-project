@@ -57,7 +57,6 @@ export class CreateAnthroponymDto {
   @IsOptional()
   isVocabularyEP?: boolean;
 
-
   @ApiProperty({ required: false })
   @IsBoolean()
   @IsOptional()

@@ -1,4 +1,14 @@
-import { Body, Controller, Get, Param, Patch, Post, Query, Request, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  Request,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { UserRole } from '@prisma/client';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -40,8 +50,14 @@ export class VonalpController {
 
   @Patch(':id')
   @Roles(UserRole.ADMIN, UserRole.SUPERVISOR, UserRole.OPERATOR)
-  @ApiOperation({ summary: 'Actualizar campos obrigatórios de um vocábulo VONALP' })
-  update(@Request() req: AuthRequest, @Param('id') id: string, @Body() dto: UpdateVonalpTermDto) {
+  @ApiOperation({
+    summary: 'Actualizar campos obrigatórios de um vocábulo VONALP',
+  })
+  update(
+    @Request() req: AuthRequest,
+    @Param('id') id: string,
+    @Body() dto: UpdateVonalpTermDto,
+  ) {
     return this.vonalpService.update(id, dto, req.user);
   }
 }

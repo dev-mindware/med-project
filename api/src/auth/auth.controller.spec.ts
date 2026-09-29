@@ -3,13 +3,19 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 
 const mockAuthService = {
-  login: jest.fn().mockResolvedValue({ accessToken: 'access', refreshToken: 'refresh' }),
-  register: jest.fn().mockResolvedValue({ id: 'user-1', email: 'test@test.com' }),
+  login: jest
+    .fn()
+    .mockResolvedValue({ accessToken: 'access', refreshToken: 'refresh' }),
+  register: jest
+    .fn()
+    .mockResolvedValue({ id: 'user-1', email: 'test@test.com' }),
   refreshTokens: jest.fn().mockResolvedValue({ accessToken: 'new-access' }),
   logout: jest.fn().mockResolvedValue({ success: true }),
   getProfile: jest.fn().mockResolvedValue({ id: 'user-1', name: 'Test' }),
   updateProfile: jest.fn().mockResolvedValue({ id: 'user-1', name: 'Updated' }),
-  updateEmail: jest.fn().mockResolvedValue({ id: 'user-1', email: 'new@test.com' }),
+  updateEmail: jest
+    .fn()
+    .mockResolvedValue({ id: 'user-1', email: 'new@test.com' }),
   updatePassword: jest.fn().mockResolvedValue({ id: 'user-1' }),
 };
 
@@ -20,9 +26,7 @@ describe('AuthController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AuthController],
-      providers: [
-        { provide: AuthService, useValue: mockAuthService },
-      ],
+      providers: [{ provide: AuthService, useValue: mockAuthService }],
     }).compile();
 
     controller = module.get<AuthController>(AuthController);
@@ -33,7 +37,7 @@ describe('AuthController', () => {
   describe('login()', () => {
     it('should call authService.login with req.user', async () => {
       const req = { user: { id: 'user-1', email: 'test@test.com' } };
-      const result = await controller.login(req);
+      const result = await controller.login(req as any);
       expect(result).toHaveProperty('accessToken');
       expect(service.login).toHaveBeenCalledWith(req.user);
     });
@@ -41,7 +45,11 @@ describe('AuthController', () => {
 
   describe('register()', () => {
     it('should call authService.register', async () => {
-      const body = { email: 'test@test.com', password: 'password', name: 'Test' };
+      const body = {
+        email: 'test@test.com',
+        password: 'password',
+        name: 'Test',
+      };
       await controller.register(body);
       expect(service.register).toHaveBeenCalledWith(body);
     });
@@ -49,7 +57,7 @@ describe('AuthController', () => {
 
   describe('refresh()', () => {
     it('should call authService.refreshTokens', async () => {
-      await controller.refresh('refresh-token');
+      await controller.refresh({ refreshToken: 'refresh-token' });
       expect(service.refreshTokens).toHaveBeenCalledWith('refresh-token');
     });
   });
@@ -57,7 +65,7 @@ describe('AuthController', () => {
   describe('logout()', () => {
     it('should call authService.logout with user id', async () => {
       const req = { user: { id: 'user-1' } };
-      await controller.logout(req);
+      await controller.logout(req as any);
       expect(service.logout).toHaveBeenCalledWith('user-1');
     });
   });
@@ -65,7 +73,9 @@ describe('AuthController', () => {
   describe('getProfile()', () => {
     it('should return current user profile', async () => {
       const req = { user: { id: 'user-1', name: 'Test' } };
-      await expect(controller.getProfile(req)).resolves.toEqual(req.user);
+      await expect(controller.getProfile(req as any)).resolves.toEqual(
+        req.user,
+      );
       expect(service.getProfile).toHaveBeenCalledWith('user-1');
     });
   });
@@ -74,20 +84,23 @@ describe('AuthController', () => {
     it('should update profile', async () => {
       const req = { user: { id: 'user-1' } };
       const body = { name: 'Updated' };
-      await controller.updateProfile(req, body);
+      await controller.updateProfile(req as any, body);
       expect(service.updateProfile).toHaveBeenCalledWith('user-1', body);
     });
 
     it('should update email', async () => {
       const req = { user: { id: 'user-1' } };
-      await controller.updateEmail(req, 'new@test.com');
-      expect(service.updateEmail).toHaveBeenCalledWith('user-1', 'new@test.com');
+      await controller.updateEmail(req as any, 'new@test.com');
+      expect(service.updateEmail).toHaveBeenCalledWith(
+        'user-1',
+        'new@test.com',
+      );
     });
 
     it('should update password', async () => {
       const req = { user: { id: 'user-1' } };
       const body = { currentPassword: 'old', newPassword: 'new' };
-      await controller.updatePassword(req, body);
+      await controller.updatePassword(req as any, body);
       expect(service.updatePassword).toHaveBeenCalledWith('user-1', body);
     });
   });
