@@ -353,47 +353,18 @@ export class StatsService {
   private async groupContributorsByModule(
     model: 'entry' | 'anthroponym' | 'toponym' | 'foreignism' | 'neologism',
   ): Promise<Array<{ createdById: string | null; _count: { _all: number } }>> {
-<<<<<<< Updated upstream
-    switch (model) {
-      case 'entry':
-        return this.prisma.entry.groupBy({
-          by: ['createdById'] as ['createdById'],
-          where: { createdById: { not: null } },
-          _count: { _all: true },
-        });
-      case 'anthroponym':
-        return this.prisma.anthroponym.groupBy({
-          by: ['createdById'] as ['createdById'],
-          where: { createdById: { not: null } },
-          _count: { _all: true },
-        });
-      case 'toponym':
-        return this.prisma.toponym.groupBy({
-          by: ['createdById'] as ['createdById'],
-          where: { createdById: { not: null } },
-          _count: { _all: true },
-        });
-      case 'foreignism':
-        return this.prisma.foreignism.groupBy({
-          by: ['createdById'] as ['createdById'],
-          where: { createdById: { not: null } },
-          _count: { _all: true },
-        });
-      case 'neologism':
-        return this.prisma.neologism.groupBy({
-          by: ['createdById'] as ['createdById'],
-          where: { createdById: { not: null } },
-          _count: { _all: true },
-        });
-    }
-=======
-    const delegate = this.prisma[model] as any;
+    const delegate = this.prisma[model] as unknown as {
+      groupBy: (args: {
+        by: string[];
+        where: { createdById: { not: null } };
+        _count: { _all: boolean };
+      }) => Promise<Array<{ createdById: string | null; _count: { _all: number } }>>;
+    };
     return delegate.groupBy({
       by: ['createdById'],
       where: { createdById: { not: null } },
       _count: { _all: true },
     });
->>>>>>> Stashed changes
   }
 
   private buildCharts(

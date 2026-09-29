@@ -42,8 +42,6 @@ type SourceRecord = {
   grammaticalSubcategory?: string | null;
   syllabicDivision?: string | null;
   etymology?: string | null;
-  firstDefinition?: string | null;
-  secondDefinition?: string | null;
   definition?: string | null;
   meaning?: string | null;
   toponym?: string | null;
@@ -595,13 +593,8 @@ export class VonalpService {
         grammaticalCategory: null,
         grammaticalSubcategory: null,
         syllabicDivision: null,
-<<<<<<< Updated upstream
         etymology: source.toponymProvenance ?? source.toponymHistory ?? null,
-        firstDefinition: source.meaning,
-=======
-        etymology: source.toponymProvenance || source.toponymHistory || null,
         firstDefinition: source.meaning ?? null,
->>>>>>> Stashed changes
         secondDefinition: null,
         origin: SOURCE_CONFIG[sourceType].origin,
       });
@@ -627,13 +620,8 @@ export class VonalpService {
       grammaticalCategory: source.grammaticalCategory ?? null,
       grammaticalSubcategory: null,
       syllabicDivision: null,
-<<<<<<< Updated upstream
-      etymology: this.buildForeignismEtymology(source),
-      firstDefinition: source.definition ?? source.meaning ?? null,
-=======
       etymology: this.buildForeignismEtymology(source) || null,
-      firstDefinition: source.definition || source.meaning || null,
->>>>>>> Stashed changes
+      firstDefinition: source.definition ?? source.meaning ?? null,
       secondDefinition: null,
       origin: SOURCE_CONFIG[sourceType].origin,
     });

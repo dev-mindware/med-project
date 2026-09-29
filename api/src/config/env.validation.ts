@@ -5,13 +5,9 @@ const REQUIRED_IN_ALL_ENVS = [
 ] as const;
 const REQUIRED_IN_PRODUCTION = ['FRONTEND_URL'] as const;
 
-<<<<<<< Updated upstream
-export function validateEnv(config: Record<string, unknown>): Record<string, unknown> {
-=======
 export function validateEnv(
   config: Record<string, unknown>,
 ): Record<string, unknown> {
->>>>>>> Stashed changes
   const missing: string[] = REQUIRED_IN_ALL_ENVS.filter((key) => {
     const value = config[key];
     return typeof value !== 'string' || value.trim().length === 0;

@@ -1,15 +1,50 @@
 services:
   postgres:
-    image: postgres:16
+    image: postgres:16-alpine
     container_name: linguistic-db
+    restart: unless-stopped
     environment:
-      POSTGRES_USER: johndoe
-      POSTGRES_PASSWORD: randompassword
-      POSTGRES_DB: mydb
+      POSTGRES_USER: ${POSTGRES_USER:-johndoe}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-randompassword}
+      POSTGRES_DB: ${POSTGRES_DB:-mydb}
     ports:
       - "5439:5432"
     volumes:
       - linguistic_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-johndoe} -d ${POSTGRES_DB:-mydb}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: linguistic-api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      DATABASE_URL: postgresql://${POSTGRES_USER:-johndoe}:${POSTGRES_PASSWORD:-randompassword}@postgres:5432/${POSTGRES_DB:-mydb}?schema=public
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-change-me-access-secret-minimum-32-chars-long}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-change-me-refresh-secret-minimum-32-chars-long}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000,http://localhost:3001,http://localhost:3002}
+      RUN_MIGRATIONS: "true"
+      VOCABULARY_MAX_FILE_MB: 20
+      MEDIA_MAX_FILE_MB: 10
+      VOCABULARY_CHUNK_WORDS: 1200
+    ports:
+      - "4000:4000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:4000/"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
 
 volumes:
   linguistic_postgres_data:

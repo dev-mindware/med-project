@@ -783,10 +783,6 @@ export class PublicService {
     filters: PublicContentFilterDto,
   ) {
     const { page, limit, skip } = this.pagination(filters);
-<<<<<<< Updated upstream
-=======
-    const delegate = this.prisma[delegateName] as any;
->>>>>>> Stashed changes
 
     switch (delegateName) {
       case 'entry':
@@ -831,7 +827,6 @@ export class PublicService {
     return { data, meta: this.meta(items.length, page, limit) };
   }
 
-<<<<<<< Updated upstream
   private async findApprovedOrThrow(
     delegateName: Exclude<PublicDelegateName, 'event' | 'blogPost'>,
     where: Prisma.EntryWhereInput
@@ -868,17 +863,6 @@ export class PublicService {
     select: object,
     message: string,
   ) {
-=======
-  private async findApprovedOrThrow<
-    DelegateName extends Exclude<PublicDelegateName, 'event' | 'blogPost'>,
-  >(
-    delegateName: DelegateName,
-    where: PublicWhereInput[DelegateName],
-    select: PublicSelectInput[DelegateName],
-    message: string,
-  ) {
-    const delegate = this.prisma[delegateName] as any;
->>>>>>> Stashed changes
     const item = await delegate.findFirst({
       where: { ...where, approvalStatus: ApprovalStatus.APPROVED },
       select,

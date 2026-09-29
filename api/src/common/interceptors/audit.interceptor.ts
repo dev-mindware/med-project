@@ -55,15 +55,9 @@ type AuditNotificationData = {
   entity: string;
   entityId?: string | null;
   path: string;
-<<<<<<< Updated upstream
   oldValues: Prisma.InputJsonObject | null;
   newValues: Prisma.InputJsonObject | null;
   result: unknown;
-=======
-  oldValues: any;
-  newValues: any;
-  result: any;
->>>>>>> Stashed changes
 };
 
 const CONTENT_ENTITIES: Record<string, ContentEntityConfig> = {
@@ -135,16 +129,9 @@ export class AuditInterceptor implements NestInterceptor {
   ) {}
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
-<<<<<<< Updated upstream
     const request = context.switchToHttp().getRequest<AuditRequest>();
     const response = context.switchToHttp().getResponse<{ statusCode?: number }>();
     const { method, url, user, body, ip, params, query, route, requestId } = request;
-=======
-    const request = context.switchToHttp().getRequest<any>();
-    const response = context.switchToHttp().getResponse<any>();
-    const { method, url, user, body, ip, params, query, route, requestId } =
-      request;
->>>>>>> Stashed changes
     const userAgent = request.get('user-agent');
     const path = url.split('?')[0];
     const shouldAudit = method !== 'GET';
@@ -238,7 +225,7 @@ export class AuditInterceptor implements NestInterceptor {
 
   private async handleSuccessfulAudit(params: {
     data: unknown;
-    oldValuesPromise: Promise<Record<string, unknown> | null>;
+    oldValuesPromise: Promise<Prisma.InputJsonObject | null>;
     method: string;
     body: unknown;
     entityId: string | null;
@@ -253,7 +240,7 @@ export class AuditInterceptor implements NestInterceptor {
     params: Record<string, string>;
     query: Record<string, string | string[]>;
     requestId?: string;
-    sanitizedBody: Record<string, unknown> | null;
+    sanitizedBody: Prisma.InputJsonObject | null;
     response?: { statusCode?: number };
   }) {
     const oldValues = await params.oldValuesPromise;
@@ -378,22 +365,15 @@ export class AuditInterceptor implements NestInterceptor {
 
   private sanitize(value: unknown): Prisma.InputJsonObject | null {
     const masked = maskSensitive(value);
-<<<<<<< Updated upstream
-    return masked && typeof masked === 'object' && !Array.isArray(masked) ? masked as Prisma.InputJsonObject : null;
-  }
-
-  private getChangedFields(oldValues: Prisma.InputJsonObject | null, newValues: Prisma.InputJsonObject | null) {
-=======
     return masked && typeof masked === 'object' && !Array.isArray(masked)
-      ? (masked as Record<string, unknown>)
+      ? (masked as Prisma.InputJsonObject)
       : null;
   }
 
   private getChangedFields(
-    oldValues: Record<string, unknown> | null,
-    newValues: Record<string, unknown> | null,
+    oldValues: Prisma.InputJsonObject | null,
+    newValues: Prisma.InputJsonObject | null,
   ) {
->>>>>>> Stashed changes
     if (!oldValues || !newValues || typeof newValues !== 'object') return [];
     return Object.keys(newValues).filter(
       (key) =>
@@ -474,9 +454,13 @@ export class AuditInterceptor implements NestInterceptor {
       (await this.getContentSnapshot(data.entity, data.entityId)) ||
       data.newValues;
     const itemLabel = this.getItemLabel(config, content);
-    const statusLabel = this.translateApprovalStatus(
-      content?.approvalStatus || data.newValues?.approvalStatus,
-    );
+    const statusVal =
+      typeof content?.approvalStatus === 'string'
+        ? content.approvalStatus
+        : typeof data.newValues?.approvalStatus === 'string'
+          ? data.newValues.approvalStatus
+          : undefined;
+    const statusLabel = this.translateApprovalStatus(statusVal);
     const notifications: NotificationDraft[] = [];
 
     const admins = await this.getActiveAdminsExcept(actor.id);
@@ -513,28 +497,24 @@ export class AuditInterceptor implements NestInterceptor {
     config: ContentEntityConfig,
     actor: ActorSnapshot,
   ) {
-<<<<<<< Updated upstream
-    const result = data.result && typeof data.result === 'object' ? data.result as Record<string, unknown> : null;
+    const result =
+      data.result && typeof data.result === 'object'
+        ? (data.result as Record<string, unknown>)
+        : null;
     const created = Array.isArray(result?.created) ? result.created : [];
     const successCount = Number(result?.successCount || created.length || 0);
-=======
-    const successCount = Number(
-      data.result?.successCount || data.result?.created?.length || 0,
-    );
->>>>>>> Stashed changes
     if (!successCount) return;
 
     const notifications: NotificationDraft[] = [];
     const title = `Importação de ${config.pluralLabel} concluída`;
-<<<<<<< Updated upstream
     const firstCreated = created[0];
-    const entityId = firstCreated && typeof firstCreated === 'object' && 'id' in firstCreated && typeof firstCreated.id === 'string'
-      ? firstCreated.id
-=======
-    const entityId = Array.isArray(data.result?.created)
-      ? data.result.created[0]?.id
->>>>>>> Stashed changes
-      : null;
+    const entityId =
+      firstCreated &&
+      typeof firstCreated === 'object' &&
+      'id' in firstCreated &&
+      typeof firstCreated.id === 'string'
+        ? firstCreated.id
+        : null;
 
     const admins = await this.getActiveAdminsExcept(actor.id);
     notifications.push(
@@ -573,14 +553,14 @@ export class AuditInterceptor implements NestInterceptor {
     if (actor.role !== UserRole.ADMIN && actor.role !== UserRole.SUPERVISOR)
       return;
 
-    const oldStatus = data.oldValues?.approvalStatus;
-<<<<<<< Updated upstream
-    const result = data.result && typeof data.result === 'object' ? data.result as Record<string, unknown> : null;
-    const newStatus = data.newValues?.approvalStatus || (typeof result?.approvalStatus === 'string' ? result.approvalStatus : null);
-=======
+    const oldStatus = (data.oldValues as Record<string, unknown> | null)?.approvalStatus as string | undefined;
+    const result =
+      data.result && typeof data.result === 'object'
+        ? (data.result as Record<string, unknown>)
+        : null;
     const newStatus =
-      data.newValues?.approvalStatus || data.result?.approvalStatus;
->>>>>>> Stashed changes
+      ((data.newValues as Record<string, unknown> | null)?.approvalStatus as string | undefined) ||
+      (typeof result?.approvalStatus === 'string' ? result.approvalStatus : null);
     if (!newStatus || oldStatus === newStatus) return;
 
     const content =
@@ -606,9 +586,9 @@ export class AuditInterceptor implements NestInterceptor {
     );
 
     const creatorId =
-      content?.createdById ||
-      data.oldValues?.createdById ||
-      data.newValues?.createdById;
+      (typeof content?.createdById === 'string' ? content.createdById : null) ||
+      (typeof data.oldValues?.createdById === 'string' ? data.oldValues.createdById : null) ||
+      (typeof data.newValues?.createdById === 'string' ? data.newValues.createdById : null);
     if (creatorId && creatorId !== actor.id) {
       const creator = await this.getActiveUser(creatorId);
       if (creator?.role === UserRole.OPERATOR) {
@@ -631,11 +611,15 @@ export class AuditInterceptor implements NestInterceptor {
     config: ContentEntityConfig,
     actor: ActorSnapshot,
   ) {
-    const oldStatus = data.oldValues?.approvalStatus;
+    const oldStatus =
+      typeof data.oldValues?.approvalStatus === 'string'
+        ? data.oldValues.approvalStatus
+        : undefined;
     if (!oldStatus || oldStatus === ApprovalStatus.DRAFT) return;
 
     const creatorId =
-      data.oldValues?.createdById || data.newValues?.createdById;
+      (typeof data.oldValues?.createdById === 'string' ? data.oldValues.createdById : null) ||
+      (typeof data.newValues?.createdById === 'string' ? data.newValues.createdById : null);
     if (creatorId && creatorId === actor.id) return;
 
     const content =
