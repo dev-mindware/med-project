@@ -3,14 +3,14 @@ services:
     image: ghcr.io/dev-mindware/med-project-api:latest
     pull_policy: always
     build:
-      context: .
+      context: ./api
       dockerfile: Dockerfile
     container_name: med_api
     restart: always
     ports:
       - "${MED_API_PORT:-4000}:${PORT:-4000}"
     env_file:
-      - path: .env
+      - path: ./api/.env
         required: false
     depends_on:
       postgres:
@@ -38,7 +38,7 @@ services:
     container_name: med_postgres
     restart: always
     env_file:
-      - path: .env
+      - path: ./api/.env
         required: false
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-johndoe}
