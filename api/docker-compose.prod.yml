@@ -12,9 +12,6 @@ services:
   med-api:
     image: ghcr.io/dev-mindware/med-project-api:latest
     pull_policy: always
-    build:
-      context: .
-      dockerfile: Dockerfile
     container_name: med_api_prod
     restart: unless-stopped
     ports:
