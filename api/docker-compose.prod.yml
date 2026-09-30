@@ -1,11 +1,11 @@
 # ==============================================================================
 # 🚀 DOCKER COMPOSE — AMBIENTE DE PRODUÇÃO (API & POSTGRESQL)
 # ==============================================================================
-# Uso:
+# Uso manual no servidor:
 #   docker compose -f docker-compose.prod.yml --env-file .env.production up -d
 #
-# Para consultar logs:
-#   docker compose -f docker-compose.prod.yml logs -f
+# No Dokploy (Source: Docker Raw):
+#   O Dokploy gera automaticamente o ficheiro .env a partir da aba Environment.
 # ==============================================================================
 
 services:
@@ -15,8 +15,8 @@ services:
     container_name: med_api_prod
     restart: unless-stopped
     ports:
-      # Exposição na porta 3009 para reverse proxy (Nginx, Traefik, Dokploy)
-      - "3009:3009"
+      - "${PORT:-3009}:3009"
+    # No Dokploy o ficheiro chama-se .env; no servidor manual pode ser .env.production
     env_file:
       - path: .env
         required: false
@@ -24,20 +24,7 @@ services:
         required: false
     environment:
       - NODE_ENV=production
-      - PORT=3009
       - RUN_MIGRATIONS=true
-      - DATABASE_URL=${DATABASE_URL:-postgresql://${POSTGRES_USER:-med_prod_user}:${POSTGRES_PASSWORD:-change_me_prod_password}@postgres:5432/${POSTGRES_DB:-med_linguistic_prod}?schema=public}
-      - JWT_ACCESS_SECRET=${JWT_ACCESS_SECRET}
-      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
-      - FRONTEND_URL=${FRONTEND_URL}
-      - R2_ENDPOINT=${R2_ENDPOINT:-}
-      - R2_ACCESS_KEY_ID=${R2_ACCESS_KEY_ID:-}
-      - R2_SECRET_ACCESS_KEY=${R2_SECRET_ACCESS_KEY:-}
-      - R2_BUCKET_NAME=${R2_BUCKET_NAME:-}
-      - R2_PUBLIC_URL=${R2_PUBLIC_URL:-}
-      - RESEND_API_KEY=${RESEND_API_KEY:-}
-      - RESEND_FROM_EMAIL=${RESEND_FROM_EMAIL:-}
-      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
     depends_on:
       postgres:
         condition: service_healthy
@@ -48,7 +35,7 @@ services:
       interval: 30s
       timeout: 5s
       retries: 3
-      start_period: 25s
+      start_period: 40s
     security_opt:
       - no-new-privileges:true
     logging:
@@ -69,25 +56,18 @@ services:
     image: postgres:16-alpine
     container_name: med_postgres_prod
     restart: unless-stopped
-    env_file:
-      - path: .env
-        required: false
-      - path: .env.production
-        required: false
+    # Sem env_file: o Postgres só precisa destas 3 variáveis,
+    # não recebendo secrets de JWT nem o restante da API.
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-med_prod_user}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_me_prod_password}
-      POSTGRES_DB: ${POSTGRES_DB:-med_linguistic_prod}
-    # Por segurança em produção, a base de dados NÃO é exposta à Internet aberta.
-    # Caso necessite de aceder localmente no host (ex: backups via pg_dump), descomente a linha abaixo:
-    # ports:
-    #   - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+      POSTGRES_USER: ${POSTGRES_USER:?Defina POSTGRES_USER no .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Defina POSTGRES_PASSWORD no .env}
+      POSTGRES_DB: ${POSTGRES_DB:?Defina POSTGRES_DB no .env}
     volumes:
       - med_pgdata_prod:/var/lib/postgresql/data
     networks:
       - med_net_prod
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -127,3 +107,4 @@ networks:
 volumes:
   med_pgdata_prod:
     name: med_pgdata_prod
+
