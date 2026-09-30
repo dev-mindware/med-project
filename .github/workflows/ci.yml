@@ -50,6 +50,11 @@ jobs:
       JWT_ACCESS_SECRET: ci-access-secret-must-be-at-least-32-characters-long
       JWT_REFRESH_SECRET: ci-refresh-secret-must-be-at-least-32-characters-long
       FRONTEND_URL: http://127.0.0.1:3000
+      R2_ENDPOINT: https://dummy.r2.cloudflarestorage.com
+      R2_ACCESS_KEY_ID: dummy-access-key
+      R2_SECRET_ACCESS_KEY: dummy-secret-key
+      R2_BUCKET_NAME: dummy-bucket
+      R2_PUBLIC_URL: https://dummy.cdn.com
 
     steps:
       # ── Setup ────────────────────────────────────────────────────────────────

@@ -2,6 +2,7 @@ export default () => ({
   app: {
     port: Number.parseInt(process.env.PORT ?? '4000', 10),
     nodeEnv: process.env.NODE_ENV ?? 'development',
+    mediaMaxFileMb: Number.parseInt(process.env.MEDIA_MAX_FILE_MB ?? '10', 10),
     frontendUrls: (
       process.env.FRONTEND_URL ??
       'http://localhost:3000,http://localhost:3001,http://localhost:3002'

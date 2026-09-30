@@ -36,6 +36,18 @@ const mockPrismaService = {
 };
 
 const mockConfigService = {
+  get: jest.fn(
+    (key: string) =>
+      ({
+        'storage.r2Endpoint': 'http://r2.endpoint',
+        'storage.r2AccessKeyId': 'access-key',
+        'storage.r2SecretAccessKey': 'secret-key',
+        'storage.r2BucketName': 'test-bucket',
+        'storage.r2PublicUrl': 'http://public.url',
+        'app.mediaMaxFileMb': 10,
+        'ai.mediaMaxFileMb': 10,
+      })[key],
+  ),
   getOrThrow: jest.fn(
     (key: string) =>
       ({
@@ -45,6 +57,7 @@ const mockConfigService = {
         'storage.r2BucketName': 'test-bucket',
         'storage.r2PublicUrl': 'http://public.url',
         'app.mediaMaxFileMb': 10,
+        'ai.mediaMaxFileMb': 10,
       })[key],
   ),
 };

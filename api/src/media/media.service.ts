@@ -13,7 +13,7 @@ import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class MediaService {
-  private s3Client: S3Client;
+  private s3Client: S3Client | null = null;
   private bucketName: string;
   private publicUrl: string;
 
@@ -22,24 +22,26 @@ export class MediaService {
     private prisma: PrismaService,
     private logger: AppLogger,
   ) {
-    this.s3Client = new S3Client({
-      region: 'auto',
-      endpoint: this.configService.getOrThrow<string>('storage.r2Endpoint'),
-      credentials: {
-        accessKeyId: this.configService.getOrThrow<string>(
-          'storage.r2AccessKeyId',
-        ),
-        secretAccessKey: this.configService.getOrThrow<string>(
-          'storage.r2SecretAccessKey',
-        ),
-      },
-    });
-    this.bucketName = this.configService.getOrThrow<string>(
-      'storage.r2BucketName',
+    const endpoint = this.configService.get<string>('storage.r2Endpoint');
+    const accessKeyId = this.configService.get<string>('storage.r2AccessKeyId');
+    const secretAccessKey = this.configService.get<string>(
+      'storage.r2SecretAccessKey',
     );
-    this.publicUrl = this.configService.getOrThrow<string>(
-      'storage.r2PublicUrl',
-    );
+    this.bucketName =
+      this.configService.get<string>('storage.r2BucketName') ?? '';
+    this.publicUrl =
+      this.configService.get<string>('storage.r2PublicUrl') ?? '';
+
+    if (endpoint && accessKeyId && secretAccessKey) {
+      this.s3Client = new S3Client({
+        region: 'auto',
+        endpoint,
+        credentials: {
+          accessKeyId,
+          secretAccessKey,
+        },
+      });
+    }
   }
 
   async uploadFile(
@@ -52,8 +54,14 @@ export class MediaService {
       throw new BadRequestException('Arquivo não enviado');
     }
 
+    if (!this.s3Client || !this.bucketName) {
+      throw new BadRequestException('Armazenamento R2 não configurado');
+    }
+
     const maxFileMb =
-      this.configService.getOrThrow<number>('app.mediaMaxFileMb');
+      this.configService.get<number>('app.mediaMaxFileMb') ??
+      this.configService.get<number>('ai.mediaMaxFileMb') ??
+      10;
     if (file.size > maxFileMb * 1024 * 1024) {
       throw new BadRequestException(
         `O ficheiro excede o limite de ${maxFileMb}MB`,
