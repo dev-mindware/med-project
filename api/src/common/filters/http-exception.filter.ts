@@ -29,6 +29,15 @@ export class AllExceptionsFilter implements ExceptionFilter {
         ? exception.getResponse()
         : { message: 'Internal server error' };
     const requestId = request.requestId || request.get('x-request-id');
+
+    // Only include full stack trace for unexpected server errors (500+)
+    const errorPayload =
+      status >= 500
+        ? exception
+        : exception instanceof HttpException
+          ? { name: exception.name, message: exception.message }
+          : { message: 'Request error' };
+
     const logPayload = {
       context: 'AllExceptionsFilter',
       action: 'HTTP_EXCEPTION',
@@ -37,12 +46,17 @@ export class AllExceptionsFilter implements ExceptionFilter {
       method: request.method,
       path: request.url,
       statusCode: status,
-      error: exception,
+      error: errorPayload,
       meta: { response: message },
     };
 
     if (status >= 500) {
       this.logger.error('Request failed', logPayload);
+    } else if (
+      status === 404 &&
+      (request.url === '/favicon.ico' || request.url === '/robots.txt')
+    ) {
+      // Do not clutter logs with automated browser favicon / robots probes
     } else {
       this.logger.warn('Request rejected', logPayload);
     }

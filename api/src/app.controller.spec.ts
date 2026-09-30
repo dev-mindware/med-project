@@ -18,5 +18,17 @@ describe('AppController', () => {
     it('should return "Hello World!"', () => {
       expect(appController.getHello()).toBe('Hello World!');
     });
+
+    it('should handle favicon request', () => {
+      expect(appController.getFavicon()).toBeUndefined();
+    });
+
+    it('should handle docs redirect', () => {
+      expect(appController.getDocs()).toBeUndefined();
+    });
+
+    it('should handle reference redirect', () => {
+      expect(appController.getReference()).toBeUndefined();
+    });
   });
 });
