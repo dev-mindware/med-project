@@ -358,7 +358,9 @@ export class StatsService {
         by: string[];
         where: { createdById: { not: null } };
         _count: { _all: boolean };
-      }) => Promise<Array<{ createdById: string | null; _count: { _all: number } }>>;
+      }) => Promise<
+        Array<{ createdById: string | null; _count: { _all: number } }>
+      >;
     };
     return delegate.groupBy({
       by: ['createdById'],

@@ -71,7 +71,10 @@ export class ManualVocabularyController {
       required: ['file'],
       properties: {
         file: { type: 'string', format: 'binary' },
-        modules: { type: 'string', description: 'Módulos separados por vírgula' },
+        modules: {
+          type: 'string',
+          description: 'Módulos separados por vírgula',
+        },
         startPage: { type: 'number', description: 'Página inicial a extrair' },
         endPage: { type: 'number', description: 'Página final a extrair' },
       },
@@ -98,15 +101,27 @@ export class ManualVocabularyController {
     this.validateSize(file);
 
     const rawModules = body?.modules;
-    let selectedModules: import('./manual-vocabulary.types').ManualVocabularySourceModel[] | undefined;
+    let selectedModules:
+      | import('./manual-vocabulary.types').ManualVocabularySourceModel[]
+      | undefined;
     if (typeof rawModules === 'string' && rawModules.trim()) {
       selectedModules = rawModules
         .split(',')
-        .map((m) => m.trim().toUpperCase() as import('./manual-vocabulary.types').ManualVocabularySourceModel)
+        .map(
+          (m) =>
+            m
+              .trim()
+              .toUpperCase() as import('./manual-vocabulary.types').ManualVocabularySourceModel,
+        )
         .filter(Boolean);
     } else if (Array.isArray(rawModules)) {
       selectedModules = rawModules
-        .map((m) => String(m).trim().toUpperCase() as import('./manual-vocabulary.types').ManualVocabularySourceModel)
+        .map(
+          (m) =>
+            String(m)
+              .trim()
+              .toUpperCase() as import('./manual-vocabulary.types').ManualVocabularySourceModel,
+        )
         .filter(Boolean);
     }
 
@@ -183,16 +198,21 @@ export class ManualVocabularyController {
   )
   @ApiConsumes('multipart/form-data')
   @ApiOperation({
-    summary: 'Importar ficheiro Excel (.xlsx) para curadoria e validação no ecrã de revisão',
+    summary:
+      'Importar ficheiro Excel (.xlsx) para curadoria e validação no ecrã de revisão',
   })
   async importExcel(
     @UploadedFile(new ParseFilePipe({ fileIsRequired: true }))
     file: Express.Multer.File,
   ) {
     if (!file.originalname.toLowerCase().endsWith('.xlsx')) {
-      throw new BadRequestException('Apenas ficheiros Excel (.xlsx) são suportados');
+      throw new BadRequestException(
+        'Apenas ficheiros Excel (.xlsx) são suportados',
+      );
     }
-    const workbookData = await this.manualVocabularyService.parseExcel(file.buffer);
+    const workbookData = await this.manualVocabularyService.parseExcel(
+      file.buffer,
+    );
     return {
       success: true,
       filename: file.originalname,
@@ -207,16 +227,24 @@ export class ManualVocabularyController {
     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   )
   @ApiOperation({
-    summary: 'Gerar e descarregar ficheiro Excel (.xlsx) a partir dos dados curados no frontend',
+    summary:
+      'Gerar e descarregar ficheiro Excel (.xlsx) a partir dos dados curados no frontend',
   })
   async exportExcel(
-    @Body() body: { workbookData: import('./manual-vocabulary.types').ManualVocabularyWorkbookData },
+    @Body()
+    body: {
+      workbookData: import('./manual-vocabulary.types').ManualVocabularyWorkbookData;
+    },
     @Res() res: Response,
   ) {
     if (!body?.workbookData) {
-      throw new BadRequestException('Os dados da folha de cálculo são obrigatórios');
+      throw new BadRequestException(
+        'Os dados da folha de cálculo são obrigatórios',
+      );
     }
-    const buffer = await this.manualVocabularyService.exportExcel(body.workbookData);
+    const buffer = await this.manualVocabularyService.exportExcel(
+      body.workbookData,
+    );
     const filename = `vocabulario_curado_${Date.now()}.xlsx`;
     res.setHeader(
       'Content-Type',
@@ -229,10 +257,12 @@ export class ManualVocabularyController {
   @Post('commit-to-database')
   @Roles(UserRole.ADMIN, UserRole.SUPERVISOR, UserRole.OPERATOR)
   @ApiOperation({
-    summary: 'Salvar itens curados na base de dados com validação forte de duplicatas',
+    summary:
+      'Salvar itens curados na base de dados com validação forte de duplicatas',
   })
   async commitToDatabase(
-    @Body() body: import('./manual-vocabulary.types').ManualVocabularyCommitPayload,
+    @Body()
+    body: import('./manual-vocabulary.types').ManualVocabularyCommitPayload,
     @CurrentUser() user?: { id?: string },
   ) {
     return this.manualVocabularyService.commitToDatabase(body, user?.id);
@@ -265,11 +295,12 @@ export class ManualVocabularyController {
   async getLogById(@Param('id') id: string) {
     const log = await this.manualVocabularyLogService.findById(id);
     if (!log) {
-      throw new NotFoundException(`Registo de auditoria com ID "${id}" não encontrado`);
+      throw new NotFoundException(
+        `Registo de auditoria com ID "${id}" não encontrado`,
+      );
     }
     return log;
   }
-
 
   private validatePdf(file: Express.Multer.File) {
     if (file.mimetype !== 'application/pdf') {

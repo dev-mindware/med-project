@@ -35,8 +35,18 @@ const TERM_FIELD: Record<ManualVocabularySourceModel, string> = {
  * A ausência gera um aviso de nível AVISO (não bloqueia a entrada).
  */
 const RECOMMENDED_FIELDS: Record<ManualVocabularySourceModel, string[]> = {
-  ENTRY: ['pronunciation', 'syllabicDivision', 'grammaticalCategory', 'wordType'],
-  NEOLOGISM: ['pronunciation', 'syllabicDivision', 'grammaticalCategory', 'wordType'],
+  ENTRY: [
+    'pronunciation',
+    'syllabicDivision',
+    'grammaticalCategory',
+    'wordType',
+  ],
+  NEOLOGISM: [
+    'pronunciation',
+    'syllabicDivision',
+    'grammaticalCategory',
+    'wordType',
+  ],
   TOPONYM: ['meaning', 'municipality', 'gentilic'],
   ANTHROPONYM: ['meaning', 'gender', 'etymology'],
   FOREIGNISM: ['definition', 'originalLanguage', 'field', 'integrationLevel'],
@@ -47,7 +57,10 @@ const RECOMMENDED_FIELDS: Record<ManualVocabularySourceModel, string[]> = {
  * Compostos hifenizados contam como 1 token lexical.
  * Ex: "couve-flor" = 1 token | "fim de semana" = 3 tokens
  */
-const TERM_TOKEN_LIMITS: Record<ManualVocabularySourceModel, { min: number; max: number }> = {
+const TERM_TOKEN_LIMITS: Record<
+  ManualVocabularySourceModel,
+  { min: number; max: number }
+> = {
   ENTRY: { min: 1, max: 3 },
   NEOLOGISM: { min: 1, max: 4 },
   TOPONYM: { min: 1, max: 5 }, // topónimos compostos podem ter mais tokens
@@ -79,7 +92,10 @@ export class VocabularyProcessorService {
 
     for (const item of filteredItems) {
       const sourceModel = item.sourceModel;
-      const data: Record<string, unknown> = this.normalize(sourceModel, item.data);
+      const data: Record<string, unknown> = this.normalize(
+        sourceModel,
+        item.data,
+      );
       const rawTerm = data[TERM_FIELD[sourceModel]];
       const term =
         typeof rawTerm === 'string' || typeof rawTerm === 'number'
@@ -93,7 +109,8 @@ export class VocabularyProcessorService {
           sourceModel,
           rowNumber,
           term,
-          message: 'Vocábulo ausente ou com número de tokens fora dos limites admitidos',
+          message:
+            'Vocábulo ausente ou com número de tokens fora dos limites admitidos',
         });
         continue;
       }
@@ -235,7 +252,10 @@ export class VocabularyProcessorService {
    *
    * O hífen dentro de uma palavra NÃO é tratado como separador de token.
    */
-  private isValidTerm(sourceModel: ManualVocabularySourceModel, term: string): boolean {
+  private isValidTerm(
+    sourceModel: ManualVocabularySourceModel,
+    term: string,
+  ): boolean {
     const trimmed = term.trim();
     if (trimmed.length === 0) return false;
 
@@ -255,7 +275,7 @@ export class VocabularyProcessorService {
       .toLowerCase()
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '') // remove diacríticos
-      .replace(/[-\s]+/g, '');         // remove hífens E espaços
+      .replace(/[-\s]+/g, ''); // remove hífens E espaços
   }
 
   // ─── Utilitários ───────────────────────────────────────────────────────

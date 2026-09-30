@@ -41,22 +41,22 @@ const mockConfigService = {
 };
 
 const mockPrismaService = {
-  $transaction: jest.fn((promises) => Array.isArray(promises) ? Promise.all(promises) : promises()),
+  $transaction: jest.fn((promises) =>
+    Array.isArray(promises) ? Promise.all(promises) : promises(),
+  ),
   refreshToken: {
     deleteMany: jest.fn().mockResolvedValue({ count: 1 }),
     updateMany: jest.fn().mockResolvedValue({ count: 1 }),
     update: jest.fn().mockResolvedValue({ id: 'rt-1' }),
     create: jest.fn().mockResolvedValue({ id: 'rt-1' }),
-    findMany: jest
-      .fn()
-      .mockResolvedValue([
-        {
-          id: 'rt-1',
-          tokenHash: 'hashed_rt',
-          revokedAt: null,
-          expiresAt: new Date(Date.now() + 86400000),
-        },
-      ]),
+    findMany: jest.fn().mockResolvedValue([
+      {
+        id: 'rt-1',
+        tokenHash: 'hashed_rt',
+        revokedAt: null,
+        expiresAt: new Date(Date.now() + 86400000),
+      },
+    ]),
   },
 };
 

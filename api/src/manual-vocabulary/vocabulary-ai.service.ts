@@ -281,7 +281,11 @@ export class VocabularyAiService {
       }
     }
 
-    if (chunks.length > 0 && allItems.length === 0 && totalChunkErrors === chunks.length) {
+    if (
+      chunks.length > 0 &&
+      allItems.length === 0 &&
+      totalChunkErrors === chunks.length
+    ) {
       throw new BadGatewayException(
         `Falha na extracção da IA: ${lastChunkError?.message || 'todos os blocos falharam ou o limite da API foi atingido'}.`,
       );
@@ -429,13 +433,20 @@ export class VocabularyAiService {
       let items = this.parseItems(content);
 
       if (selectedModules && selectedModules.length > 0) {
-        items = items.filter((item) => selectedModules.includes(item.sourceModel));
+        items = items.filter((item) =>
+          selectedModules.includes(item.sourceModel),
+        );
       }
 
       this.logger.info(`Chunk ${chunkIndex}/${totalChunks} processado`, {
         context: 'VocabularyAiService',
         action: 'CHUNK_DONE',
-        meta: { chunkIndex, totalChunks, extractedItems: items.length, attempt },
+        meta: {
+          chunkIndex,
+          totalChunks,
+          extractedItems: items.length,
+          attempt,
+        },
       });
 
       return items;
@@ -446,7 +457,9 @@ export class VocabularyAiService {
         String(error?.message || '').includes('RESOURCE_EXHAUSTED');
 
       if (attempt < MAX_CHUNK_ATTEMPTS) {
-        const delayMs = isRateLimit ? attempt * 3000 : Math.pow(2, attempt) * 1000;
+        const delayMs = isRateLimit
+          ? attempt * 3000
+          : Math.pow(2, attempt) * 1000;
         this.logger.warn(
           `Chunk ${chunkIndex}/${totalChunks} falhou (tentativa ${attempt}): ${error?.message}, a aguardar ${delayMs}ms`,
           {
@@ -507,11 +520,14 @@ export class VocabularyAiService {
       const match = raw.match(/\[[\s\S]*\]/);
       if (!match) {
         // Conteúdo com texto mas sem estrutura de array — resposta inesperada da IA
-        this.logger.warn('IA devolveu resposta sem estrutura JSON válida; chunk ignorado', {
-          context: 'VocabularyAiService',
-          action: 'PARSE_JSON_FAILED',
-          meta: { preview: raw.slice(0, 300) },
-        });
+        this.logger.warn(
+          'IA devolveu resposta sem estrutura JSON válida; chunk ignorado',
+          {
+            context: 'VocabularyAiService',
+            action: 'PARSE_JSON_FAILED',
+            meta: { preview: raw.slice(0, 300) },
+          },
+        );
         return [];
       }
       json = match[0];
@@ -541,7 +557,8 @@ export class VocabularyAiService {
         typeof (item as ManualVocabularyRawItem).data === 'object' &&
         (item as ManualVocabularyRawItem).data !== null &&
         // Descartar items abaixo do limiar de confiança
-        (Number((item as ManualVocabularyRawItem).confidence) >= CONFIDENCE_THRESHOLD),
+        Number((item as ManualVocabularyRawItem).confidence) >=
+          CONFIDENCE_THRESHOLD,
     );
   }
 }

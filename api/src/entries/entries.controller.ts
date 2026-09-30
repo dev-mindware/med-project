@@ -94,7 +94,7 @@ export class EntriesController {
       startDate,
       endDate,
       ...rest
-    } = filters as LinguisticFilterDto;
+    } = filters;
     const where: Prisma.EntryWhereInput = { ...rest };
 
     if (startDate || endDate) {
@@ -102,7 +102,7 @@ export class EntriesController {
       if (startDate) where.createdAt.gte = new Date(startDate);
       if (endDate) where.createdAt.lte = new Date(endDate);
     }
-    applySupervisorEntryScope(reqUser as any, where);
+    applySupervisorEntryScope(reqUser, where);
 
     const params = {
       skip: (page - 1) * limit,

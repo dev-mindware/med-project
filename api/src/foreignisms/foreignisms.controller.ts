@@ -98,7 +98,7 @@ export class ForeignismsController {
       endDate,
       languageCode,
       ...rest
-    } = filters as LinguisticFilterDto;
+    } = filters;
     const where: Prisma.ForeignismWhereInput = { ...rest };
 
     if (startDate || endDate) {
@@ -106,7 +106,7 @@ export class ForeignismsController {
       if (startDate) where.createdAt.gte = new Date(startDate);
       if (endDate) where.createdAt.lte = new Date(endDate);
     }
-    applySupervisorForeignismScope(reqUser as any, where);
+    applySupervisorForeignismScope(reqUser, where);
 
     const params = {
       skip: (page - 1) * limit,

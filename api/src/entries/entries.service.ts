@@ -111,7 +111,11 @@ export class EntriesService {
               createdBy: { connect: { id: userId } },
               approvalStatus: ApprovalStatus.DRAFT,
             });
-            created.push({ rowNumber: row.rowNumber, id: item.id, label: item.entry });
+            created.push({
+              rowNumber: row.rowNumber,
+              id: item.id,
+              label: item.entry,
+            });
           } catch (err) {
             errors.push({
               rowNumber: row.rowNumber,

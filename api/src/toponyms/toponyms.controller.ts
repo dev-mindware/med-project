@@ -97,7 +97,7 @@ export class ToponymsController {
       startDate,
       endDate,
       ...rest
-    } = filters as LinguisticFilterDto;
+    } = filters;
     const where: Prisma.ToponymWhereInput = { ...rest };
 
     if (startDate || endDate) {
@@ -105,7 +105,7 @@ export class ToponymsController {
       if (startDate) where.createdAt.gte = new Date(startDate);
       if (endDate) where.createdAt.lte = new Date(endDate);
     }
-    applySupervisorToponymScope(reqUser as any, where);
+    applySupervisorToponymScope(reqUser, where);
 
     const params = {
       skip: (page - 1) * limit,

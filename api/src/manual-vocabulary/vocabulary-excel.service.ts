@@ -9,90 +9,90 @@ type ColumnConfig = {
 };
 
 // ─── Paleta de cores ─────────────────────────────────────────────────────────
-const PRIMARY      = '2563EB'; // azul cabeçalho
+const PRIMARY = '2563EB'; // azul cabeçalho
 const PRIMARY_DARK = '1D4ED8';
 const PRIMARY_SOFT = 'DBEAFE'; // linhas pares
-const BORDER       = 'BFDBFE';
-const TEXT         = '1E293B';
-const WARN_BG      = 'FEF3C7'; // amarelo — confiança 0.5–0.69
-const LOW_BG       = 'FEE2E2'; // vermelho suave — confiança < 0.5 (não deve chegar aqui)
+const BORDER = 'BFDBFE';
+const TEXT = '1E293B';
+const WARN_BG = 'FEF3C7'; // amarelo — confiança 0.5–0.69
+const LOW_BG = 'FEE2E2'; // vermelho suave — confiança < 0.5 (não deve chegar aqui)
 
 // ─── Colunas por modelo ───────────────────────────────────────────────────────
 
 const ENTRY_COLUMNS: ColumnConfig[] = [
-  { label: 'Entrada*',              key: 'entry',                  width: 28 },
-  { label: 'Tipo de palavra*',      key: 'wordType',               width: 24 },
-  { label: 'Primeira definição*',   key: 'firstDefinition',        width: 46 },
-  { label: 'Segunda definição',     key: 'secondDefinition',       width: 40 },
-  { label: 'Terceira definição',    key: 'thirdDefinition',        width: 40 },
-  { label: 'Pronúncia',            key: 'pronunciation',           width: 18 },
-  { label: 'Divisão silábica',      key: 'syllabicDivision',       width: 18 },
-  { label: 'Etimologia',            key: 'etymology',              width: 28 },
-  { label: 'Exemplo de uso',        key: 'usageExample',           width: 40 },
-  { label: 'Cat. gramatical',       key: 'grammaticalCategory',    width: 22 },
-  { label: 'Subcat. gramatical',    key: 'grammaticalSubcategory', width: 24 },
-  { label: 'Estado gramatical',     key: 'grammaticalStatus',      width: 18 },
-  { label: 'Código de língua',      key: 'languageCode',           width: 16 },
-  { label: 'É VONALP?',             key: 'isVocabulary',           width: 14 },
-  { label: 'É VONALP-EP?',          key: 'isVocabularyEP',         width: 14 },
-  { label: 'É estrangeirismo?',     key: 'isForeignism',           width: 16 },
-  { label: 'Confiança IA',          key: 'confidence',             width: 14 },
+  { label: 'Entrada*', key: 'entry', width: 28 },
+  { label: 'Tipo de palavra*', key: 'wordType', width: 24 },
+  { label: 'Primeira definição*', key: 'firstDefinition', width: 46 },
+  { label: 'Segunda definição', key: 'secondDefinition', width: 40 },
+  { label: 'Terceira definição', key: 'thirdDefinition', width: 40 },
+  { label: 'Pronúncia', key: 'pronunciation', width: 18 },
+  { label: 'Divisão silábica', key: 'syllabicDivision', width: 18 },
+  { label: 'Etimologia', key: 'etymology', width: 28 },
+  { label: 'Exemplo de uso', key: 'usageExample', width: 40 },
+  { label: 'Cat. gramatical', key: 'grammaticalCategory', width: 22 },
+  { label: 'Subcat. gramatical', key: 'grammaticalSubcategory', width: 24 },
+  { label: 'Estado gramatical', key: 'grammaticalStatus', width: 18 },
+  { label: 'Código de língua', key: 'languageCode', width: 16 },
+  { label: 'É VONALP?', key: 'isVocabulary', width: 14 },
+  { label: 'É VONALP-EP?', key: 'isVocabularyEP', width: 14 },
+  { label: 'É estrangeirismo?', key: 'isForeignism', width: 16 },
+  { label: 'Confiança IA', key: 'confidence', width: 14 },
 ];
 
 const TOPONYM_COLUMNS: ColumnConfig[] = [
-  { label: 'Topónimo*',             key: 'toponym',                width: 28 },
-  { label: 'Província*',            key: 'province',               width: 22 },
-  { label: 'Município',             key: 'municipality',           width: 22 },
-  { label: 'Significado',           key: 'meaning',                width: 42 },
-  { label: 'Pronúncia',            key: 'pronunciation',           width: 18 },
-  { label: 'Localização',           key: 'location',               width: 28 },
-  { label: 'Gentílico',             key: 'gentilic',               width: 20 },
-  { label: 'História',              key: 'toponymHistory',         width: 42 },
-  { label: 'Proveniência',          key: 'toponymProvenance',      width: 36 },
-  { label: 'Uso comum',             key: 'commonUsage',            width: 34 },
-  { label: 'Variação gráfica',      key: 'graphicVariation',       width: 28 },
-  { label: 'Classes',               key: 'toponymClasses',         width: 28 },
-  { label: 'Subclasses',            key: 'toponymSubclasses',      width: 28 },
-  { label: 'Código de língua',      key: 'languageCode',           width: 16 },
-  { label: 'É VONALP?',             key: 'isVocabulary',           width: 14 },
-  { label: 'É VONALP-EP?',          key: 'isVocabularyEP',         width: 14 },
-  { label: 'É estrangeirismo?',     key: 'isForeignism',           width: 16 },
-  { label: 'Confiança IA',          key: 'confidence',             width: 14 },
+  { label: 'Topónimo*', key: 'toponym', width: 28 },
+  { label: 'Província*', key: 'province', width: 22 },
+  { label: 'Município', key: 'municipality', width: 22 },
+  { label: 'Significado', key: 'meaning', width: 42 },
+  { label: 'Pronúncia', key: 'pronunciation', width: 18 },
+  { label: 'Localização', key: 'location', width: 28 },
+  { label: 'Gentílico', key: 'gentilic', width: 20 },
+  { label: 'História', key: 'toponymHistory', width: 42 },
+  { label: 'Proveniência', key: 'toponymProvenance', width: 36 },
+  { label: 'Uso comum', key: 'commonUsage', width: 34 },
+  { label: 'Variação gráfica', key: 'graphicVariation', width: 28 },
+  { label: 'Classes', key: 'toponymClasses', width: 28 },
+  { label: 'Subclasses', key: 'toponymSubclasses', width: 28 },
+  { label: 'Código de língua', key: 'languageCode', width: 16 },
+  { label: 'É VONALP?', key: 'isVocabulary', width: 14 },
+  { label: 'É VONALP-EP?', key: 'isVocabularyEP', width: 14 },
+  { label: 'É estrangeirismo?', key: 'isForeignism', width: 16 },
+  { label: 'Confiança IA', key: 'confidence', width: 14 },
 ];
 
 const ANTHROPONYM_COLUMNS: ColumnConfig[] = [
-  { label: 'Nome próprio*',                 key: 'name',                     width: 28 },
-  { label: 'Género',                        key: 'gender',                   width: 18 },
-  { label: 'Significado do nome',           key: 'meaning',                  width: 42 },
-  { label: 'Etimologia',                    key: 'etymology',                width: 34 },
-  { label: 'Apelido',                       key: 'surname',                  width: 24 },
-  { label: 'Significado do apelido',        key: 'surnameMeaning',           width: 42 },
-  { label: 'Figura histórica',              key: 'historicalFigure',         width: 28 },
-  { label: 'Pseudónimo',                    key: 'historicalFigurePseudonym',width: 24 },
-  { label: 'Domínio de actuação',           key: 'historicalFigureDomain',   width: 28 },
-  { label: 'É VONALP?',                     key: 'isVocabulary',             width: 14 },
-  { label: 'É VONALP-EP?',                  key: 'isVocabularyEP',           width: 14 },
-  { label: 'É estrangeirismo?',             key: 'isForeignism',             width: 16 },
-  { label: 'Confiança IA',                  key: 'confidence',               width: 14 },
+  { label: 'Nome próprio*', key: 'name', width: 28 },
+  { label: 'Género', key: 'gender', width: 18 },
+  { label: 'Significado do nome', key: 'meaning', width: 42 },
+  { label: 'Etimologia', key: 'etymology', width: 34 },
+  { label: 'Apelido', key: 'surname', width: 24 },
+  { label: 'Significado do apelido', key: 'surnameMeaning', width: 42 },
+  { label: 'Figura histórica', key: 'historicalFigure', width: 28 },
+  { label: 'Pseudónimo', key: 'historicalFigurePseudonym', width: 24 },
+  { label: 'Domínio de actuação', key: 'historicalFigureDomain', width: 28 },
+  { label: 'É VONALP?', key: 'isVocabulary', width: 14 },
+  { label: 'É VONALP-EP?', key: 'isVocabularyEP', width: 14 },
+  { label: 'É estrangeirismo?', key: 'isForeignism', width: 16 },
+  { label: 'Confiança IA', key: 'confidence', width: 14 },
 ];
 
 const FOREIGNISM_COLUMNS: ColumnConfig[] = [
-  { label: 'Vocábulo estrangeiro*', key: 'term',                 width: 28 },
-  { label: 'Nível de integração',   key: 'integrationLevel',     width: 20 },
-  { label: 'Definição',             key: 'definition',           width: 44 },
-  { label: 'Significado',           key: 'meaning',              width: 38 },
-  { label: 'Pronúncia',            key: 'pronunciation',         width: 18 },
-  { label: 'Idioma original',       key: 'originalLanguage',     width: 22 },
-  { label: 'País de origem',        key: 'originCountry',        width: 22 },
-  { label: 'Forma adaptada',        key: 'adaptedForm',          width: 24 },
-  { label: 'Forma original',        key: 'originalForm',         width: 24 },
-  { label: 'Exemplo de uso',        key: 'usageExample',         width: 40 },
-  { label: 'Contexto',              key: 'context',              width: 30 },
-  { label: 'Área de conhecimento',  key: 'field',                width: 26 },
-  { label: 'Cat. gramatical',       key: 'grammaticalCategory',  width: 22 },
-  { label: 'É VONALP?',             key: 'isVocabulary',         width: 14 },
-  { label: 'É VONALP-EP?',          key: 'isVocabularyEP',       width: 14 },
-  { label: 'Confiança IA',          key: 'confidence',           width: 14 },
+  { label: 'Vocábulo estrangeiro*', key: 'term', width: 28 },
+  { label: 'Nível de integração', key: 'integrationLevel', width: 20 },
+  { label: 'Definição', key: 'definition', width: 44 },
+  { label: 'Significado', key: 'meaning', width: 38 },
+  { label: 'Pronúncia', key: 'pronunciation', width: 18 },
+  { label: 'Idioma original', key: 'originalLanguage', width: 22 },
+  { label: 'País de origem', key: 'originCountry', width: 22 },
+  { label: 'Forma adaptada', key: 'adaptedForm', width: 24 },
+  { label: 'Forma original', key: 'originalForm', width: 24 },
+  { label: 'Exemplo de uso', key: 'usageExample', width: 40 },
+  { label: 'Contexto', key: 'context', width: 30 },
+  { label: 'Área de conhecimento', key: 'field', width: 26 },
+  { label: 'Cat. gramatical', key: 'grammaticalCategory', width: 22 },
+  { label: 'É VONALP?', key: 'isVocabulary', width: 14 },
+  { label: 'É VONALP-EP?', key: 'isVocabularyEP', width: 14 },
+  { label: 'Confiança IA', key: 'confidence', width: 14 },
 ];
 
 @Injectable()
@@ -103,11 +103,21 @@ export class VocabularyExcelService {
     workbook.created = new Date();
 
     this.addSummary(workbook, data);
-    this.addDataSheet(workbook, 'Entradas',       ENTRY_COLUMNS,       data.entries);
-    this.addDataSheet(workbook, 'Neologismos',    ENTRY_COLUMNS,       data.neologisms);
-    this.addDataSheet(workbook, 'Topónimos',      TOPONYM_COLUMNS,     data.toponyms);
-    this.addDataSheet(workbook, 'Antropónimos',   ANTHROPONYM_COLUMNS, data.anthroponyms);
-    this.addDataSheet(workbook, 'Estrangeirismos',FOREIGNISM_COLUMNS,  data.foreignisms);
+    this.addDataSheet(workbook, 'Entradas', ENTRY_COLUMNS, data.entries);
+    this.addDataSheet(workbook, 'Neologismos', ENTRY_COLUMNS, data.neologisms);
+    this.addDataSheet(workbook, 'Topónimos', TOPONYM_COLUMNS, data.toponyms);
+    this.addDataSheet(
+      workbook,
+      'Antropónimos',
+      ANTHROPONYM_COLUMNS,
+      data.anthroponyms,
+    );
+    this.addDataSheet(
+      workbook,
+      'Estrangeirismos',
+      FOREIGNISM_COLUMNS,
+      data.foreignisms,
+    );
     this.addWarnings(workbook, data);
     this.addInstructions(workbook);
 
@@ -126,21 +136,21 @@ export class VocabularyExcelService {
     });
     sheet.columns = [
       { header: 'Métrica', key: 'metric', width: 34 },
-      { header: 'Valor',   key: 'value',  width: 18 },
+      { header: 'Valor', key: 'value', width: 18 },
     ];
     this.styleHeader(sheet);
 
     [
-      ['Total extraído pela IA',               data.stats.totalTerms],
-      ['Descartados (confiança baixa)',         data.stats.lowConfidenceDiscarded],
-      ['Linhas válidas',                        data.stats.validRows],
-      ['Entradas',                              data.stats.entries],
-      ['Neologismos',                           data.stats.neologisms],
-      ['Topónimos',                             data.stats.toponyms],
-      ['Antropónimos',                          data.stats.anthroponyms],
-      ['Estrangeirismos',                       data.stats.foreignisms],
-      ['Avisos (campos em falta)',               data.stats.warnings],
-      ['Duplicados removidos',                  data.stats.duplicatesRemoved],
+      ['Total extraído pela IA', data.stats.totalTerms],
+      ['Descartados (confiança baixa)', data.stats.lowConfidenceDiscarded],
+      ['Linhas válidas', data.stats.validRows],
+      ['Entradas', data.stats.entries],
+      ['Neologismos', data.stats.neologisms],
+      ['Topónimos', data.stats.toponyms],
+      ['Antropónimos', data.stats.anthroponyms],
+      ['Estrangeirismos', data.stats.foreignisms],
+      ['Avisos (campos em falta)', data.stats.warnings],
+      ['Duplicados removidos', data.stats.duplicatesRemoved],
     ].forEach(([metric, value]) => sheet.addRow({ metric, value }));
 
     this.styleRows(sheet);
@@ -181,12 +191,20 @@ export class VocabularyExcelService {
       if (confidence < 0.5) {
         // Nunca deve chegar aqui (filtrado na IA), mas protege por segurança
         excelRow.eachCell((cell) => {
-          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: LOW_BG } };
+          cell.fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: LOW_BG },
+          };
         });
       } else if (confidence < 0.7) {
         // Confiança moderada: fundo amarelo-âmbar para revisão atenta
         excelRow.eachCell((cell) => {
-          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: WARN_BG } };
+          cell.fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: WARN_BG },
+          };
         });
       }
     });
@@ -194,7 +212,7 @@ export class VocabularyExcelService {
     this.styleRows(sheet);
     sheet.autoFilter = {
       from: { row: 1, column: 1 },
-      to:   { row: 1, column: columns.length },
+      to: { row: 1, column: columns.length },
     };
   }
 
@@ -208,11 +226,11 @@ export class VocabularyExcelService {
       views: [{ state: 'frozen', ySplit: 1 }],
     });
     sheet.columns = [
-      { header: 'Modelo',   key: 'sourceModel', width: 18 },
-      { header: 'Linha',    key: 'rowNumber',   width: 12 },
-      { header: 'Campo',    key: 'field',       width: 26 },
-      { header: 'Vocábulo', key: 'term',        width: 32 },
-      { header: 'Mensagem', key: 'message',     width: 54 },
+      { header: 'Modelo', key: 'sourceModel', width: 18 },
+      { header: 'Linha', key: 'rowNumber', width: 12 },
+      { header: 'Campo', key: 'field', width: 26 },
+      { header: 'Vocábulo', key: 'term', width: 32 },
+      { header: 'Mensagem', key: 'message', width: 54 },
     ];
     this.styleHeader(sheet);
     data.warnings.forEach((warning) => sheet.addRow(warning));
@@ -272,7 +290,11 @@ export class VocabularyExcelService {
       cell.border = {
         bottom: { style: 'thin', color: { argb: PRIMARY_DARK } },
       };
-      cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+      cell.alignment = {
+        vertical: 'middle',
+        horizontal: 'center',
+        wrapText: true,
+      };
     });
   }
 
@@ -281,7 +303,10 @@ export class VocabularyExcelService {
       if (rowNumber === 1) return;
       row.eachCell((cell) => {
         // Não sobrescrever fill de confiança já aplicado
-        if (!cell.fill || (cell.fill as ExcelJS.FillPattern).fgColor?.argb === undefined) {
+        if (
+          !cell.fill ||
+          (cell.fill as ExcelJS.FillPattern).fgColor?.argb === undefined
+        ) {
           if (rowNumber % 2 === 0) {
             cell.fill = {
               type: 'pattern',
@@ -293,7 +318,7 @@ export class VocabularyExcelService {
         cell.font = { color: { argb: TEXT } };
         cell.alignment = { vertical: 'top', wrapText: true };
         cell.border = {
-          top:    { style: 'thin', color: { argb: BORDER } },
+          top: { style: 'thin', color: { argb: BORDER } },
           bottom: { style: 'thin', color: { argb: BORDER } },
         };
       });
@@ -312,7 +337,8 @@ export class VocabularyExcelService {
     const toponyms: Record<string, unknown>[] = [];
     const anthroponyms: Record<string, unknown>[] = [];
     const foreignisms: Record<string, unknown>[] = [];
-    const warnings: import('./manual-vocabulary.types').ManualVocabularyWarning[] = [];
+    const warnings: import('./manual-vocabulary.types').ManualVocabularyWarning[] =
+      [];
 
     const normalizeHeader = (h: string): string =>
       h
@@ -377,7 +403,9 @@ export class VocabularyExcelService {
           const val = this.extractCellValue(cell);
           if (val) {
             hasData = true;
-            if (['isVocabulary', 'isVocabularyEP', 'isForeignism'].includes(key)) {
+            if (
+              ['isVocabulary', 'isVocabularyEP', 'isForeignism'].includes(key)
+            ) {
               item[key] = ['true', 'sim', '1', 's'].includes(val.toLowerCase());
             } else if (key === 'confidence') {
               const num = parseFloat(val);
@@ -402,21 +430,29 @@ export class VocabularyExcelService {
     };
 
     const entriesSheet = workbook.getWorksheet('Entradas');
-    if (entriesSheet) entries.push(...parseSheetRows(entriesSheet, ENTRY_COLUMNS));
+    if (entriesSheet)
+      entries.push(...parseSheetRows(entriesSheet, ENTRY_COLUMNS));
 
     const neologismsSheet = workbook.getWorksheet('Neologismos');
-    if (neologismsSheet) neologisms.push(...parseSheetRows(neologismsSheet, ENTRY_COLUMNS));
+    if (neologismsSheet)
+      neologisms.push(...parseSheetRows(neologismsSheet, ENTRY_COLUMNS));
 
     const toponymsSheet =
       workbook.getWorksheet('Topónimos') || workbook.getWorksheet('Toponimos');
-    if (toponymsSheet) toponyms.push(...parseSheetRows(toponymsSheet, TOPONYM_COLUMNS));
+    if (toponymsSheet)
+      toponyms.push(...parseSheetRows(toponymsSheet, TOPONYM_COLUMNS));
 
     const anthroponymsSheet =
-      workbook.getWorksheet('Antropónimos') || workbook.getWorksheet('Antroponimos');
-    if (anthroponymsSheet) anthroponyms.push(...parseSheetRows(anthroponymsSheet, ANTHROPONYM_COLUMNS));
+      workbook.getWorksheet('Antropónimos') ||
+      workbook.getWorksheet('Antroponimos');
+    if (anthroponymsSheet)
+      anthroponyms.push(
+        ...parseSheetRows(anthroponymsSheet, ANTHROPONYM_COLUMNS),
+      );
 
     const foreignismsSheet = workbook.getWorksheet('Estrangeirismos');
-    if (foreignismsSheet) foreignisms.push(...parseSheetRows(foreignismsSheet, FOREIGNISM_COLUMNS));
+    if (foreignismsSheet)
+      foreignisms.push(...parseSheetRows(foreignismsSheet, FOREIGNISM_COLUMNS));
 
     // Fallback se o ficheiro tiver apenas a primeira folha sem nomes específicos
     if (
@@ -470,9 +506,20 @@ export class VocabularyExcelService {
         return (cell.value as any).text.trim();
       }
       if ('result' in cell.value) {
-        return String((cell.value as any).result ?? '').trim();
+        const res = (cell.value as any).result;
+        return res !== null && res !== undefined ? String(res).trim() : '';
       }
+      if (cell.value instanceof Date) {
+        return cell.value.toISOString();
+      }
+      return '';
     }
-    return String(cell.value).trim();
+    if (typeof cell.value === 'string') {
+      return cell.value.trim();
+    }
+    if (typeof cell.value === 'number' || typeof cell.value === 'boolean') {
+      return String(cell.value).trim();
+    }
+    return '';
   }
 }

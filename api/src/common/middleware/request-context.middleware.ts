@@ -22,8 +22,7 @@ export class RequestContextMiddleware implements NestMiddleware {
 
   private isValidRequestId(value?: string): boolean {
     return (
-      typeof value === 'string' &&
-      /^[a-zA-Z0-9_\-.]{1,128}$/.test(value.trim())
+      typeof value === 'string' && /^[a-zA-Z0-9_\-.]{1,128}$/.test(value.trim())
     );
   }
 }

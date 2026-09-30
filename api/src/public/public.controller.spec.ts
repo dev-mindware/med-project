@@ -25,12 +25,10 @@ describe('PublicController', () => {
         .fn()
         .mockResolvedValue({ data: [], meta: { total: 0 } }),
       foreignismDetails: jest.fn().mockResolvedValue({ id: 'foreignism-1' }),
-      vocabulary: jest
-        .fn()
-        .mockResolvedValue({
-          data: [{ id: 'vt-1', term: 'Casa' }],
-          meta: { total: 1 },
-        }),
+      vocabulary: jest.fn().mockResolvedValue({
+        data: [{ id: 'vt-1', term: 'Casa' }],
+        meta: { total: 1 },
+      }),
       events: jest.fn().mockResolvedValue({ data: [], meta: { total: 0 } }),
       eventDetails: jest.fn().mockResolvedValue({ id: 'event-1' }),
       registerForEvent: jest.fn().mockResolvedValue({ id: 'registration-1' }),

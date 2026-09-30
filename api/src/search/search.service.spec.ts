@@ -4,16 +4,14 @@ import { PrismaService } from '../prisma/prisma.service';
 
 const mockPrismaService = {
   entry: {
-    findMany: jest
-      .fn()
-      .mockResolvedValue([
-        {
-          id: 'e1',
-          entry: 'Mukanda',
-          firstDefinition: 'Carta',
-          createdAt: new Date(),
-        },
-      ]),
+    findMany: jest.fn().mockResolvedValue([
+      {
+        id: 'e1',
+        entry: 'Mukanda',
+        firstDefinition: 'Carta',
+        createdAt: new Date(),
+      },
+    ]),
   },
   neologism: {
     findMany: jest.fn().mockResolvedValue([]),

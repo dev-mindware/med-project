@@ -1,4 +1,8 @@
-import { BadRequestException, NotFoundException, PayloadTooLargeException } from '@nestjs/common';
+import {
+  BadRequestException,
+  NotFoundException,
+  PayloadTooLargeException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { Response } from 'express';
 import { ManualVocabularyController } from './manual-vocabulary.controller';
@@ -87,13 +91,9 @@ describe('ManualVocabularyController', () => {
       buffer: Buffer.from('%PDF-1.7\nvalid\n%%EOF'),
     } as Express.Multer.File;
 
-    await controller.extract(
-      file,
-      {} as any,
-      {},
-      response as any,
-      { id: 'user-456' },
-    );
+    await controller.extract(file, {} as any, {}, response as any, {
+      id: 'user-456',
+    });
 
     expect(service.extract).toHaveBeenCalledWith(file, 'user-456', undefined);
     expect(response.setHeader).toHaveBeenCalledWith(
@@ -105,7 +105,10 @@ describe('ManualVocabularyController', () => {
   });
 
   it('delegates getLogs query to logService.findAll', async () => {
-    logService.findAll.mockResolvedValue({ items: [{ id: 'log-1' }], total: 1 });
+    logService.findAll.mockResolvedValue({
+      items: [{ id: 'log-1' }],
+      total: 1,
+    });
 
     const result = await controller.getLogs('10', '20', 'user-1');
 
@@ -142,4 +145,3 @@ function mockResponse() {
     send: jest.fn(),
   };
 }
-

@@ -36,7 +36,9 @@ describe('VocabularyAiService', () => {
   // ─── Parsing defensivo ─────────────────────────────────────────────────
 
   it('retorna [] sem lançar excepção quando a IA devolve JSON inválido', () => {
-    const items = (service as any).parseItems('Texto completamente inválido {{{');
+    const items = (service as any).parseItems(
+      'Texto completamente inválido {{{',
+    );
     expect(items).toEqual([]);
     expect(logger.warn).toHaveBeenCalledWith(
       expect.stringContaining('JSON'),
@@ -52,9 +54,13 @@ describe('VocabularyAiService', () => {
   it('filtra items com sourceModel inválido', () => {
     const items = (service as any).parseItems(
       JSON.stringify([
-        { sourceModel: 'ENTRY',   confidence: 0.9, data: { entry: 'Luanda' } },
+        { sourceModel: 'ENTRY', confidence: 0.9, data: { entry: 'Luanda' } },
         { sourceModel: 'INVALID', confidence: 0.9, data: {} },
-        { sourceModel: 'TOPONYM', confidence: 0.8, data: { toponym: 'Luanda' } },
+        {
+          sourceModel: 'TOPONYM',
+          confidence: 0.8,
+          data: { toponym: 'Luanda' },
+        },
       ]),
     );
     expect(items).toHaveLength(2);
@@ -64,9 +70,9 @@ describe('VocabularyAiService', () => {
   it('descarta items com confidence < 0.5', () => {
     const items = (service as any).parseItems(
       JSON.stringify([
-        { sourceModel: 'ENTRY', confidence: 0.9,  data: { entry: 'casa' } },
+        { sourceModel: 'ENTRY', confidence: 0.9, data: { entry: 'casa' } },
         { sourceModel: 'ENTRY', confidence: 0.49, data: { entry: 'coisa' } },
-        { sourceModel: 'ENTRY', confidence: 0.5,  data: { entry: 'terra' } },
+        { sourceModel: 'ENTRY', confidence: 0.5, data: { entry: 'terra' } },
       ]),
     );
     expect(items).toHaveLength(2);
@@ -132,18 +138,25 @@ describe('VocabularyAiService', () => {
 
   it('preserva o hífen em compostos (couve-flor não é modificado pelo parseItems)', () => {
     const items = (service as any).parseItems(
-      JSON.stringify([{
-        sourceModel: 'ENTRY',
-        confidence: 0.95,
-        data: { entry: 'couve-flor', wordType: 'especie-botanica', firstDefinition: 'Planta.' },
-      }]),
+      JSON.stringify([
+        {
+          sourceModel: 'ENTRY',
+          confidence: 0.95,
+          data: {
+            entry: 'couve-flor',
+            wordType: 'especie-botanica',
+            firstDefinition: 'Planta.',
+          },
+        },
+      ]),
     );
     expect(items[0].data.entry).toBe('couve-flor');
     expect(items[0].data.wordType).toBe('especie-botanica');
   });
 
   it('trata JSON embrulhado em markdown (```json ... ```) correctamente', () => {
-    const wrapped = '```json\n[{"sourceModel":"ENTRY","confidence":0.9,"data":{"entry":"casa"}}]\n```';
+    const wrapped =
+      '```json\n[{"sourceModel":"ENTRY","confidence":0.9,"data":{"entry":"casa"}}]\n```';
     const items = (service as any).parseItems(wrapped);
     expect(items).toHaveLength(1);
     expect(items[0].data.entry).toBe('casa');

@@ -60,16 +60,19 @@ export class ManualVocabularyLogService {
         },
       });
 
-      this.logger.info('Registo de auditoria de extracção gravado com sucesso', {
-        context: 'ManualVocabularyLogService',
-        action: 'LOG_EXTRACTION_SUCCESS',
-        meta: {
-          logId: log.id,
-          filename: params.filename,
-          totalTerms: params.stats.totalTerms,
-          processingMs: params.processingMs,
+      this.logger.info(
+        'Registo de auditoria de extracção gravado com sucesso',
+        {
+          context: 'ManualVocabularyLogService',
+          action: 'LOG_EXTRACTION_SUCCESS',
+          meta: {
+            logId: log.id,
+            filename: params.filename,
+            totalTerms: params.stats.totalTerms,
+            processingMs: params.processingMs,
+          },
         },
-      });
+      );
 
       return log;
     } catch (error) {

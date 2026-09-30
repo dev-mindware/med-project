@@ -3,11 +3,7 @@
  * Todos os tipos de palavra reconhecidos pelo sistema de extracção de manuais.
  */
 export type ManualVocabularySourceModel =
-  | 'ENTRY'
-  | 'NEOLOGISM'
-  | 'TOPONYM'
-  | 'ANTHROPONYM'
-  | 'FOREIGNISM';
+  'ENTRY' | 'NEOLOGISM' | 'TOPONYM' | 'ANTHROPONYM' | 'FOREIGNISM';
 
 /**
  * Classificação morfológica da entrada conforme o AO45.

@@ -13,6 +13,14 @@ import {
   ManualVocabularySourceModel,
   ManualVocabularyWorkbookData,
 } from './manual-vocabulary.types';
+/** Converte um valor unknown para string de forma segura (evita no-base-to-string). */
+function toStr(value: unknown, fallback = ''): string {
+  if (value === null || value === undefined) return fallback;
+  if (typeof value === 'string') return value;
+  if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+  return fallback;
+}
+
 
 /**
  * Orquestra o pipeline completo de extracção de vocabulário de manuais PDF,
@@ -119,10 +127,11 @@ export class ManualVocabularyService {
     const rawEntries = Array.isArray(payload.entries) ? payload.entries : [];
     if (rawEntries.length > 0) {
       const seenInBatch = new Set<string>();
-      const validCandidates: { term: string; raw: Record<string, unknown> }[] = [];
+      const validCandidates: { term: string; raw: Record<string, unknown> }[] =
+        [];
 
       for (const raw of rawEntries) {
-        const term = String(raw.entry || '').trim();
+        const term = toStr(raw.entry, '').trim();
         if (!term) continue;
         const key = term.toLowerCase();
         if (seenInBatch.has(key)) {
@@ -158,19 +167,36 @@ export class ManualVocabularyService {
           await this.prisma.entry.create({
             data: {
               entry: term,
-              firstDefinition: String(
-                raw.firstDefinition || 'Definição a completar na revisão editorial',
+              firstDefinition: toStr(
+                raw.firstDefinition,
+                'Definição a completar na revisão editorial',
               ).trim(),
-              secondDefinition: raw.secondDefinition ? String(raw.secondDefinition) : null,
-              thirdDefinition: raw.thirdDefinition ? String(raw.thirdDefinition) : null,
-              usageExample: raw.usageExample ? String(raw.usageExample) : null,
-              pronunciation: raw.pronunciation ? String(raw.pronunciation) : null,
-              syllabicDivision: raw.syllabicDivision ? String(raw.syllabicDivision) : null,
-              etymology: raw.etymology ? String(raw.etymology) : null,
-              grammaticalCategory: raw.grammaticalCategory ? String(raw.grammaticalCategory) : null,
-              grammaticalSubcategory: raw.grammaticalSubcategory ? String(raw.grammaticalSubcategory) : null,
-              grammaticalStatus: raw.grammaticalStatus ? String(raw.grammaticalStatus) : null,
-              languageCode: raw.languageCode ? String(raw.languageCode) : 'pt-AO',
+              secondDefinition: raw.secondDefinition
+                ? toStr(raw.secondDefinition)
+                : null,
+              thirdDefinition: raw.thirdDefinition
+                ? toStr(raw.thirdDefinition)
+                : null,
+              usageExample: raw.usageExample ? toStr(raw.usageExample) : null,
+              pronunciation: raw.pronunciation
+                ? toStr(raw.pronunciation)
+                : null,
+              syllabicDivision: raw.syllabicDivision
+                ? toStr(raw.syllabicDivision)
+                : null,
+              etymology: raw.etymology ? toStr(raw.etymology) : null,
+              grammaticalCategory: raw.grammaticalCategory
+                ? toStr(raw.grammaticalCategory)
+                : null,
+              grammaticalSubcategory: raw.grammaticalSubcategory
+                ? toStr(raw.grammaticalSubcategory)
+                : null,
+              grammaticalStatus: raw.grammaticalStatus
+                ? toStr(raw.grammaticalStatus)
+                : null,
+              languageCode: raw.languageCode
+                ? toStr(raw.languageCode)
+                : 'pt-AO',
               isVocabulary: Boolean(raw.isVocabulary),
               isVocabularyEP: Boolean(raw.isVocabularyEP),
               isForeignism: Boolean(raw.isForeignism),
@@ -191,13 +217,16 @@ export class ManualVocabularyService {
     }
 
     // ── 2. Neologismos ──────────────────────────────────────────────────────
-    const rawNeologisms = Array.isArray(payload.neologisms) ? payload.neologisms : [];
+    const rawNeologisms = Array.isArray(payload.neologisms)
+      ? payload.neologisms
+      : [];
     if (rawNeologisms.length > 0) {
       const seenInBatch = new Set<string>();
-      const validCandidates: { term: string; raw: Record<string, unknown> }[] = [];
+      const validCandidates: { term: string; raw: Record<string, unknown> }[] =
+        [];
 
       for (const raw of rawNeologisms) {
-        const term = String(raw.entry || '').trim();
+        const term = toStr(raw.entry, '').trim();
         if (!term) continue;
         const key = term.toLowerCase();
         if (seenInBatch.has(key)) {
@@ -239,19 +268,36 @@ export class ManualVocabularyService {
           await this.prisma.neologism.create({
             data: {
               entry: term,
-              firstDefinition: String(
-                raw.firstDefinition || 'Definição a completar na revisão editorial',
+              firstDefinition: toStr(
+                raw.firstDefinition,
+                'Definição a completar na revisão editorial',
               ).trim(),
-              secondDefinition: raw.secondDefinition ? String(raw.secondDefinition) : null,
-              thirdDefinition: raw.thirdDefinition ? String(raw.thirdDefinition) : null,
-              usageExample: raw.usageExample ? String(raw.usageExample) : null,
-              pronunciation: raw.pronunciation ? String(raw.pronunciation) : null,
-              syllabicDivision: raw.syllabicDivision ? String(raw.syllabicDivision) : null,
-              etymology: raw.etymology ? String(raw.etymology) : null,
-              grammaticalCategory: raw.grammaticalCategory ? String(raw.grammaticalCategory) : null,
-              grammaticalSubcategory: raw.grammaticalSubcategory ? String(raw.grammaticalSubcategory) : null,
-              grammaticalStatus: raw.grammaticalStatus ? String(raw.grammaticalStatus) : null,
-              languageCode: raw.languageCode ? String(raw.languageCode) : 'pt-AO',
+              secondDefinition: raw.secondDefinition
+                ? toStr(raw.secondDefinition)
+                : null,
+              thirdDefinition: raw.thirdDefinition
+                ? toStr(raw.thirdDefinition)
+                : null,
+              usageExample: raw.usageExample ? toStr(raw.usageExample) : null,
+              pronunciation: raw.pronunciation
+                ? toStr(raw.pronunciation)
+                : null,
+              syllabicDivision: raw.syllabicDivision
+                ? toStr(raw.syllabicDivision)
+                : null,
+              etymology: raw.etymology ? toStr(raw.etymology) : null,
+              grammaticalCategory: raw.grammaticalCategory
+                ? toStr(raw.grammaticalCategory)
+                : null,
+              grammaticalSubcategory: raw.grammaticalSubcategory
+                ? toStr(raw.grammaticalSubcategory)
+                : null,
+              grammaticalStatus: raw.grammaticalStatus
+                ? toStr(raw.grammaticalStatus)
+                : null,
+              languageCode: raw.languageCode
+                ? toStr(raw.languageCode)
+                : 'pt-AO',
               isVocabulary: Boolean(raw.isVocabulary),
               isVocabularyEP: Boolean(raw.isVocabularyEP),
               isForeignism: Boolean(raw.isForeignism),
@@ -275,10 +321,11 @@ export class ManualVocabularyService {
     const rawToponyms = Array.isArray(payload.toponyms) ? payload.toponyms : [];
     if (rawToponyms.length > 0) {
       const seenInBatch = new Set<string>();
-      const validCandidates: { term: string; raw: Record<string, unknown> }[] = [];
+      const validCandidates: { term: string; raw: Record<string, unknown> }[] =
+        [];
 
       for (const raw of rawToponyms) {
-        const term = String(raw.toponym || '').trim();
+        const term = toStr(raw.toponym, '').trim();
         if (!term) continue;
         const key = term.toLowerCase();
         if (seenInBatch.has(key)) {
@@ -314,30 +361,46 @@ export class ManualVocabularyService {
           const toponymClasses = Array.isArray(raw.toponymClasses)
             ? (raw.toponymClasses as string[]).map(String)
             : typeof raw.toponymClasses === 'string'
-              ? raw.toponymClasses.split(/[;,]/).map((s) => s.trim()).filter(Boolean)
+              ? raw.toponymClasses
+                  .split(/[;,]/)
+                  .map((s) => s.trim())
+                  .filter(Boolean)
               : [];
           const toponymSubclasses = Array.isArray(raw.toponymSubclasses)
             ? (raw.toponymSubclasses as string[]).map(String)
             : typeof raw.toponymSubclasses === 'string'
-              ? raw.toponymSubclasses.split(/[;,]/).map((s) => s.trim()).filter(Boolean)
+              ? raw.toponymSubclasses
+                  .split(/[;,]/)
+                  .map((s) => s.trim())
+                  .filter(Boolean)
               : [];
 
           await this.prisma.toponym.create({
             data: {
               toponym: term,
-              province: String(raw.province || 'Angola').trim(),
-              municipality: raw.municipality ? String(raw.municipality) : null,
-              location: raw.location ? String(raw.location) : null,
-              meaning: raw.meaning ? String(raw.meaning) : null,
-              pronunciation: raw.pronunciation ? String(raw.pronunciation) : null,
-              gentilic: raw.gentilic ? String(raw.gentilic) : null,
-              toponymHistory: raw.toponymHistory ? String(raw.toponymHistory) : null,
-              toponymProvenance: raw.toponymProvenance ? String(raw.toponymProvenance) : null,
-              commonUsage: raw.commonUsage ? String(raw.commonUsage) : null,
-              graphicVariation: raw.graphicVariation ? String(raw.graphicVariation) : null,
+              province: toStr(raw.province, 'Angola').trim(),
+              municipality: raw.municipality ? toStr(raw.municipality) : null,
+              location: raw.location ? toStr(raw.location) : null,
+              meaning: raw.meaning ? toStr(raw.meaning) : null,
+              pronunciation: raw.pronunciation
+                ? toStr(raw.pronunciation)
+                : null,
+              gentilic: raw.gentilic ? toStr(raw.gentilic) : null,
+              toponymHistory: raw.toponymHistory
+                ? toStr(raw.toponymHistory)
+                : null,
+              toponymProvenance: raw.toponymProvenance
+                ? toStr(raw.toponymProvenance)
+                : null,
+              commonUsage: raw.commonUsage ? toStr(raw.commonUsage) : null,
+              graphicVariation: raw.graphicVariation
+                ? toStr(raw.graphicVariation)
+                : null,
               toponymClasses,
               toponymSubclasses,
-              languageCode: raw.languageCode ? String(raw.languageCode) : 'pt-AO',
+              languageCode: raw.languageCode
+                ? toStr(raw.languageCode)
+                : 'pt-AO',
               isVocabulary: Boolean(raw.isVocabulary),
               isVocabularyEP: Boolean(raw.isVocabularyEP),
               isForeignism: Boolean(raw.isForeignism),
@@ -358,13 +421,16 @@ export class ManualVocabularyService {
     }
 
     // ── 4. Antropónimos ─────────────────────────────────────────────────────
-    const rawAnthroponyms = Array.isArray(payload.anthroponyms) ? payload.anthroponyms : [];
+    const rawAnthroponyms = Array.isArray(payload.anthroponyms)
+      ? payload.anthroponyms
+      : [];
     if (rawAnthroponyms.length > 0) {
       const seenInBatch = new Set<string>();
-      const validCandidates: { term: string; raw: Record<string, unknown> }[] = [];
+      const validCandidates: { term: string; raw: Record<string, unknown> }[] =
+        [];
 
       for (const raw of rawAnthroponyms) {
-        const term = String(raw.name || '').trim();
+        const term = toStr(raw.name, '').trim();
         if (!term) continue;
         const key = term.toLowerCase();
         if (seenInBatch.has(key)) {
@@ -400,17 +466,21 @@ export class ManualVocabularyService {
           await this.prisma.anthroponym.create({
             data: {
               name: term,
-              gender: raw.gender ? String(raw.gender) : null,
-              meaning: raw.meaning ? String(raw.meaning) : null,
-              etymology: raw.etymology ? String(raw.etymology) : null,
-              surname: raw.surname ? String(raw.surname) : null,
-              surnameMeaning: raw.surnameMeaning ? String(raw.surnameMeaning) : null,
-              historicalFigure: raw.historicalFigure ? String(raw.historicalFigure) : null,
+              gender: raw.gender ? toStr(raw.gender) : null,
+              meaning: raw.meaning ? toStr(raw.meaning) : null,
+              etymology: raw.etymology ? toStr(raw.etymology) : null,
+              surname: raw.surname ? toStr(raw.surname) : null,
+              surnameMeaning: raw.surnameMeaning
+                ? toStr(raw.surnameMeaning)
+                : null,
+              historicalFigure: raw.historicalFigure
+                ? toStr(raw.historicalFigure)
+                : null,
               historicalFigurePseudonym: raw.historicalFigurePseudonym
-                ? String(raw.historicalFigurePseudonym)
+                ? toStr(raw.historicalFigurePseudonym)
                 : null,
               historicalFigureDomain: raw.historicalFigureDomain
-                ? String(raw.historicalFigureDomain)
+                ? toStr(raw.historicalFigureDomain)
                 : null,
               isVocabulary: Boolean(raw.isVocabulary),
               isVocabularyEP: Boolean(raw.isVocabularyEP),
@@ -432,13 +502,16 @@ export class ManualVocabularyService {
     }
 
     // ── 5. Estrangeirismos ──────────────────────────────────────────────────
-    const rawForeignisms = Array.isArray(payload.foreignisms) ? payload.foreignisms : [];
+    const rawForeignisms = Array.isArray(payload.foreignisms)
+      ? payload.foreignisms
+      : [];
     if (rawForeignisms.length > 0) {
       const seenInBatch = new Set<string>();
-      const validCandidates: { term: string; raw: Record<string, unknown> }[] = [];
+      const validCandidates: { term: string; raw: Record<string, unknown> }[] =
+        [];
 
       for (const raw of rawForeignisms) {
-        const term = String(raw.term || '').trim();
+        const term = toStr(raw.term, '').trim();
         if (!term) continue;
         const key = term.toLowerCase();
         if (seenInBatch.has(key)) {
@@ -474,17 +547,25 @@ export class ManualVocabularyService {
           await this.prisma.foreignism.create({
             data: {
               term,
-              definition: raw.definition ? String(raw.definition) : null,
-              meaning: raw.meaning ? String(raw.meaning) : null,
-              originalLanguage: raw.originalLanguage ? String(raw.originalLanguage) : null,
-              originCountry: raw.originCountry ? String(raw.originCountry) : null,
-              adaptedForm: raw.adaptedForm ? String(raw.adaptedForm) : null,
-              originalForm: raw.originalForm ? String(raw.originalForm) : null,
-              usageExample: raw.usageExample ? String(raw.usageExample) : null,
-              context: raw.context ? String(raw.context) : null,
-              field: raw.field ? String(raw.field) : null,
-              grammaticalCategory: raw.grammaticalCategory ? String(raw.grammaticalCategory) : null,
-              pronunciation: raw.pronunciation ? String(raw.pronunciation) : null,
+              definition: raw.definition ? toStr(raw.definition) : null,
+              meaning: raw.meaning ? toStr(raw.meaning) : null,
+              originalLanguage: raw.originalLanguage
+                ? toStr(raw.originalLanguage)
+                : null,
+              originCountry: raw.originCountry
+                ? toStr(raw.originCountry)
+                : null,
+              adaptedForm: raw.adaptedForm ? toStr(raw.adaptedForm) : null,
+              originalForm: raw.originalForm ? toStr(raw.originalForm) : null,
+              usageExample: raw.usageExample ? toStr(raw.usageExample) : null,
+              context: raw.context ? toStr(raw.context) : null,
+              field: raw.field ? toStr(raw.field) : null,
+              grammaticalCategory: raw.grammaticalCategory
+                ? toStr(raw.grammaticalCategory)
+                : null,
+              pronunciation: raw.pronunciation
+                ? toStr(raw.pronunciation)
+                : null,
               isVocabulary: Boolean(raw.isVocabulary),
               isVocabularyEP: Boolean(raw.isVocabularyEP),
               approvalStatus: ApprovalStatus.DRAFT,
@@ -527,4 +608,3 @@ export class ManualVocabularyService {
     };
   }
 }
-

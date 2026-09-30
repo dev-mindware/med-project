@@ -130,8 +130,11 @@ export class AuditInterceptor implements NestInterceptor {
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
     const request = context.switchToHttp().getRequest<AuditRequest>();
-    const response = context.switchToHttp().getResponse<{ statusCode?: number }>();
-    const { method, url, user, body, ip, params, query, route, requestId } = request;
+    const response = context
+      .switchToHttp()
+      .getResponse<{ statusCode?: number }>();
+    const { method, url, user, body, ip, params, query, route, requestId } =
+      request;
     const userAgent = request.get('user-agent');
     const path = url.split('?')[0];
     const shouldAudit = method !== 'GET';
@@ -366,7 +369,7 @@ export class AuditInterceptor implements NestInterceptor {
   private sanitize(value: unknown): Prisma.InputJsonObject | null {
     const masked = maskSensitive(value);
     return masked && typeof masked === 'object' && !Array.isArray(masked)
-      ? (masked as Prisma.InputJsonObject)
+      ? masked
       : null;
   }
 
@@ -553,14 +556,18 @@ export class AuditInterceptor implements NestInterceptor {
     if (actor.role !== UserRole.ADMIN && actor.role !== UserRole.SUPERVISOR)
       return;
 
-    const oldStatus = (data.oldValues as Record<string, unknown> | null)?.approvalStatus as string | undefined;
+    const oldStatus = (data.oldValues as Record<string, unknown> | null)
+      ?.approvalStatus as string | undefined;
     const result =
       data.result && typeof data.result === 'object'
         ? (data.result as Record<string, unknown>)
         : null;
     const newStatus =
-      ((data.newValues as Record<string, unknown> | null)?.approvalStatus as string | undefined) ||
-      (typeof result?.approvalStatus === 'string' ? result.approvalStatus : null);
+      ((data.newValues as Record<string, unknown> | null)?.approvalStatus as
+        string | undefined) ||
+      (typeof result?.approvalStatus === 'string'
+        ? result.approvalStatus
+        : null);
     if (!newStatus || oldStatus === newStatus) return;
 
     const content =
@@ -587,8 +594,12 @@ export class AuditInterceptor implements NestInterceptor {
 
     const creatorId =
       (typeof content?.createdById === 'string' ? content.createdById : null) ||
-      (typeof data.oldValues?.createdById === 'string' ? data.oldValues.createdById : null) ||
-      (typeof data.newValues?.createdById === 'string' ? data.newValues.createdById : null);
+      (typeof data.oldValues?.createdById === 'string'
+        ? data.oldValues.createdById
+        : null) ||
+      (typeof data.newValues?.createdById === 'string'
+        ? data.newValues.createdById
+        : null);
     if (creatorId && creatorId !== actor.id) {
       const creator = await this.getActiveUser(creatorId);
       if (creator?.role === UserRole.OPERATOR) {
@@ -618,8 +629,12 @@ export class AuditInterceptor implements NestInterceptor {
     if (!oldStatus || oldStatus === ApprovalStatus.DRAFT) return;
 
     const creatorId =
-      (typeof data.oldValues?.createdById === 'string' ? data.oldValues.createdById : null) ||
-      (typeof data.newValues?.createdById === 'string' ? data.newValues.createdById : null);
+      (typeof data.oldValues?.createdById === 'string'
+        ? data.oldValues.createdById
+        : null) ||
+      (typeof data.newValues?.createdById === 'string'
+        ? data.newValues.createdById
+        : null);
     if (creatorId && creatorId === actor.id) return;
 
     const content =

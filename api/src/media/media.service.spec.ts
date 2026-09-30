@@ -77,7 +77,9 @@ describe('MediaService', () => {
         originalname: 'test.jpg',
         mimetype: 'image/jpeg',
         size: 500,
-        buffer: Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46, 0x49, 0x46]),
+        buffer: Buffer.from([
+          0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46, 0x49, 0x46,
+        ]),
       } as Express.Multer.File;
 
       const result = await service.uploadFile(

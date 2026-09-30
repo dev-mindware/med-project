@@ -225,7 +225,9 @@ export class PdfOcrService {
 
     const uploadUrl = initRes.headers.get('x-goog-upload-url');
     if (!uploadUrl) {
-      throw new Error('Google Files API não forneceu o cabeçalho de upload URL');
+      throw new Error(
+        'Google Files API não forneceu o cabeçalho de upload URL',
+      );
     }
 
     const uploadRes = await fetch(uploadUrl, {
@@ -265,31 +267,34 @@ export class PdfOcrService {
    * 7. Colapsa espaços e quebras de linha em excesso
    */
   private cleanText(text: string): string {
-    return text
-      // 1. Remove formatação Markdown do OCR / Leitura
-      .replace(/#{1,6}\s/g, '')
-      .replace(/\*\*|__|\*(?!\w)|_(?!\w)/g, '')
-      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
-      // 2a. Reconstrói palavras hifenizadas quebradas no fim de linha
-      //     "couve-\nflor" → "couve-flor"
-      .replace(/(\w)-\r?\n(\w)/g, '$1-$2')
-      // 2b. Reconstrói sílabas sem hífen quebradas por paginação
-      .replace(/([a-záéíóúâêôãõçàü])\r?\n([a-záéíóúâêôãõçàü])/gi, '$1$2')
-      // 3. Remove caracteres de controlo invisíveis (excepto \t \n \r)
-      .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '')
-      // 4. Normaliza aspas tipográficas para ASCII
-      .replace(/[""«»]/g, '"')
-      .replace(/[''‹›]/g, "'")
-      // 5. Remove linhas que contêm apenas números (números de página)
-      .replace(/^\s*\d+\s*$/gm, '')
-      // 6. Remove linhas em MAIÚSCULAS isoladas com 4+ caracteres (cabeçalhos de secção)
-      .replace(/^([A-ZÁÉÍÓÚÂÊÔÃÕÇ\s\-]{4,})$/gm, (match) =>
-        match.trim() === match.trim().toUpperCase() ? '' : match,
-      )
-      // 7. Colapsa espaços em excesso e limita quebras de linha consecutivas a 2
-      .replace(/[ \t]{3,}/g, '  ')
-      .replace(/(\r?\n){3,}/g, '\n\n')
-      .trim();
+    return (
+      text
+        // 1. Remove formatação Markdown do OCR / Leitura
+        .replace(/#{1,6}\s/g, '')
+        .replace(/\*\*|__|\*(?!\w)|_(?!\w)/g, '')
+        .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+        // 2a. Reconstrói palavras hifenizadas quebradas no fim de linha
+        //     "couve-\nflor" → "couve-flor"
+        .replace(/(\w)-\r?\n(\w)/g, '$1-$2')
+        // 2b. Reconstrói sílabas sem hífen quebradas por paginação
+        .replace(/([a-záéíóúâêôãõçàü])\r?\n([a-záéíóúâêôãõçàü])/gi, '$1$2')
+        // 3. Remove caracteres de controlo invisíveis (excepto \t \n \r)
+        // eslint-disable-next-line no-control-regex
+        .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '')
+        // 4. Normaliza aspas tipográficas para ASCII
+        .replace(/[""«»]/g, '"')
+        .replace(/[''‹›]/g, "'")
+        // 5. Remove linhas que contêm apenas números (números de página)
+        .replace(/^\s*\d+\s*$/gm, '')
+        // 6. Remove linhas em MAIÚSCULAS isoladas com 4+ caracteres (cabeçalhos de secção)
+        .replace(/^([A-ZÁÉÍÓÚÂÊÔÃÕÇ\s-]{4,})$/gm, (match) =>
+          match.trim() === match.trim().toUpperCase() ? '' : match,
+        )
+        // 7. Colapsa espaços em excesso e limita quebras de linha consecutivas a 2
+        .replace(/[ \t]{3,}/g, '  ')
+        .replace(/(\r?\n){3,}/g, '\n\n')
+        .trim()
+    );
   }
 
   private errorMessage(error: unknown) {

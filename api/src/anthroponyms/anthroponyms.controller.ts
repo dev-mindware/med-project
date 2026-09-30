@@ -98,7 +98,7 @@ export class AnthroponymsController {
       endDate,
       languageCode,
       ...rest
-    } = filters as LinguisticFilterDto;
+    } = filters;
     const where: Prisma.AnthroponymWhereInput = { ...rest };
 
     if (startDate || endDate) {
@@ -106,7 +106,7 @@ export class AnthroponymsController {
       if (startDate) where.createdAt.gte = new Date(startDate);
       if (endDate) where.createdAt.lte = new Date(endDate);
     }
-    applySupervisorAnthroponymScope(reqUser as any, where);
+    applySupervisorAnthroponymScope(reqUser, where);
 
     const params = {
       skip: (page - 1) * limit,

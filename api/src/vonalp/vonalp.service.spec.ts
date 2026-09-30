@@ -80,14 +80,12 @@ function createPrismaMock() {
       findUnique: jest.fn().mockResolvedValue(null),
       create: jest.fn(async ({ data }) => makeTerm(data)),
       update: jest.fn(async ({ data }) => makeTerm(data)),
-      findMany: jest
-        .fn()
-        .mockResolvedValue([
-          makeTerm({
-            completionStatus: VonalpCompletionStatus.COMPLETE,
-            missingFields: [],
-          }),
-        ]),
+      findMany: jest.fn().mockResolvedValue([
+        makeTerm({
+          completionStatus: VonalpCompletionStatus.COMPLETE,
+          missingFields: [],
+        }),
+      ]),
       count: jest.fn().mockResolvedValue(1),
     },
   };

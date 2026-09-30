@@ -90,7 +90,7 @@ export class NeologismsController {
       startDate,
       endDate,
       ...rest
-    } = filters as LinguisticFilterDto;
+    } = filters;
     const where: Prisma.NeologismWhereInput = { ...rest };
 
     if (startDate || endDate) {
@@ -98,7 +98,7 @@ export class NeologismsController {
       if (startDate) where.createdAt.gte = new Date(startDate);
       if (endDate) where.createdAt.lte = new Date(endDate);
     }
-    applySupervisorNeologismScope(reqUser as any, where);
+    applySupervisorNeologismScope(reqUser, where);
 
     const params = {
       skip: (page - 1) * limit,
