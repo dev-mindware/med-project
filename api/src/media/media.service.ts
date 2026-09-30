@@ -6,7 +6,7 @@ import {
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
 import * as path from 'path';
 import { AppLogger } from '../common/logger/app-logger.service';
 import { Prisma } from '@prisma/client';
@@ -101,7 +101,7 @@ export class MediaService {
       );
     }
 
-    const fileName = `${uuidv4()}${fileExtension}`;
+    const fileName = `${randomUUID()}${fileExtension}`;
     const key = entity ? `${entity}/${fileName}` : fileName;
 
     try {

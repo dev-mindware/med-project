@@ -1,4 +1,4 @@
-﻿name: CI/CD Deploy (GHCR + Dokploy)
+name: CI/CD Deploy (GHCR + Dokploy)
 
 on:
   push:
@@ -105,10 +105,15 @@ jobs:
       - name: Wait for API to be healthy
         run: |
           for i in {1..30}; do
+            if ! kill -0 $(cat e2e-server.pid) 2>/dev/null; then
+              echo "=== API process terminated unexpectedly ==="
+              cat e2e-server.log
+              exit 1
+            fi
             if curl --fail --silent http://127.0.0.1:3009/ > /tmp/api-root.txt; then exit 0; fi
             sleep 2
           done
-          echo "=== API failed to start ==="
+          echo "=== API timed out waiting to start ==="
           cat e2e-server.log
           exit 1
 
