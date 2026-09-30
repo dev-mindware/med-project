@@ -34,10 +34,24 @@ export class EntriesService {
     });
   }
 
+  /**
+   * Importa entradas em massa com estratégia em lote.
+   *
+   * Fluxo:
+   * 1. Valida e normaliza todas as linhas via DTO (falhas registadas imediatamente)
+   * 2. Deduplica dentro do ficheiro por chave case-insensitive
+   * 3. Insere em lotes de BATCH_SIZE dentro de uma transacção por lote
+   * 4. Se um lote falhar (ex: conflito de chave única), faz fallback linha-a-linha
+   *    para identificar o erro exacto sem descartar o lote inteiro
+   */
   async importRows(rows: BulkImportRow[], userId: string) {
+    const BATCH_SIZE = 100;
     const created: BulkImportCreated[] = [];
     const errors: BulkImportError[] = [];
     const seen = new Set<string>();
+
+    // ── Fase 1: Validação e deduplicação ───────────────────────────────────
+    const validRows: { row: BulkImportRow; data: CreateEntryDto }[] = [];
 
     for (const row of rows) {
       const validation = await validateBulkImportData(
@@ -63,25 +77,50 @@ export class EntriesService {
         continue;
       }
       seen.add(key);
+      validRows.push({ row, data });
+    }
+
+    // ── Fase 2: Inserção em lotes com transacção ───────────────────────────
+    for (let i = 0; i < validRows.length; i += BATCH_SIZE) {
+      const batch = validRows.slice(i, i + BATCH_SIZE);
 
       try {
-        const item = await this.create({
-          ...(data as Prisma.EntryCreateInput),
-          createdBy: { connect: { id: userId } },
-          approvalStatus: ApprovalStatus.DRAFT,
+        // Tenta inserir o lote inteiro numa transacção atómica
+        await this.prisma.$transaction(async (tx) => {
+          for (const { data } of batch) {
+            const item = await tx.entry.create({
+              data: {
+                ...(data as Prisma.EntryCreateInput),
+                createdBy: { connect: { id: userId } },
+                approvalStatus: ApprovalStatus.DRAFT,
+              },
+            });
+            created.push({
+              rowNumber: batch.find((b) => b.data === data)!.row.rowNumber,
+              id: item.id,
+              label: item.entry,
+            });
+          }
         });
-        created.push({
-          rowNumber: row.rowNumber,
-          id: item.id,
-          label: item.entry,
-        });
-      } catch (error) {
-        errors.push({
-          rowNumber: row.rowNumber,
-          field: 'entry',
-          value: data.entry,
-          message: httpErrorToImportMessage(error),
-        });
+      } catch {
+        // Fallback: inserir linha a linha para identificar o erro exacto
+        for (const { row, data } of batch) {
+          try {
+            const item = await this.create({
+              ...(data as Prisma.EntryCreateInput),
+              createdBy: { connect: { id: userId } },
+              approvalStatus: ApprovalStatus.DRAFT,
+            });
+            created.push({ rowNumber: row.rowNumber, id: item.id, label: item.entry });
+          } catch (err) {
+            errors.push({
+              rowNumber: row.rowNumber,
+              field: 'entry',
+              value: data.entry,
+              message: httpErrorToImportMessage(err),
+            });
+          }
+        }
       }
     }
 

@@ -41,14 +41,17 @@ export default () => ({
       process.env.AI_MODEL ??
       process.env.OPENAI_MODEL ??
       'gemini-2.5-flash',
-    mistralApiKey: process.env.MISTRAL_API_KEY,
-    mistralOcrModel: process.env.MISTRAL_OCR_MODEL ?? 'mistral-ocr-latest',
+    geminiOcrModel:
+      process.env.GEMINI_OCR_MODEL ??
+      process.env.GEMINI_MODEL ??
+      process.env.AI_MODEL ??
+      'gemini-2.5-flash',
     vocabularyChunkWords: Number.parseInt(
       process.env.VOCABULARY_CHUNK_WORDS ?? '2200',
       10,
     ),
     vocabularyMaxFileMb: Number.parseInt(
-      process.env.VOCABULARY_MAX_FILE_MB ?? '20',
+      process.env.VOCABULARY_MAX_FILE_MB ?? '100',
       10,
     ),
     mediaMaxFileMb: Number.parseInt(process.env.MEDIA_MAX_FILE_MB ?? '10', 10),

@@ -23,7 +23,9 @@ describe('VocabularyAiService', () => {
     service = new VocabularyAiService(configService, logger);
   });
 
-  it('throws BadGatewayException when no API key is configured', async () => {
+  // ─── Configuração ───────────────────────────────────────────────────────
+
+  it('lança BadGatewayException quando nenhuma API key está configurada', async () => {
     configService.get.mockReturnValue(undefined);
 
     await expect(service.extractVocabulary('Algum texto')).rejects.toThrow(
@@ -31,61 +33,119 @@ describe('VocabularyAiService', () => {
     );
   });
 
-  it('correctly uses Gemini 2.5 Flash as default model and parses valid JSON items', async () => {
-    configService.get.mockImplementation((key: string) => {
-      if (key === 'GEMINI_API_KEY') return 'test-gemini-key';
-      if (key === 'GEMINI_MODEL') return 'gemini-2.5-flash';
-      if (key === 'VOCABULARY_CHUNK_WORDS') return 2200;
-      return undefined;
-    });
+  // ─── Parsing defensivo ─────────────────────────────────────────────────
 
-    const mockCreate = jest.fn().mockResolvedValue({
-      choices: [
-        {
-          message: {
-            content: JSON.stringify([
-              {
-                sourceModel: 'ENTRY',
-                confidence: 0.95,
-                data: {
-                  entry: 'Luanda',
-                  firstDefinition: 'Capital de Angola',
-                },
-              },
-              {
-                sourceModel: 'TOPONYM',
-                confidence: 0.98,
-                data: {
-                  toponym: 'Luanda',
-                  province: 'Luanda',
-                },
-              },
-            ]),
-          },
-        },
-      ],
-    });
+  it('retorna [] sem lançar excepção quando a IA devolve JSON inválido', () => {
+    const items = (service as any).parseItems('Texto completamente inválido {{{');
+    expect(items).toEqual([]);
+    expect(logger.warn).toHaveBeenCalledWith(
+      expect.stringContaining('JSON'),
+      expect.any(Object),
+    );
+  });
 
-    // Mock the OpenAI instance creation
-    jest.spyOn(service as any, 'splitText').mockReturnValue(['Luanda texto']);
-    
-    // We can also test the private parseItems directly
+  it('retorna [] quando a IA devolve um array vazio', () => {
+    const items = (service as any).parseItems('[]');
+    expect(items).toEqual([]);
+  });
+
+  it('filtra items com sourceModel inválido', () => {
     const items = (service as any).parseItems(
       JSON.stringify([
-        {
-          sourceModel: 'ENTRY',
-          confidence: 0.95,
-          data: { entry: 'Luanda', firstDefinition: 'Capital' },
-        },
-        {
-          sourceModel: 'INVALID_MODEL',
-          data: {},
-        },
+        { sourceModel: 'ENTRY',   confidence: 0.9, data: { entry: 'Luanda' } },
+        { sourceModel: 'INVALID', confidence: 0.9, data: {} },
+        { sourceModel: 'TOPONYM', confidence: 0.8, data: { toponym: 'Luanda' } },
       ]),
     );
+    expect(items).toHaveLength(2);
+    expect(items.map((i: any) => i.sourceModel)).toEqual(['ENTRY', 'TOPONYM']);
+  });
 
+  it('descarta items com confidence < 0.5', () => {
+    const items = (service as any).parseItems(
+      JSON.stringify([
+        { sourceModel: 'ENTRY', confidence: 0.9,  data: { entry: 'casa' } },
+        { sourceModel: 'ENTRY', confidence: 0.49, data: { entry: 'coisa' } },
+        { sourceModel: 'ENTRY', confidence: 0.5,  data: { entry: 'terra' } },
+      ]),
+    );
+    expect(items).toHaveLength(2);
+    expect(items.map((i: any) => i.data.entry)).toEqual(['casa', 'terra']);
+  });
+
+  it('aceita items com confidence exactamente igual a 0.5 (limiar incluso)', () => {
+    const items = (service as any).parseItems(
+      JSON.stringify([
+        { sourceModel: 'ENTRY', confidence: 0.5, data: { entry: 'musseque' } },
+      ]),
+    );
     expect(items).toHaveLength(1);
-    expect(items[0].sourceModel).toBe('ENTRY');
-    expect(items[0].data.entry).toBe('Luanda');
+  });
+
+  it('filtra items sem campo data ou com data nulo', () => {
+    const items = (service as any).parseItems(
+      JSON.stringify([
+        { sourceModel: 'ENTRY', confidence: 0.9, data: null },
+        { sourceModel: 'ENTRY', confidence: 0.9 },
+        { sourceModel: 'ENTRY', confidence: 0.9, data: { entry: 'válido' } },
+      ]),
+    );
+    expect(items).toHaveLength(1);
+    expect(items[0].data.entry).toBe('válido');
+  });
+
+  // ─── Chunking por parágrafos ────────────────────────────────────────────
+
+  it('cria chunk único quando o texto tem menos palavras que o limite', () => {
+    configService.get.mockImplementation((key: string) => {
+      if (key === 'VOCABULARY_CHUNK_WORDS') return '2200';
+      return undefined;
+    });
+    const texto = 'couve-flor s.f. Planta da família das crucíferas.';
+    const chunks = (service as any).splitIntoChunks(texto);
+    expect(chunks.length).toBe(1);
+    expect(chunks[0]).toContain('couve-flor');
+  });
+
+  it('não quebra uma entrada lexicográfica a meio de um parágrafo', () => {
+    configService.get.mockImplementation((key: string) => {
+      if (key === 'VOCABULARY_CHUNK_WORDS') return '10'; // limite baixo para testar
+      return undefined;
+    });
+    // 2 parágrafos separados por linha em branco — cada um é uma unidade
+    const texto =
+      'couve-flor s.f. Planta das crucíferas cultivada pela inflorescência.\n\n' +
+      'musseque s.m. Bairro periférico característico das cidades angolanas.';
+    const chunks = (service as any).splitIntoChunks(texto);
+    // Cada parágrafo deve estar completo num chunk (nunca cortado a meio)
+    chunks.forEach((chunk: string) => {
+      if (chunk.includes('couve-flor')) {
+        expect(chunk).toContain('crucíferas');
+      }
+      if (chunk.includes('musseque')) {
+        expect(chunk).toContain('angolanas');
+      }
+    });
+  });
+
+  // ─── Tipos de palavra (AO45) ────────────────────────────────────────────
+
+  it('preserva o hífen em compostos (couve-flor não é modificado pelo parseItems)', () => {
+    const items = (service as any).parseItems(
+      JSON.stringify([{
+        sourceModel: 'ENTRY',
+        confidence: 0.95,
+        data: { entry: 'couve-flor', wordType: 'especie-botanica', firstDefinition: 'Planta.' },
+      }]),
+    );
+    expect(items[0].data.entry).toBe('couve-flor');
+    expect(items[0].data.wordType).toBe('especie-botanica');
+  });
+
+  it('trata JSON embrulhado em markdown (```json ... ```) correctamente', () => {
+    const wrapped = '```json\n[{"sourceModel":"ENTRY","confidence":0.9,"data":{"entry":"casa"}}]\n```';
+    const items = (service as any).parseItems(wrapped);
+    expect(items).toHaveLength(1);
+    expect(items[0].data.entry).toBe('casa');
   });
 });

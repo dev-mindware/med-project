@@ -19,7 +19,7 @@ export class ImportRowDto {
 
 export class ImportRowsDto {
   @IsArray()
-  @ArrayMaxSize(1000)
+  @ArrayMaxSize(5000)
   @ValidateNested({ each: true })
   @Type(() => ImportRowDto)
   rows: ImportRowDto[];

@@ -43,7 +43,7 @@ RUN apk add --no-cache openssl dumb-init curl
 WORKDIR /app
 
 ENV NODE_ENV=production
-ENV PORT=4000
+ENV PORT=3009
 
 # Set non-root user
 USER node
@@ -55,7 +55,7 @@ COPY --chown=node:node --from=builder /app/prisma ./prisma
 COPY --chown=node:node --from=builder /app/package.json ./package.json
 COPY --chown=node:node docker-entrypoint.sh ./docker-entrypoint.sh
 
-EXPOSE 4000
+EXPOSE 3009
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
   CMD curl -f http://127.0.0.1:${PORT}/ || exit 1

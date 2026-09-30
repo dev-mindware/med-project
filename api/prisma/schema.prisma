@@ -120,6 +120,7 @@ model User {
   createdVolnaTerms  VolnaTerm[]  @relation("VolnaTermCreatedBy")
   updatedVolnaTerms  VolnaTerm[]  @relation("VolnaTermUpdatedBy")
   approvedVolnaTerms VolnaTerm[]  @relation("VolnaTermApprovedBy")
+  manualExtractionLogs ManualExtractionLog[]
 
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
@@ -555,4 +556,29 @@ model VolnaTerm {
   @@index([grammaticalCategory])
   @@index([createdById])
   @@map("volna_terms")
+}
+
+model ManualExtractionLog {
+  id                     String   @id @default(uuid())
+  filename               String
+  fileSize               Int
+  userId                 String?
+  user                   User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  model                  String
+  totalTerms             Int
+  validRows              Int
+  entries                Int
+  neologisms             Int      @default(0)
+  toponyms               Int
+  anthroponyms           Int
+  foreignisms            Int
+  warnings               Int
+  duplicatesRemoved      Int
+  lowConfidenceDiscarded Int
+  processingMs           Int
+  createdAt              DateTime @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
+  @@map("manual_extraction_logs")
 }

@@ -1,0 +1,115 @@
+# ==============================================================================
+# 🚀 DOCKER COMPOSE — AMBIENTE DE PRODUÇÃO (RAIZ DO REPOSITÓRIO)
+# ==============================================================================
+# Uso a partir da raiz:
+#   docker compose -f docker-compose.prod.yml --env-file ./api/.env.production up -d
+#
+# Para consultar logs:
+#   docker compose -f docker-compose.prod.yml logs -f
+# ==============================================================================
+
+services:
+  med-api:
+    image: ghcr.io/dev-mindware/med-project-api:latest
+    pull_policy: always
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: med_api_prod
+    restart: unless-stopped
+    ports:
+      # Exposição no host para reverse proxy (Nginx, Traefik, Caddy ou Cloudflare Tunnel)
+      - "${PORT:-3009}:3009"
+    env_file:
+      - path: ./api/.env.production
+        required: false
+    environment:
+      - NODE_ENV=production
+      - RUN_MIGRATIONS=true
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - med_net_prod
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:3009/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 25s
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "5"
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 1024M
+        reservations:
+          cpus: "0.5"
+          memory: 256M
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: med_postgres_prod
+    restart: unless-stopped
+    env_file:
+      - path: ./api/.env.production
+        required: false
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    # Por segurança em produção, a base de dados NÃO é exposta à Internet aberta.
+    # Caso necessite de aceder localmente no host (ex: backups via pg_dump), descomente a linha abaixo:
+    # ports:
+    #   - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - med_pgdata_prod:/var/lib/postgresql/data
+    networks:
+      - med_net_prod
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    command: >
+      postgres
+        -c max_connections=200
+        -c shared_buffers=256MB
+        -c effective_cache_size=768MB
+        -c maintenance_work_mem=64MB
+        -c checkpoint_completion_target=0.9
+        -c wal_buffers=16MB
+        -c default_statistics_target=100
+        -c random_page_cost=1.1
+        -c effective_io_concurrency=200
+        -c min_wal_size=1GB
+        -c max_wal_size=4GB
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "5"
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 1024M
+        reservations:
+          cpus: "0.5"
+          memory: 256M
+
+networks:
+  med_net_prod:
+    driver: bridge
+    name: med_net_prod
+
+volumes:
+  med_pgdata_prod:
+    name: med_pgdata_prod
