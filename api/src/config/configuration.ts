@@ -10,6 +10,9 @@ export default () => ({
       .split(',')
       .map((url) => url.trim())
       .filter(Boolean),
+    trustProxy: process.env.TRUST_PROXY
+      ? Number.parseInt(process.env.TRUST_PROXY, 10)
+      : 1,
   },
   database: { url: process.env.DATABASE_URL },
   jwt: {

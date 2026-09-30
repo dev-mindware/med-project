@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Badge } from "@/components/ui/badge"
@@ -152,6 +152,13 @@ export function LexicalExplorer({
   const [field, setField] = useState(allValue)
   const [isLoading, setIsLoading] = useState(false)
   const didMount = useRef(false)
+  const abortRef = useRef<AbortController | null>(null)
+
+  useEffect(() => {
+    return () => {
+      abortRef.current?.abort()
+    }
+  }, [])
 
   const activeConfig = collections.find((collection) => collection.key === active) ?? collections[0]
   const activeItems = itemsByCollection[active].data
@@ -177,6 +184,10 @@ export function LexicalExplorer({
   }, [initialData])
 
   const search = useCallback(async (collection = active) => {
+    abortRef.current?.abort()
+    const controller = new AbortController()
+    abortRef.current = controller
+
     setIsLoading(true)
 
     try {
@@ -195,15 +206,24 @@ export function LexicalExplorer({
         limit: 6,
       }
 
-      const response = await fetchCollection(collection, filters)
-      setItemsByCollection((current) => ({ ...current, [collection]: response }))
-    } catch {
-      setItemsByCollection((current) => ({
-        ...current,
-        [collection]: { data: [], meta: { ...EMPTY_META } },
-      }))
+      const response = await fetchCollection(collection, filters, controller.signal)
+      if (abortRef.current === controller) {
+        setItemsByCollection((current) => ({ ...current, [collection]: response }))
+      }
+    } catch (error) {
+      if ((error as Error)?.name === "AbortError") {
+        return
+      }
+      if (abortRef.current === controller) {
+        setItemsByCollection((current) => ({
+          ...current,
+          [collection]: { data: [], meta: { ...EMPTY_META } },
+        }))
+      }
     } finally {
-      setIsLoading(false)
+      if (abortRef.current === controller) {
+        setIsLoading(false)
+      }
     }
   }, [
     active,
@@ -586,14 +606,15 @@ function categoryBadge(category?: string | null, subcategory?: string | null) {
     .join(" / ")
 }
 
-function fetchCollection(collection: CollectionKey, filters: PublicFilters) {
-  if (collection === "neologisms") return publicApi.neologisms(filters)
-  if (collection === "foreignisms") return publicApi.foreignisms(filters)
-  if (collection === "toponyms") return publicApi.toponyms(filters)
-  if (collection === "anthroponyms") return publicApi.anthroponyms(filters)
-  if (collection === "volna") return publicApi.volna(filters)
-  if (collection === "vonalpEp") return publicApi.vonalpEp(filters)
-  return publicApi.vonalp(filters)
+function fetchCollection(collection: CollectionKey, filters: PublicFilters, signal?: AbortSignal) {
+  const options = { signal }
+  if (collection === "neologisms") return publicApi.neologisms(filters, options)
+  if (collection === "foreignisms") return publicApi.foreignisms(filters, options)
+  if (collection === "toponyms") return publicApi.toponyms(filters, options)
+  if (collection === "anthroponyms") return publicApi.anthroponyms(filters, options)
+  if (collection === "volna") return publicApi.volna(filters, options)
+  if (collection === "vonalpEp") return publicApi.vonalpEp(filters, options)
+  return publicApi.vonalp(filters, options)
 }
 
 function usesGrammar(collection: CollectionKey) {

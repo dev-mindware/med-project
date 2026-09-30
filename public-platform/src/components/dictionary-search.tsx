@@ -65,6 +65,7 @@ export function DictionarySearch({
   const [favorites, setFavorites] = useState<string[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const didMount = useRef(false)
+  const abortRef = useRef<AbortController | null>(null)
 
   const selectedCategory = grammaticalCategoryOptions.find((item) => item.value === wordClass)
   const subcategoryOptions = selectedCategory?.subcategories ?? []
@@ -85,6 +86,10 @@ export function DictionarySearch({
   }
 
   const loadResults = useCallback(async (page = 1) => {
+    abortRef.current?.abort()
+    const controller = new AbortController()
+    abortRef.current = controller
+
     const category = wordClass === "all" ? undefined : wordClass
     const grammaticalSubcategory = subcategory === "all" ? undefined : subcategory
     const language = languageCode === "all" ? undefined : languageCode
@@ -95,21 +100,28 @@ export function DictionarySearch({
     updateUrl({ q, category, grammaticalSubcategory, languageCode: language, page: page > 1 ? page : undefined })
 
     try {
-      const response = await publicApi.dictionary({
-        q,
-        category,
-        grammaticalSubcategory,
-        languageCode: language,
-        page,
-        limit: 6,
-      })
+      const response = await publicApi.dictionary(
+        {
+          q,
+          category,
+          grammaticalSubcategory,
+          languageCode: language,
+          page,
+          limit: 6,
+        },
+        { signal: controller.signal }
+      )
+      if (controller.signal.aborted) return
       setSearchResults(response.data)
       setMeta(response.meta)
-    } catch {
+    } catch (err) {
+      if ((err as Error)?.name === "AbortError") return
       setSearchResults([])
       setMeta(defaultMeta)
     } finally {
-      setIsLoading(false)
+      if (abortRef.current === controller) {
+        setIsLoading(false)
+      }
     }
   }, [languageCode, searchTerm, subcategory, wordClass])
 
@@ -119,12 +131,16 @@ export function DictionarySearch({
       return
     }
 
+    const delay = searchTerm.trim().length >= 3 ? 220 : 320
     const timeout = window.setTimeout(() => {
       void loadResults(1)
-    }, 320)
+    }, delay)
 
-    return () => window.clearTimeout(timeout)
-  }, [loadResults])
+    return () => {
+      window.clearTimeout(timeout)
+      abortRef.current?.abort()
+    }
+  }, [loadResults, searchTerm])
 
   const handleCategoryChange = (value: string) => {
     setWordClass(value)

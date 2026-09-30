@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
 import { Badge } from "@/components/ui/badge"
@@ -25,24 +25,36 @@ export function ArticlesSearch({
   const [isSearching, setIsSearching] = useState(false)
   const [hasSearched, setHasSearched] = useState(initialResults.length > 0)
   const didMount = useRef(false)
+  const abortRef = useRef<AbortController | null>(null)
 
   const categories = ["Todas", ...Array.from(new Set(initialResults.map((article) => article.category).filter(Boolean) as string[]))]
 
   const handleSearch = useCallback(async () => {
+    abortRef.current?.abort()
+    const controller = new AbortController()
+    abortRef.current = controller
+
     setIsSearching(true)
     setHasSearched(true)
 
     try {
-      const response = await publicApi.blogPosts({
-        q: searchTerm,
-        category: selectedCategory === "Todas" ? undefined : selectedCategory,
-        limit: 6,
-      })
+      const response = await publicApi.blogPosts(
+        {
+          q: searchTerm.trim() || undefined,
+          category: selectedCategory === "Todas" ? undefined : selectedCategory,
+          limit: 6,
+        },
+        { signal: controller.signal }
+      )
+      if (controller.signal.aborted) return
       setSearchResults(response.data)
-    } catch {
+    } catch (err) {
+      if ((err as Error)?.name === "AbortError") return
       setSearchResults([])
     } finally {
-      setIsSearching(false)
+      if (abortRef.current === controller) {
+        setIsSearching(false)
+      }
     }
   }, [searchTerm, selectedCategory])
 
@@ -52,12 +64,16 @@ export function ArticlesSearch({
       return
     }
 
+    const delay = searchTerm.trim().length >= 3 ? 220 : 320
     const timeout = window.setTimeout(() => {
       void handleSearch()
-    }, 320)
+    }, delay)
 
-    return () => window.clearTimeout(timeout)
-  }, [handleSearch])
+    return () => {
+      window.clearTimeout(timeout)
+      abortRef.current?.abort()
+    }
+  }, [handleSearch, searchTerm])
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">

@@ -32,7 +32,9 @@ import { VolnaModule } from './volna/volna.module';
 import { ManualVocabularyModule } from './manual-vocabulary/manual-vocabulary.module';
 import { AllExceptionsFilter } from './common/filters/http-exception.filter';
 import { LoggerModule } from './common/logger/logger.module';
+import { CacheModule } from '@nestjs/cache-manager';
 import { RequestContextMiddleware } from './common/middleware/request-context.middleware';
+import { AbuseProtectionGuard } from './common/guards/abuse-protection.guard';
 
 @Module({
   imports: [
@@ -43,7 +45,14 @@ import { RequestContextMiddleware } from './common/middleware/request-context.mi
       validate: validateEnv,
     }),
     LoggerModule,
-    ThrottlerModule.forRoot([{ ttl: 60000, limit: 300 }]),
+    CacheModule.register({
+      isGlobal: true,
+      ttl: 60000,
+    }),
+    ThrottlerModule.forRoot([
+      { name: 'burst', ttl: 10000, limit: 20 },
+      { name: 'sustained', ttl: 60000, limit: 120 },
+    ]),
     PrismaModule,
     UsersModule,
     AuthModule,
@@ -70,6 +79,8 @@ import { RequestContextMiddleware } from './common/middleware/request-context.mi
   providers: [
     AppService,
     AllExceptionsFilter,
+    AbuseProtectionGuard,
+    { provide: APP_GUARD, useClass: AbuseProtectionGuard },
     { provide: APP_GUARD, useClass: ThrottlerGuard },
     { provide: APP_INTERCEPTOR, useClass: AuditInterceptor },
   ],

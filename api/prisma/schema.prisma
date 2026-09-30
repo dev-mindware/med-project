@@ -209,6 +209,9 @@ model Entry {
   createdAt              DateTime       @default(now())
   updatedAt              DateTime       @updatedAt
 
+  @@index([approvalStatus, entry, id])
+  @@index([approvalStatus, createdAt])
+  @@index([approvalStatus, grammaticalCategory])
   @@map("entries")
 }
 
@@ -257,6 +260,9 @@ model Neologism {
   createdAt              DateTime       @default(now())
   updatedAt              DateTime       @updatedAt
 
+  @@index([approvalStatus, entry, id])
+  @@index([approvalStatus, createdAt])
+  @@index([approvalStatus, grammaticalCategory])
   @@map("neologisms")
 }
 
@@ -292,6 +298,8 @@ model Anthroponym {
   createdAt              DateTime       @default(now())
   updatedAt              DateTime       @updatedAt
 
+  @@index([approvalStatus, name, id])
+  @@index([approvalStatus, gender])
   @@map("anthroponyms")
 }
 
@@ -334,6 +342,8 @@ model Toponym {
   createdAt         DateTime       @default(now())
   updatedAt         DateTime       @updatedAt
 
+  @@index([approvalStatus, toponym, id])
+  @@index([approvalStatus, province])
   @@map("toponyms")
 }
 
@@ -376,6 +386,8 @@ model Foreignism {
   createdAt              DateTime       @default(now())
   updatedAt              DateTime       @updatedAt
 
+  @@index([approvalStatus, term, id])
+  @@index([approvalStatus, originalLanguage])
   @@map("foreignisms")
 }
 
@@ -399,6 +411,7 @@ model BlogPost {
   createdAt        DateTime    @default(now())
   updatedAt        DateTime    @updatedAt
 
+  @@index([status, publishedAt])
   @@map("blog_posts")
 }
 
@@ -424,6 +437,7 @@ model Event {
   createdAt          DateTime    @default(now())
   updatedAt          DateTime    @updatedAt
 
+  @@index([status, startDate])
   @@map("events")
 }
 

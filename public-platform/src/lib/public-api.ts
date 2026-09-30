@@ -231,14 +231,48 @@ function buildUrl(path: string, filters?: PublicFilters) {
   return url.toString()
 }
 
-async function request<T>(path: string, init?: RequestInit & { filters?: PublicFilters }): Promise<T> {
-  const { filters, ...requestInit } = init ?? {}
-  const response = await fetch(buildUrl(path, filters), {
+export type PublicSuggestion = {
+  id: string
+  label: string
+  type: string
+  meta?: string
+  url: string
+}
+
+type RequestOptions = RequestInit & {
+  filters?: PublicFilters
+  signal?: AbortSignal
+  skipCache?: boolean
+}
+
+const clientCache = new Map<string, { data: unknown; expiresAt: number }>()
+
+async function request<T>(path: string, init?: RequestOptions): Promise<T> {
+  const { filters, signal, skipCache, ...requestInit } = init ?? {}
+  const url = buildUrl(path, filters)
+  const isGet = !requestInit.method || requestInit.method.toUpperCase() === "GET"
+
+  // Cache em memória no cliente para GETs (60 segundos)
+  if (typeof window !== "undefined" && isGet && !skipCache) {
+    const cached = clientCache.get(url)
+    if (cached && cached.expiresAt > Date.now()) {
+      return cached.data as T
+    }
+  }
+
+  const headers: Record<string, string> = {
+    ...((requestInit.headers as Record<string, string>) || {}),
+  }
+
+  // Apenas definir Content-Type se houver corpo, evitando preflight CORS desnecessário em GET
+  if (requestInit.body && !headers["Content-Type"]) {
+    headers["Content-Type"] = "application/json"
+  }
+
+  const response = await fetch(url, {
     ...requestInit,
-    headers: {
-      "Content-Type": "application/json",
-      ...requestInit.headers,
-    },
+    signal,
+    headers,
     next: requestInit.method ? undefined : { revalidate: 60 },
   })
 
@@ -246,42 +280,54 @@ async function request<T>(path: string, init?: RequestInit & { filters?: PublicF
     throw new Error(`Public content request failed: ${response.status} ${response.statusText}`)
   }
 
-  return response.json() as Promise<T>
+  const data = (await response.json()) as T
+
+  if (typeof window !== "undefined" && isGet) {
+    clientCache.set(url, { data, expiresAt: Date.now() + 60_000 })
+    if (clientCache.size > 200) {
+      const oldestKey = clientCache.keys().next().value
+      if (oldestKey) clientCache.delete(oldestKey)
+    }
+  }
+
+  return data
 }
 
 export const publicApi = {
-  stats: () => request<PublicStats>("/public/stats"),
-  dictionary: (filters?: PublicFilters) =>
-    request<PublicPaginated<PublicEntry>>("/public/dictionary", { filters }),
-  dictionaryDetails: (id: string) =>
-    request<PublicEntry>(`/public/dictionary/${encodeURIComponent(id)}`),
-  neologisms: (filters?: PublicFilters) =>
-    request<PublicPaginated<PublicNeologism>>("/public/neologisms", { filters }),
-  foreignisms: (filters?: PublicFilters) =>
-    request<PublicPaginated<PublicForeignism>>("/public/foreignisms", { filters }),
-  vonalp: (filters?: PublicFilters) =>
-    request<PublicPaginated<PublicVonalpTerm>>("/public/vocabularies/vonalp", { filters }),
-  vonalpEp: (filters?: PublicFilters) =>
-    request<PublicPaginated<PublicVonalpTerm>>("/public/vocabularies/vonalpep", { filters }),
-  volna: (filters?: PublicFilters) =>
-    request<PublicPaginated<PublicVolnaTerm>>("/public/vocabularies/volna", { filters }),
-  toponyms: (filters?: PublicFilters) =>
-    request<PublicPaginated<PublicToponym>>("/public/toponyms", { filters }),
-  anthroponyms: (filters?: PublicFilters) =>
-    request<PublicPaginated<PublicAnthroponym>>("/public/anthroponyms", { filters }),
-  events: (filters?: PublicFilters) =>
-    request<PublicPaginated<PublicEvent>>("/public/events", { filters }),
-  eventDetails: (idOrSlug: string) =>
-    request<PublicEvent>(`/public/events/${encodeURIComponent(idOrSlug)}`),
+  stats: (init?: { signal?: AbortSignal }) => request<PublicStats>("/public/stats", init),
+  suggest: (q: string, init?: { signal?: AbortSignal }) =>
+    request<PublicSuggestion[]>("/public/suggest", { filters: { q }, ...init }),
+  dictionary: (filters?: PublicFilters, init?: { signal?: AbortSignal }) =>
+    request<PublicPaginated<PublicEntry>>("/public/dictionary", { filters, ...init }),
+  dictionaryDetails: (id: string, init?: { signal?: AbortSignal }) =>
+    request<PublicEntry>(`/public/dictionary/${encodeURIComponent(id)}`, init),
+  neologisms: (filters?: PublicFilters, init?: { signal?: AbortSignal }) =>
+    request<PublicPaginated<PublicNeologism>>("/public/neologisms", { filters, ...init }),
+  foreignisms: (filters?: PublicFilters, init?: { signal?: AbortSignal }) =>
+    request<PublicPaginated<PublicForeignism>>("/public/foreignisms", { filters, ...init }),
+  vonalp: (filters?: PublicFilters, init?: { signal?: AbortSignal }) =>
+    request<PublicPaginated<PublicVonalpTerm>>("/public/vocabularies/vonalp", { filters, ...init }),
+  vonalpEp: (filters?: PublicFilters, init?: { signal?: AbortSignal }) =>
+    request<PublicPaginated<PublicVonalpTerm>>("/public/vocabularies/vonalpep", { filters, ...init }),
+  volna: (filters?: PublicFilters, init?: { signal?: AbortSignal }) =>
+    request<PublicPaginated<PublicVolnaTerm>>("/public/vocabularies/volna", { filters, ...init }),
+  toponyms: (filters?: PublicFilters, init?: { signal?: AbortSignal }) =>
+    request<PublicPaginated<PublicToponym>>("/public/toponyms", { filters, ...init }),
+  anthroponyms: (filters?: PublicFilters, init?: { signal?: AbortSignal }) =>
+    request<PublicPaginated<PublicAnthroponym>>("/public/anthroponyms", { filters, ...init }),
+  events: (filters?: PublicFilters, init?: { signal?: AbortSignal }) =>
+    request<PublicPaginated<PublicEvent>>("/public/events", { filters, ...init }),
+  eventDetails: (idOrSlug: string, init?: { signal?: AbortSignal }) =>
+    request<PublicEvent>(`/public/events/${encodeURIComponent(idOrSlug)}`, init),
   registerForEvent: (idOrSlug: string, payload: PublicEventRegistrationPayload) =>
     request(`/public/events/${encodeURIComponent(idOrSlug)}/registrations`, {
       method: "POST",
       body: JSON.stringify(payload),
     }),
-  blogPosts: (filters?: PublicFilters) =>
-    request<PublicPaginated<PublicBlogPost>>("/public/blog-posts", { filters }),
-  blogPostDetails: (idOrSlug: string) =>
-    request<PublicBlogPost>(`/public/blog-posts/${encodeURIComponent(idOrSlug)}`),
+  blogPosts: (filters?: PublicFilters, init?: { signal?: AbortSignal }) =>
+    request<PublicPaginated<PublicBlogPost>>("/public/blog-posts", { filters, ...init }),
+  blogPostDetails: (idOrSlug: string, init?: { signal?: AbortSignal }) =>
+    request<PublicBlogPost>(`/public/blog-posts/${encodeURIComponent(idOrSlug)}`, init),
 }
 
 export async function safePublicApi<T>(callback: () => Promise<T>, fallback: T) {

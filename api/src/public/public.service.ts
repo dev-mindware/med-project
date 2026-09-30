@@ -1,8 +1,11 @@
 import {
   BadRequestException,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import type { Cache } from 'cache-manager';
 import {
   ApprovalStatus,
   EventStatus,
@@ -20,6 +23,74 @@ import {
 import { PublicEventRegistrationDto } from './dto/public-event-registration.dto';
 import { VonalpService } from '../vonalp/vonalp.service';
 import { VolnaService } from '../volna/volna.service';
+
+const entrySummarySelect = {
+  id: true,
+  entry: true,
+  pronunciation: true,
+  firstDefinition: true,
+  grammaticalCategory: true,
+  grammaticalSubcategory: true,
+  languageCode: true,
+  audioUrl: true,
+  imageUrl: true,
+  approvedAt: true,
+  createdAt: true,
+  updatedAt: true,
+} satisfies Prisma.EntrySelect;
+
+const neologismSummarySelect = {
+  id: true,
+  entry: true,
+  pronunciation: true,
+  firstDefinition: true,
+  grammaticalCategory: true,
+  grammaticalSubcategory: true,
+  languageCode: true,
+  audioUrl: true,
+  imageUrl: true,
+  approvedAt: true,
+  createdAt: true,
+  updatedAt: true,
+} satisfies Prisma.NeologismSelect;
+
+const toponymSummarySelect = {
+  id: true,
+  toponym: true,
+  pronunciation: true,
+  meaning: true,
+  province: true,
+  municipality: true,
+  locationImage: true,
+  approvedAt: true,
+  createdAt: true,
+  updatedAt: true,
+} satisfies Prisma.ToponymSelect;
+
+const anthroponymSummarySelect = {
+  id: true,
+  name: true,
+  gender: true,
+  meaning: true,
+  surname: true,
+  historicalFigure: true,
+  approvedAt: true,
+  createdAt: true,
+  updatedAt: true,
+} satisfies Prisma.AnthroponymSelect;
+
+const foreignismSummarySelect = {
+  id: true,
+  term: true,
+  pronunciation: true,
+  definition: true,
+  meaning: true,
+  originalLanguage: true,
+  originCountry: true,
+  approvedAt: true,
+  createdAt: true,
+  updatedAt: true,
+} satisfies Prisma.ForeignismSelect;
 
 const entrySelect = {
   id: true,
@@ -237,9 +308,16 @@ export class PublicService {
     private readonly prisma: PrismaService,
     private readonly vonalpService: VonalpService,
     private readonly volnaService: VolnaService,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
   ) {}
 
   async stats() {
+    const cacheKey = 'public:stats';
+    const cached = await this.cacheManager.get<Record<string, unknown>>(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
     const now = new Date();
 
     const [
@@ -284,7 +362,7 @@ export class PublicService {
       }),
     ]);
 
-    return {
+    const statsResult = {
       dictionaryEntries,
       toponyms,
       anthroponyms,
@@ -303,11 +381,118 @@ export class PublicService {
         volnaTerms,
       updatedAt: new Date().toISOString(),
     };
+
+    await this.cacheManager.set(cacheKey, statsResult, 300_000); // 5 minutos de cache
+    return statsResult;
+  }
+
+  async suggest(query: string) {
+    const q = (query || '').trim();
+    if (q.length < 2) {
+      return [];
+    }
+
+    const cacheKey = `public:suggest:${q.toLowerCase()}`;
+    const cached = await this.cacheManager.get<unknown[]>(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
+    const take = 4;
+    const [entries, neologisms, toponyms, anthroponyms, foreignisms] =
+      await Promise.all([
+        this.prisma.entry.findMany({
+          where: {
+            approvalStatus: ApprovalStatus.APPROVED,
+            entry: { contains: q, mode: 'insensitive' },
+          },
+          take,
+          select: { id: true, entry: true, grammaticalCategory: true },
+          orderBy: { entry: 'asc' },
+        }),
+        this.prisma.neologism.findMany({
+          where: {
+            approvalStatus: ApprovalStatus.APPROVED,
+            entry: { contains: q, mode: 'insensitive' },
+          },
+          take,
+          select: { id: true, entry: true, grammaticalCategory: true },
+          orderBy: { entry: 'asc' },
+        }),
+        this.prisma.toponym.findMany({
+          where: {
+            approvalStatus: ApprovalStatus.APPROVED,
+            toponym: { contains: q, mode: 'insensitive' },
+          },
+          take,
+          select: { id: true, toponym: true, province: true },
+          orderBy: { toponym: 'asc' },
+        }),
+        this.prisma.anthroponym.findMany({
+          where: {
+            approvalStatus: ApprovalStatus.APPROVED,
+            name: { contains: q, mode: 'insensitive' },
+          },
+          take,
+          select: { id: true, name: true, gender: true },
+          orderBy: { name: 'asc' },
+        }),
+        this.prisma.foreignism.findMany({
+          where: {
+            approvalStatus: ApprovalStatus.APPROVED,
+            term: { contains: q, mode: 'insensitive' },
+          },
+          take,
+          select: { id: true, term: true, originalLanguage: true },
+          orderBy: { term: 'asc' },
+        }),
+      ]);
+
+    const suggestions = [
+      ...entries.map((e) => ({
+        id: e.id,
+        label: e.entry,
+        type: 'Dicionário',
+        meta: e.grammaticalCategory,
+        url: `/dictionary?q=${encodeURIComponent(e.entry)}`,
+      })),
+      ...neologisms.map((n) => ({
+        id: n.id,
+        label: n.entry,
+        type: 'Neologismo',
+        meta: n.grammaticalCategory,
+        url: `/neologismos?q=${encodeURIComponent(n.entry)}`,
+      })),
+      ...toponyms.map((t) => ({
+        id: t.id,
+        label: t.toponym,
+        type: 'Topónimo',
+        meta: t.province,
+        url: `/toponimos?q=${encodeURIComponent(t.toponym)}`,
+      })),
+      ...anthroponyms.map((a) => ({
+        id: a.id,
+        label: a.name,
+        type: 'Antropónimo',
+        meta: a.gender,
+        url: `/antroponimos?q=${encodeURIComponent(a.name)}`,
+      })),
+      ...foreignisms.map((f) => ({
+        id: f.id,
+        label: f.term,
+        type: 'Estrangeirismo',
+        meta: f.originalLanguage,
+        url: `/estrangeirismos?q=${encodeURIComponent(f.term)}`,
+      })),
+    ].slice(0, 10);
+
+    await this.cacheManager.set(cacheKey, suggestions, 60_000);
+    return suggestions;
   }
 
   async search(filters: PublicContentFilterDto) {
     const query = this.searchTerm(filters);
-    if (!query) {
+    if (!query || query.length < 2) {
       return {
         query: '',
         entries: [],
@@ -328,7 +513,7 @@ export class PublicService {
           },
           take,
           orderBy: { entry: 'asc' },
-          select: entrySelect,
+          select: entrySummarySelect,
         }),
         this.prisma.neologism.findMany({
           where: {
@@ -337,7 +522,7 @@ export class PublicService {
           },
           take,
           orderBy: { entry: 'asc' },
-          select: neologismSelect,
+          select: neologismSummarySelect,
         }),
         this.prisma.toponym.findMany({
           where: {
@@ -346,7 +531,7 @@ export class PublicService {
           },
           take,
           orderBy: { toponym: 'asc' },
-          select: toponymSelect,
+          select: toponymSummarySelect,
         }),
         this.prisma.anthroponym.findMany({
           where: {
@@ -355,7 +540,7 @@ export class PublicService {
           },
           take,
           orderBy: { name: 'asc' },
-          select: anthroponymSelect,
+          select: anthroponymSummarySelect,
         }),
         this.prisma.foreignism.findMany({
           where: {
@@ -364,7 +549,7 @@ export class PublicService {
           },
           take,
           orderBy: { term: 'asc' },
-          select: foreignismSelect,
+          select: foreignismSummarySelect,
         }),
       ]);
 
@@ -786,6 +971,7 @@ export class PublicService {
     filters: PublicContentFilterDto,
   ) {
     const { page, limit, skip } = this.pagination(filters);
+    const isSearch = Boolean(this.searchTerm(filters));
 
     switch (delegateName) {
       case 'entry':
@@ -797,6 +983,7 @@ export class PublicService {
           page,
           limit,
           skip,
+          isSearch,
         );
       case 'neologism':
         return this.paginateDelegate(
@@ -807,6 +994,7 @@ export class PublicService {
           page,
           limit,
           skip,
+          isSearch,
         );
       case 'toponym':
         return this.paginateDelegate(
@@ -817,6 +1005,7 @@ export class PublicService {
           page,
           limit,
           skip,
+          isSearch,
         );
       case 'anthroponym':
         return this.paginateDelegate(
@@ -827,6 +1016,7 @@ export class PublicService {
           page,
           limit,
           skip,
+          isSearch,
         );
       case 'foreignism':
         return this.paginateDelegate(
@@ -837,6 +1027,7 @@ export class PublicService {
           page,
           limit,
           skip,
+          isSearch,
         );
       case 'event':
         return this.paginateDelegate(
@@ -847,6 +1038,7 @@ export class PublicService {
           page,
           limit,
           skip,
+          isSearch,
         );
       case 'blogPost':
         return this.paginateDelegate(
@@ -857,6 +1049,7 @@ export class PublicService {
           page,
           limit,
           skip,
+          isSearch,
         );
     }
   }
@@ -880,7 +1073,32 @@ export class PublicService {
     page: number,
     limit: number,
     skip: number,
+    isSearch = false,
   ) {
+    if (isSearch) {
+      // Elimina o count(*) repetido na busca: busca limit + 1 para detetar hasNextPage
+      const rows = await delegate.findMany({
+        where,
+        select,
+        orderBy,
+        skip,
+        take: limit + 1,
+      });
+      const hasNextPage = rows.length > limit;
+      const data = rows.slice(0, limit);
+      return {
+        data,
+        meta: {
+          total: undefined,
+          page,
+          limit,
+          totalPages: undefined,
+          hasNextPage,
+          hasPreviousPage: page > 1,
+        },
+      };
+    }
+
     const [data, total] = await Promise.all([
       delegate.findMany({ where, select, orderBy, skip, take: limit }),
       delegate.count({ where }),
@@ -973,65 +1191,79 @@ export class PublicService {
   }
 
   private entrySearchWhere(query: string): Prisma.EntryWhereInput {
+    const isShort = query.length <= 2;
+    if (isShort) {
+      return {
+        entry: { contains: query, mode: 'insensitive' },
+      };
+    }
     return {
       OR: [
         { entry: { contains: query, mode: 'insensitive' } },
         { firstDefinition: { contains: query, mode: 'insensitive' } },
-        { secondDefinition: { contains: query, mode: 'insensitive' } },
-        { thirdDefinition: { contains: query, mode: 'insensitive' } },
-        { etymology: { contains: query, mode: 'insensitive' } },
-        { usageExample: { contains: query, mode: 'insensitive' } },
       ],
     };
   }
 
   private neologismSearchWhere(query: string): Prisma.NeologismWhereInput {
+    const isShort = query.length <= 2;
+    if (isShort) {
+      return {
+        entry: { contains: query, mode: 'insensitive' },
+      };
+    }
     return {
       OR: [
         { entry: { contains: query, mode: 'insensitive' } },
         { firstDefinition: { contains: query, mode: 'insensitive' } },
-        { secondDefinition: { contains: query, mode: 'insensitive' } },
-        { thirdDefinition: { contains: query, mode: 'insensitive' } },
-        { etymology: { contains: query, mode: 'insensitive' } },
-        { usageExample: { contains: query, mode: 'insensitive' } },
       ],
     };
   }
 
   private toponymSearchWhere(query: string): Prisma.ToponymWhereInput {
+    const isShort = query.length <= 2;
+    if (isShort) {
+      return {
+        toponym: { contains: query, mode: 'insensitive' },
+      };
+    }
     return {
       OR: [
         { toponym: { contains: query, mode: 'insensitive' } },
         { meaning: { contains: query, mode: 'insensitive' } },
         { province: { contains: query, mode: 'insensitive' } },
-        { municipality: { contains: query, mode: 'insensitive' } },
-        { gentilic: { contains: query, mode: 'insensitive' } },
-        { toponymHistory: { contains: query, mode: 'insensitive' } },
       ],
     };
   }
 
   private anthroponymSearchWhere(query: string): Prisma.AnthroponymWhereInput {
+    const isShort = query.length <= 2;
+    if (isShort) {
+      return {
+        name: { contains: query, mode: 'insensitive' },
+      };
+    }
     return {
       OR: [
         { name: { contains: query, mode: 'insensitive' } },
         { surname: { contains: query, mode: 'insensitive' } },
         { meaning: { contains: query, mode: 'insensitive' } },
-        { etymology: { contains: query, mode: 'insensitive' } },
-        { historicalFigure: { contains: query, mode: 'insensitive' } },
       ],
     };
   }
 
   private foreignismSearchWhere(query: string): Prisma.ForeignismWhereInput {
+    const isShort = query.length <= 2;
+    if (isShort) {
+      return {
+        term: { contains: query, mode: 'insensitive' },
+      };
+    }
     return {
       OR: [
         { term: { contains: query, mode: 'insensitive' } },
-        { meaning: { contains: query, mode: 'insensitive' } },
         { definition: { contains: query, mode: 'insensitive' } },
-        { originalLanguage: { contains: query, mode: 'insensitive' } },
-        { originCountry: { contains: query, mode: 'insensitive' } },
-        { field: { contains: query, mode: 'insensitive' } },
+        { meaning: { contains: query, mode: 'insensitive' } },
       ],
     };
   }

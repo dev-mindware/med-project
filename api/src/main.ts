@@ -39,7 +39,10 @@ async function bootstrap() {
     credentials: true,
   });
 
-  app.getHttpAdapter().getInstance().set('etag', 'strong');
+  const expressApp = app.getHttpAdapter().getInstance();
+  expressApp.set('etag', 'strong');
+  expressApp.set('trust proxy', config.get<number | boolean>('app.trustProxy') ?? 1);
+
   app.useGlobalFilters(app.get(AllExceptionsFilter));
   app.useGlobalPipes(
     new ValidationPipe({
