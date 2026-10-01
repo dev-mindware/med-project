@@ -3,9 +3,6 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "api:dev": "npm --prefix api run start:dev",
-    "api:build": "npm --prefix api run build",
-    "api:test": "npm --prefix api run test",
     "back-office:dev": "pnpm --dir back-office dev",
     "back-office:build": "pnpm --dir back-office build",
     "back-office:lint": "pnpm --dir back-office lint",
