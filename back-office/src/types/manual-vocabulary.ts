@@ -55,6 +55,7 @@ export type ManualVocabularyCommitPayload = {
   toponyms?: Record<string, any>[];
   anthroponyms?: Record<string, any>[];
   foreignisms?: Record<string, any>[];
+  directApproval?: boolean;
 };
 
 export type ManualVocabularySkippedDuplicate = {

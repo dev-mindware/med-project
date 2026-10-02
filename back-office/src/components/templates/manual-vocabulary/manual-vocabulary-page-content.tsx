@@ -37,6 +37,7 @@ import {
 } from "@/components/ui";
 import { Icon, TitleList } from "@/components/common";
 import {
+  useAuth,
   useCommitManualVocabularyToDatabase,
   useExportExcelManualVocabulary,
   useExtractManualVocabularyPreview,
@@ -239,6 +240,13 @@ export function ManualVocabularyPageContent() {
   const [commitResult, setCommitResult] = useState<ManualVocabularyCommitResult | null>(null);
   const [resultDialogOpen, setResultDialogOpen] = useState<boolean>(false);
 
+  // RBAC & Auth Context
+  const { user } = useAuth();
+  const isOperator = user?.role === "OPERATOR";
+  const isSupervisor = user?.role === "SUPERVISOR";
+  const isAdmin = user?.role === "ADMIN";
+  const [directApproval, setDirectApproval] = useState<boolean>(false);
+
   // Mutations & Queries
   const extractPreview = useExtractManualVocabularyPreview();
   const importExcel = useImportExcelManualVocabulary();
@@ -261,8 +269,13 @@ export function ManualVocabularyPageContent() {
       return;
     }
 
-    if (nextFile.size > MAX_PDF_SIZE) {
-      ErrorMessage("O ficheiro excede o limite de 100MB.");
+    const maxAllowedSize = isOperator ? 25 * 1024 * 1024 : MAX_PDF_SIZE;
+    if (nextFile.size > maxAllowedSize) {
+      ErrorMessage(
+        isOperator
+          ? "Operadores têm um limite de 25MB por manual. Para ficheiros maiores, contacte o seu supervisor."
+          : "O ficheiro excede o limite de 100MB.",
+      );
       return;
     }
 
@@ -364,6 +377,11 @@ export function ManualVocabularyPageContent() {
     const parsedStart = startPage.trim() ? parseInt(startPage.trim(), 10) : undefined;
     const parsedEnd = endPage.trim() ? parseInt(endPage.trim(), 10) : undefined;
 
+    if (isOperator && parsedStart && parsedEnd && parsedEnd - parsedStart + 1 > 30) {
+      ErrorMessage("Operadores podem extrair no máximo 30 páginas por operação.");
+      return;
+    }
+
     try {
       const result = await extractPreview.mutateAsync({
         file,
@@ -406,12 +424,14 @@ export function ManualVocabularyPageContent() {
   const handleCommitToDatabase = async () => {
     if (!stagingData) return;
     try {
+      const shouldApproveDirectly = Boolean((isSupervisor || isAdmin) && directApproval);
       const result = await commitToDb.mutateAsync({
         entries: stagingData.entries,
         neologisms: stagingData.neologisms,
         toponyms: stagingData.toponyms,
         anthroponyms: stagingData.anthroponyms,
         foreignisms: stagingData.foreignisms,
+        directApproval: shouldApproveDirectly,
       });
 
       setCommitResult(result);
@@ -419,9 +439,19 @@ export function ManualVocabularyPageContent() {
       setResultDialogOpen(true);
 
       if (result.insertedCount > 0) {
-        SucessMessage(
-          `${result.insertedCount} novos registos foram inseridos na base de dados (em estado Rascunho/DRAFT)!`,
-        );
+        if (shouldApproveDirectly) {
+          SucessMessage(
+            `${result.insertedCount} novos registos foram aprovados e gravados diretamente na base de dados!`,
+          );
+        } else if (isOperator) {
+          SucessMessage(
+            `${result.insertedCount} registos foram submetidos como rascunhos para validação do seu supervisor!`,
+          );
+        } else {
+          SucessMessage(
+            `${result.insertedCount} novos registos foram inseridos na base de dados (em estado Rascunho/DRAFT)!`,
+          );
+        }
       }
       if (result.duplicatesCount > 0) {
         ErrorMessage(
@@ -710,7 +740,14 @@ export function ManualVocabularyPageContent() {
                   <div className="flex items-center gap-2">
                     <Icon name="FileText" className="h-5 w-5 text-primary" />
                     <div>
-                      <CardTitle className="text-lg">Opção A: Extrair de Manual PDF</CardTitle>
+                      <div className="flex items-center gap-2">
+                        <CardTitle className="text-lg">Opção A: Extrair de Manual PDF</CardTitle>
+                        {isOperator && (
+                          <Badge variant="outline" className="text-xs bg-amber-500/10 text-amber-700 border-amber-300 font-medium">
+                            Quota Operador: máx. 30 págs / 25MB
+                          </Badge>
+                        )}
+                      </div>
                       <CardDescription>
                         Carregue uma obra ou documento em formato PDF para análise automatizada pela IA.
                       </CardDescription>
@@ -748,7 +785,7 @@ export function ManualVocabularyPageContent() {
                           Arraste o manual PDF aqui ou clique para seleccionar
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          PDF nativo ou digitalizado até 100MB
+                          PDF nativo ou digitalizado até {isOperator ? "25MB (limite de Operador)" : "100MB"}
                         </p>
                       </div>
                     )}
@@ -979,8 +1016,8 @@ export function ManualVocabularyPageContent() {
                     loading={commitToDb.isPending}
                     className="flex items-center gap-2"
                   >
-                    <Icon name="Database" className="h-4 w-4" />
-                    Salvar na Base de Dados
+                    <Icon name={isOperator ? "Send" : "Database"} className="h-4 w-4" />
+                    {isOperator ? "Submeter para Revisão" : "Salvar na Base de Dados"}
                   </Button>
                   <Button
                     type="button"
@@ -1577,11 +1614,13 @@ export function ManualVocabularyPageContent() {
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Icon name="Database" className="h-5 w-5 text-primary" />
-              Salvar Tudo na Base de Dados
+              <Icon name={isOperator ? "Send" : "Database"} className="h-5 w-5 text-primary" />
+              {isOperator ? "Submeter Vocábulos para Revisão Editorial" : "Salvar Tudo na Base de Dados"}
             </DialogTitle>
             <DialogDescription>
-              Tem a certeza de que deseja persistir os vocábulos curados na base de dados?
+              {isOperator
+                ? "Os vocábulos curados serão gravados em estado Rascunho (DRAFT) e associados à sua autoria para revisão pelo seu supervisor."
+                : "Tem a certeza de que deseja persistir os vocábulos curados na base de dados?"}
             </DialogDescription>
           </DialogHeader>
 
@@ -1600,6 +1639,34 @@ export function ManualVocabularyPageContent() {
                   </span>
                 </div>
               </div>
+
+              {/* Opção de Aprovação Direta para Supervisor e Admin vs Alerta de Submissão de Operador */}
+              {isSupervisor || isAdmin ? (
+                <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 space-y-1.5 text-xs">
+                  <label className="flex items-center gap-2 cursor-pointer font-medium text-foreground">
+                    <input
+                      type="checkbox"
+                      checked={directApproval}
+                      onChange={(e) => setDirectApproval(e.target.checked)}
+                      className="rounded border-gray-300 text-primary focus:ring-primary h-4 w-4"
+                    />
+                    Aprovação Direta (marcar imediatamente como APROVADO)
+                  </label>
+                  <p className="text-muted-foreground text-[11px] pl-6">
+                    Se desmarcado, os itens serão gravados como Rascunho (DRAFT) para revisão editorial posterior.
+                  </p>
+                </div>
+              ) : (
+                <div className="rounded-lg border border-blue-500/20 bg-blue-500/5 p-3 text-xs text-blue-700 space-y-1">
+                  <p className="font-semibold flex items-center gap-1.5">
+                    <Icon name="UserCheck" className="h-4 w-4" />
+                    Fluxo de Submissão Editorial (Operador)
+                  </p>
+                  <p>
+                    Os itens serão gravados em estado Rascunho (DRAFT) associados à sua autoria e encaminhados para validação do seu supervisor.
+                  </p>
+                </div>
+              )}
 
               <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-3 text-xs text-amber-700 space-y-1">
                 <p className="font-semibold flex items-center gap-1.5">
@@ -1632,8 +1699,12 @@ export function ManualVocabularyPageContent() {
               onClick={handleCommitToDatabase}
               className="flex items-center gap-2"
             >
-              <Icon name="Check" className="h-4 w-4" />
-              Confirmar & Salvar
+              <Icon name={isOperator ? "Send" : "Check"} className="h-4 w-4" />
+              {isOperator
+                ? "Submeter para Revisão"
+                : directApproval
+                  ? "Aprovar & Salvar Tudo"
+                  : "Confirmar & Salvar como Rascunhos"}
             </Button>
           </DialogFooter>
         </DialogContent>
