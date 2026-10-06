@@ -194,6 +194,7 @@ export const manualVocabularyService = {
         toponyms: parseNumberHeader(response.headers["x-toponyms"]),
         anthroponyms: parseNumberHeader(response.headers["x-anthroponyms"]),
         foreignisms: parseNumberHeader(response.headers["x-foreignisms"]),
+        nationalLanguages: parseNumberHeader(response.headers["x-national-languages"]),
         warnings: parseNumberHeader(response.headers["x-warnings"]),
         duplicatesRemoved: parseNumberHeader(response.headers["x-duplicates-removed"]),
       },
