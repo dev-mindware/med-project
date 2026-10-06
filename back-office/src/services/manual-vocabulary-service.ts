@@ -1,4 +1,5 @@
 import {
+  ExtractionProgress,
   ManualExtractionLogsResponse,
   ManualVocabularyCommitPayload,
   ManualVocabularyCommitResult,
@@ -27,10 +28,12 @@ export const manualVocabularyService = {
     file: File,
     modules?: ManualVocabularySourceModel[],
     options?: { startPage?: number; endPage?: number },
+    onProgress?: (progress: ExtractionProgress) => void,
   ): Promise<ManualVocabularyExtractPreviewResult> => {
     const formData = new FormData();
     formData.append("file", file);
     formData.append("format", "json");
+    formData.append("async", "true");
     if (modules && modules.length > 0) {
       formData.append("modules", modules.join(","));
     }
@@ -41,19 +44,48 @@ export const manualVocabularyService = {
       formData.append("endPage", String(options.endPage));
     }
 
-    const response = await api.post<ManualVocabularyExtractPreviewResult>(
-      "/manuals/vocabulary/extract?format=json",
+    // 1. Inicia a extracção em segundo plano; 2. acompanha o progresso real por polling.
+    const start = await api.post<{ jobId: string }>(
+      "/manuals/vocabulary/extract?format=json&async=true",
       formData,
       {
         headers: {
           "Content-Type": "multipart/form-data",
           Accept: "application/json",
         },
-        timeout: 600000,
+        timeout: 120000,
       },
     );
+    const { jobId } = start.data;
 
-    return response.data;
+    const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+    const deadline = Date.now() + 60 * 60 * 1000;
+    let pollErrors = 0;
+
+    while (Date.now() < deadline) {
+      await sleep(1500);
+      try {
+        const { data } = await api.get<{
+          status: "running" | "done" | "error";
+          progress: ExtractionProgress;
+          result?: ManualVocabularyExtractPreviewResult;
+          error?: { message: string; statusCode: number };
+        }>(`/manuals/vocabulary/extract/jobs/${jobId}`);
+        pollErrors = 0;
+        onProgress?.(data.progress);
+
+        if (data.status === "done" && data.result) return data.result;
+        if (data.status === "error") {
+          throw Object.assign(new Error(data.error?.message || "Falha na extracção"), {
+            response: { data: { message: data.error?.message } },
+            fatal: true,
+          });
+        }
+      } catch (err: any) {
+        if (err?.fatal || ++pollErrors > 5) throw err;
+      }
+    }
+    throw new Error("A extracção excedeu o tempo máximo de espera.");
   },
 
   /**

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useDropzone } from "react-dropzone";
 import {
@@ -45,12 +45,15 @@ import {
   useManualVocabularyLogs,
 } from "@/hooks";
 import {
+  ExtractionProgress as ExtractionProgressState,
   ManualExtractionLogItem,
   ManualVocabularyCommitResult,
+  ManualVocabularyModule,
   ManualVocabularySourceModel,
   ManualVocabularyWorkbookData,
 } from "@/types";
 import { cn } from "@/lib/utils";
+import { ensurePtAO, MODULE_FIELDS, type FieldDef } from "./manual-vocabulary-fields";
 import { ErrorMessage, SucessMessage } from "@/utils/messages";
 
 const MAX_PDF_SIZE = 100 * 1024 * 1024;
@@ -211,6 +214,258 @@ function reclassifyItem(
   }
 }
 
+/**
+ * Chamadas de atenção da curadoria: campos que a IA preencheu sem base segura
+ * no texto (ex: conjugação de verbos, pronúncia, etimologia) ou que ficaram em falta.
+ */
+function getAttention(
+  module: ManualVocabularyModule,
+  row: Record<string, any>,
+): string[] {
+  const out: string[] = [];
+  const has = (k: string) => String(row[k] ?? "").trim().length > 0;
+  const confidence = Number(row.confidence ?? 1);
+
+  if (confidence < 0.7) out.push("Confiança baixa: confirme se o vocábulo e a classificação estão certos.");
+
+  if (module === "ENTRY" || module === "NEOLOGISM") {
+    if (!has("firstDefinition")) out.push("Definição em falta: escreva a acepção a partir do texto.");
+    if (String(row.grammaticalCategory ?? "").toLowerCase() === "verbo") {
+      out.push(
+        "Verbo: as conjugações são geradas automaticamente a partir do infinitivo. Confirme as formas irregulares.",
+      );
+    }
+    if (!has("grammaticalCategory")) out.push("Categoria gramatical não identificada.");
+    if (has("pronunciation") || has("etymology")) {
+      out.push("Pronúncia/etimologia inferidas pela IA, não vêm do texto: confirme antes de gravar.");
+    }
+  }
+
+  if (module === "TOPONYM" && !has("province")) {
+    out.push("Província não identificada no texto: indique a província ou país.");
+  }
+  if (module === "ANTHROPONYM" && !has("gender")) {
+    out.push("Género não identificado: preencha apenas se for claro no texto.");
+  }
+  if (module === "FOREIGNISM" && (!has("originalLanguage") || !has("meaning"))) {
+    out.push("Língua de origem ou significado em falta: confirme antes de gravar.");
+  }
+  if (module === "NATIONAL_LANGUAGE") {
+    if (!has("definition")) out.push("Definição em falta: preencha a partir de uma fonte fiável.");
+    if (row.verified !== true) {
+      out.push("Significado não confirmado na web: confirme numa fonte fiável antes de gravar.");
+    }
+  }
+  return out;
+}
+
+/** Campos do registo que originaram uma chamada de atenção (para os realçar no formulário). */
+function getFlaggedFields(module: ManualVocabularyModule, row: Record<string, any>): Set<string> {
+  const flagged = new Set<string>();
+  const has = (k: string) => String(row[k] ?? "").trim().length > 0;
+  if (module === "ENTRY" || module === "NEOLOGISM") {
+    if (!has("firstDefinition")) flagged.add("firstDefinition");
+    if (!has("grammaticalCategory") || String(row.grammaticalCategory).toLowerCase() === "verbo") {
+      flagged.add("grammaticalCategory");
+    }
+    if (has("pronunciation")) flagged.add("pronunciation");
+    if (has("etymology")) flagged.add("etymology");
+  }
+  if (module === "TOPONYM" && !has("province")) flagged.add("province");
+  if (module === "ANTHROPONYM" && !has("gender")) flagged.add("gender");
+  if (module === "FOREIGNISM") {
+    if (!has("originalLanguage")) flagged.add("originalLanguage");
+    if (!has("meaning")) flagged.add("meaning");
+  }
+  if (module === "NATIONAL_LANGUAGE" && (!has("definition") || row.verified !== true)) {
+    flagged.add("definition");
+  }
+  return flagged;
+}
+
+/** Campo do formulário de edição, com ajuda e realce quando precisa de revisão. */
+function FieldInput({
+  def,
+  value,
+  flagged,
+}: {
+  def: FieldDef;
+  value: any;
+  flagged: boolean;
+}) {
+  const tone = flagged ? "border-amber-500 focus-visible:ring-amber-500/40" : "";
+  const empty = value === undefined || value === null || value === "";
+  return (
+    <div className={cn(def.wide && "col-span-2")}>
+      {def.kind === "boolean" ? (
+        <label className="flex cursor-pointer items-center gap-2 pt-5 text-xs font-semibold text-foreground">
+          <input
+            type="checkbox"
+            name={def.key}
+            defaultChecked={Boolean(value)}
+            className="h-4 w-4 rounded border-gray-300"
+          />
+          {def.label}
+        </label>
+      ) : (
+        <>
+          <label className="text-xs font-semibold text-foreground">
+            {def.label}
+            {def.required && <span className="text-destructive"> *</span>}
+          </label>
+          {def.kind === "textarea" ? (
+            <textarea
+              name={def.key}
+              defaultValue={value ?? ""}
+              rows={2}
+              className={cn(
+                "mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
+                tone,
+              )}
+            />
+          ) : def.kind === "select" ? (
+            <select
+              name={def.key}
+              defaultValue={value ?? def.options?.[0] ?? ""}
+              className={cn(
+                "mt-1 h-9 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
+                tone,
+              )}
+            >
+              {empty && !def.options?.includes("") && <option value="">—</option>}
+              {value && !def.options?.includes(value) && <option value={value}>{value}</option>}
+              {def.options?.map((o) => (
+                <option key={o} value={o}>
+                  {o || "—"}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <Input
+              name={def.key}
+              type={def.kind === "number" ? "number" : "text"}
+              min={def.kind === "number" ? 1 : undefined}
+              defaultValue={
+                def.kind === "list" && Array.isArray(value) ? value.join("; ") : (value ?? "")
+              }
+              required={def.required}
+              className={cn("mt-1", tone)}
+            />
+          )}
+          {def.hint && (
+            <p className={cn("mt-1 text-[11px] leading-snug", flagged ? "text-amber-700" : "text-muted-foreground")}>
+              {def.hint}
+            </p>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+const STAGE_ORDER = ["queued", "reading", "extracting", "processing", "verifying", "done"];
+
+const STAGE_STEPS: { id: string; label: string; unit?: string }[] = [
+  { id: "reading", label: "A ler o PDF" },
+  { id: "extracting", label: "A identificar e classificar vocábulos", unit: "blocos" },
+  { id: "processing", label: "A validar e contar frequências" },
+  { id: "verifying", label: "A confirmar vocábulos das línguas nacionais na web", unit: "vocábulos" },
+];
+
+/** Percentagem global a partir da etapa real e das unidades concluídas nessa etapa. */
+function overallPercent(p: ExtractionProgressState): number {
+  const frac = p.total > 0 ? Math.min(1, p.done / p.total) : 0;
+  switch (p.stage) {
+    case "queued":
+      return 1;
+    case "reading":
+      return 3;
+    case "extracting":
+      return 5 + frac * 70;
+    case "processing":
+      return 76;
+    case "verifying":
+      return 80 + frac * 18;
+    default:
+      return 100;
+  }
+}
+
+/** Feedback visual durante a extracção, alimentado pelo progresso real do servidor. */
+function ExtractionProgress({ progress }: { progress: ExtractionProgressState }) {
+  const [seconds, setSeconds] = useState(0);
+
+  useEffect(() => {
+    const id = setInterval(() => setSeconds((s) => s + 1), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  const current = STAGE_ORDER.indexOf(progress.stage);
+  const percent = Math.round(overallPercent(progress));
+  const mm = String(Math.floor(seconds / 60)).padStart(2, "0");
+  const ss = String(seconds % 60).padStart(2, "0");
+
+  return (
+    <div
+      role="status"
+      aria-live="polite"
+      className="space-y-3 rounded-lg border border-primary/30 bg-primary/5 p-4"
+    >
+      <style>{`
+        @keyframes mv-shine { 0% { transform: translateX(-100%); } 100% { transform: translateX(400%); } }
+      `}</style>
+      <div className="flex items-center justify-between text-sm">
+        <span className="font-medium text-foreground">A extrair vocabulário · {percent}%</span>
+        <span className="font-mono text-xs text-muted-foreground">
+          {mm}:{ss}
+        </span>
+      </div>
+      <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-primary/15">
+        <div
+          className="h-full rounded-full bg-primary transition-[width] duration-700 ease-out"
+          style={{ width: `${percent}%` }}
+        />
+        <div
+          className="absolute inset-y-0 left-0 w-1/5 rounded-full bg-white/40"
+          style={{ animation: "mv-shine 1.6s ease-in-out infinite" }}
+        />
+      </div>
+      <ul className="space-y-1.5 text-xs">
+        {STAGE_STEPS.map((step) => {
+          const idx = STAGE_ORDER.indexOf(step.id);
+          const state = idx < current ? "done" : idx === current ? "active" : "pending";
+          return (
+            <li
+              key={step.id}
+              className={cn(
+                "flex items-center gap-2",
+                state === "pending" ? "text-muted-foreground/60" : "text-foreground",
+              )}
+            >
+              {state === "done" ? (
+                <Icon name="CircleCheck" className="h-3.5 w-3.5 text-emerald-500" />
+              ) : state === "active" ? (
+                <Icon name="Loader" className="h-3.5 w-3.5 animate-spin text-primary" />
+              ) : (
+                <span className="ml-1 mr-0.5 h-1.5 w-1.5 rounded-full bg-muted-foreground/40" />
+              )}
+              <span>{step.label}</span>
+              {state === "active" && step.unit && progress.total > 0 && (
+                <span className="font-mono text-muted-foreground">
+                  {progress.done}/{progress.total} {step.unit}
+                </span>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+      <p className="text-xs text-muted-foreground">
+        Manuais grandes podem demorar vários minutos. Pode limitar o intervalo de páginas para acelerar.
+      </p>
+    </div>
+  );
+}
+
 export function ManualVocabularyPageContent() {
   const [activeTab, setActiveTab] = useState<string>("extract");
   const [file, setFile] = useState<File | null>(null);
@@ -229,8 +484,10 @@ export function ManualVocabularyPageContent() {
   const [sourceFilename, setSourceFilename] = useState<string>("");
   const [activeStagingTab, setActiveStagingTab] = useState<string>("ENTRY");
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [onlyAttention, setOnlyAttention] = useState<boolean>(false);
+  const [progress, setProgress] = useState<ExtractionProgressState | null>(null);
   const [editingItem, setEditingItem] = useState<{
-    module: ManualVocabularySourceModel;
+    module: ManualVocabularyModule;
     index: number;
     data: Record<string, any>;
   } | null>(null);
@@ -315,7 +572,7 @@ export function ManualVocabularyPageContent() {
         setSourceFilename(result.filename || nextFile.name);
         setActiveTab("staging");
         SucessMessage(
-          `Folha Excel importada! ${result.stats.totalTerms} termos carregados para curadoria.`,
+          `Folha Excel importada e validada! ${result.stats.totalTerms} vocábulos carregados para curadoria.`,
         );
       } catch (err: any) {
         ErrorMessage(
@@ -382,19 +639,21 @@ export function ManualVocabularyPageContent() {
       return;
     }
 
+    setProgress({ stage: "queued", done: 0, total: 0 });
     try {
       const result = await extractPreview.mutateAsync({
         file,
         modules: selectedModules,
         startPage: parsedStart,
         endPage: parsedEnd,
+        onProgress: setProgress,
       });
 
       setStagingData(result.workbookData);
       setSourceFilename(file.name);
       setActiveTab("staging");
       SucessMessage(
-        `Extracção concluída! ${result.stats.totalTerms} termos carregados para curadoria.`,
+        `Extracção concluída! ${result.stats.totalTerms} vocábulos carregados para curadoria.`,
       );
     } catch (error: any) {
       let message =
@@ -405,6 +664,8 @@ export function ManualVocabularyPageContent() {
         message = error.message;
       }
       ErrorMessage(message);
+    } finally {
+      setProgress(null);
     }
   };
 
@@ -431,6 +692,7 @@ export function ManualVocabularyPageContent() {
         toponyms: stagingData.toponyms,
         anthroponyms: stagingData.anthroponyms,
         foreignisms: stagingData.foreignisms,
+        nationalLanguages: stagingData.nationalLanguages,
         directApproval: shouldApproveDirectly,
       });
 
@@ -453,10 +715,14 @@ export function ManualVocabularyPageContent() {
           );
         }
       }
-      if (result.duplicatesCount > 0) {
-        ErrorMessage(
-          `${result.duplicatesCount} registos duplicados foram ignorados para proteger a integridade da base de dados.`,
+      if (result.frequencyUpdatedCount > 0) {
+        SucessMessage(
+          `${result.frequencyUpdatedCount} vocábulos já existentes tiveram a frequência somada.`,
         );
+      }
+      const ignored = result.duplicatesCount - (result.frequencyUpdatedCount ?? 0);
+      if (ignored > 0) {
+        ErrorMessage(`${ignored} registos repetidos foram ignorados.`);
       }
     } catch (error: any) {
       ErrorMessage(
@@ -508,7 +774,7 @@ export function ManualVocabularyPageContent() {
     );
   };
 
-  const handleDeleteItem = (module: ManualVocabularySourceModel, index: number) => {
+  const handleDeleteItem = (module: ManualVocabularyModule, index: number) => {
     if (!stagingData) return;
     const key = getModuleDataKey(module);
     const list = [...stagingData[key]];
@@ -550,9 +816,11 @@ export function ManualVocabularyPageContent() {
 
   // Helper mappings
   function getModuleDataKey(
-    mod: ManualVocabularySourceModel,
-  ): "entries" | "neologisms" | "toponyms" | "anthroponyms" | "foreignisms" {
+    mod: ManualVocabularyModule,
+  ): "entries" | "neologisms" | "toponyms" | "anthroponyms" | "foreignisms" | "nationalLanguages" {
     switch (mod) {
+      case "NATIONAL_LANGUAGE":
+        return "nationalLanguages";
       case "ENTRY":
         return "entries";
       case "NEOLOGISM":
@@ -566,8 +834,10 @@ export function ManualVocabularyPageContent() {
     }
   }
 
-  function getModuleLabel(mod: ManualVocabularySourceModel): string {
+  function getModuleLabel(mod: ManualVocabularyModule): string {
     switch (mod) {
+      case "NATIONAL_LANGUAGE":
+        return "Língua nacional";
       case "ENTRY":
         return "Entrada";
       case "NEOLOGISM":
@@ -581,18 +851,32 @@ export function ManualVocabularyPageContent() {
     }
   }
 
+  const attentionCount = useMemo(() => {
+    if (!stagingData) return 0;
+    return (
+      ["ENTRY", "NEOLOGISM", "TOPONYM", "ANTHROPONYM", "FOREIGNISM", "NATIONAL_LANGUAGE"] as ManualVocabularyModule[]
+    ).reduce(
+      (sum, m) =>
+        sum +
+        (stagingData[getModuleDataKey(m)] ?? []).filter((r) => getAttention(m, r).length > 0).length,
+      0,
+    );
+  }, [stagingData]);
+
   // Filtered rows for current staging tab
   const currentStagingRows = useMemo(() => {
     if (!stagingData) return [];
     if (activeStagingTab === "WARNINGS") return [];
 
-    const key = getModuleDataKey(activeStagingTab as ManualVocabularySourceModel);
-    const list = stagingData[key] || [];
+    const mod = activeStagingTab as ManualVocabularyModule;
+    const key = getModuleDataKey(mod);
+    let list = ((stagingData[key] as Record<string, any>[] | undefined) || []).map((item, index) => ({ item, index }));
 
+    if (onlyAttention) list = list.filter(({ item }) => getAttention(mod, item).length > 0);
     if (!searchQuery.trim()) return list;
     const q = searchQuery.toLowerCase().trim();
 
-    return list.filter((item) => {
+    return list.filter(({ item }) => {
       const term = String(
         item.entry || item.toponym || item.name || item.term || "",
       ).toLowerCase();
@@ -602,24 +886,19 @@ export function ManualVocabularyPageContent() {
       const province = String(item.province || "").toLowerCase();
       return term.includes(q) || def.includes(q) || province.includes(q);
     });
-  }, [stagingData, activeStagingTab, searchQuery]);
+  }, [stagingData, activeStagingTab, searchQuery, onlyAttention]);
 
   return (
     <div className="mt-6 space-y-6">
-      <TitleList
-        title="Automação, Curadoria & Extracção Lexical"
-        suTitle="Leitura inteligente de manuais PDF, importação de folhas Excel, curadoria em tempo real e persistência com validação forte de duplicatas."
-      />
+      <TitleList title="Extracção Lexical" suTitle="" />
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full max-w-xl grid-cols-3">
-          <TabsTrigger value="extract" className="flex items-center gap-2">
-            <Icon name="Sparkles" className="h-4 w-4" />
-            Nova Extracção
+        <TabsList className="grid w-full max-w-md grid-cols-3">
+          <TabsTrigger value="extract" >
+            Extracção
           </TabsTrigger>
           <TabsTrigger value="staging" className="flex items-center gap-2 relative">
-            <Icon name="Layers" className="h-4 w-4" />
-            Curadoria & Validação
+            Curadoria
             {stagingData && (
               <Badge variant="default" className="ml-1.5 px-1.5 py-0 text-[10px] h-4">
                 {stagingData.stats.totalTerms}
@@ -627,333 +906,106 @@ export function ManualVocabularyPageContent() {
             )}
           </TabsTrigger>
           <TabsTrigger value="logs" className="flex items-center gap-2">
-            <Icon name="History" className="h-4 w-4" />
-            Histórico & Auditoria
+            Histórico
           </TabsTrigger>
         </TabsList>
 
-        {/* ─── TAB 1: NOVA EXTRACÇÃO / IMPORTAÇÃO ───────────────────────────── */}
-        <TabsContent value="extract" className="space-y-6">
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-            {/* PAINEL PRINCIPAL: OPÇÕES DE ENTRADA */}
-            <div className="space-y-6 lg:col-span-2">
-              {/* ESCOLHA DOS MÓDULOS */}
-              <Card className="rounded-lg border-border">
-                <CardHeader className="pb-3">
-                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                      <CardTitle className="text-lg">Módulos a Identificar</CardTitle>
-                      <CardDescription>
-                        Seleccione quais os tipos de vocabulário que a inteligência artificial deve reconhecer no manual.
-                      </CardDescription>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={selectAllModules}
-                        disabled={
-                          extractPreview.isPending ||
-                          selectedModules.length === AVAILABLE_MODULES.length
-                        }
-                      >
-                        Todos
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={clearAllModules}
-                        disabled={extractPreview.isPending || selectedModules.length === 0}
-                      >
-                        Limpar
-                      </Button>
-                      <Badge variant="secondary" className="ml-1 font-semibold">
-                        {selectedModules.length} de {AVAILABLE_MODULES.length}
-                      </Badge>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                    {AVAILABLE_MODULES.map((mod) => {
-                      const isChecked = selectedModules.includes(mod.id);
-                      return (
-                        <button
-                          key={mod.id}
-                          type="button"
-                          onClick={() => toggleModule(mod.id)}
-                          disabled={extractPreview.isPending}
-                          className={cn(
-                            "group relative flex flex-col justify-between rounded-lg border p-4 text-left transition-all",
-                            isChecked
-                              ? "border-primary bg-primary/5 shadow-sm ring-1 ring-primary/20"
-                              : "border-border bg-card hover:border-primary/40 hover:bg-muted/20 opacity-70",
-                            extractPreview.isPending && "pointer-events-none opacity-50",
-                          )}
-                        >
-                          <div>
-                            <div className="flex items-center justify-between gap-2">
-                              <div
-                                className={cn(
-                                  "flex h-9 w-9 items-center justify-center rounded-md transition-colors",
-                                  isChecked
-                                    ? "bg-primary text-primary-foreground"
-                                    : "bg-muted text-muted-foreground",
-                                )}
-                              >
-                                <Icon name={mod.icon} className="h-5 w-5" />
-                              </div>
-                              <div
-                                className={cn(
-                                  "flex h-5 w-5 items-center justify-center rounded border transition-colors",
-                                  isChecked
-                                    ? "border-primary bg-primary text-primary-foreground"
-                                    : "border-muted-foreground/40",
-                                )}
-                              >
-                                {isChecked && <Icon name="Check" className="h-3.5 w-3.5" />}
-                              </div>
-                            </div>
-                            <p className="mt-3 font-semibold text-sm text-foreground">
-                              {mod.label}
-                            </p>
-                            <p className="mt-1 text-xs text-muted-foreground line-clamp-2">
-                              {mod.shortDesc}
-                            </p>
-                          </div>
-                          <div className="mt-3 border-t border-border/40 pt-2 text-[11px] text-muted-foreground">
-                            <span className="font-medium text-foreground/80">Ex: </span>
-                            <span className="italic">{mod.examples}</span>
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </CardContent>
-              </Card>
+        {/* ─── TAB 1: EXTRACÇÃO ─────────────────────────────────────────────── */}
+        <TabsContent value="extract" className="mx-auto max-w-2xl space-y-5">
+          <div
+            {...getPdfRootProps()}
+            className={cn(
+              "flex cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed px-6 py-10 text-center transition-colors",
+              isPdfDragActive || file
+                ? "border-primary bg-primary/5"
+                : "border-border hover:border-primary/50",
+              extractPreview.isPending && "pointer-events-none opacity-60",
+            )}
+          >
+            <input {...getPdfInputProps()} />
+            <Icon name="Upload" className="h-5 w-5 text-muted-foreground" />
+            {file ? (
+              <p className="mt-2 text-sm font-medium">
+                {file.name}{" "}
+                <span className="font-normal text-muted-foreground">· {formatSize(file.size)}</span>
+              </p>
+            ) : (
+              <p className="mt-2 text-sm text-muted-foreground">
+                Arraste um PDF ou clique para seleccionar
+              </p>
+            )}
+          </div>
 
-              {/* OPÇÃO 1: DROPZONE PDF (EXTRACÇÃO COM IA) */}
-              <Card className="rounded-lg border-border">
-                <CardHeader className="pb-3">
-                  <div className="flex items-center gap-2">
-                    <Icon name="FileText" className="h-5 w-5 text-primary" />
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <CardTitle className="text-lg">Opção A: Extrair de Manual PDF</CardTitle>
-                        {isOperator && (
-                          <Badge variant="outline" className="text-xs bg-amber-500/10 text-amber-700 border-amber-300 font-medium">
-                            Quota Operador: máx. 30 págs / 25MB
-                          </Badge>
-                        )}
-                      </div>
-                      <CardDescription>
-                        Carregue uma obra ou documento em formato PDF para análise automatizada pela IA.
-                      </CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div
-                    {...getPdfRootProps()}
-                    className={cn(
-                      "flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-8 text-center transition-colors cursor-pointer",
-                      isPdfDragActive
-                        ? "border-primary bg-primary/10"
-                        : file
-                          ? "border-primary/50 bg-primary/5"
-                          : "border-border hover:border-primary/50 hover:bg-muted/30",
-                      extractPreview.isPending && "pointer-events-none opacity-60",
-                    )}
-                  >
-                    <input {...getPdfInputProps()} />
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
-                      <Icon name="Upload" className="h-6 w-6" />
-                    </div>
-                    {file ? (
-                      <div className="mt-3 space-y-1">
-                        <p className="text-sm font-semibold text-foreground">{file.name}</p>
-                        <p className="text-xs text-muted-foreground">{formatSize(file.size)}</p>
-                        <p className="text-xs text-emerald-600 font-medium">
-                          Ficheiro PDF pronto para processamento
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="mt-3 space-y-1">
-                        <p className="text-sm font-medium text-foreground">
-                          Arraste o manual PDF aqui ou clique para seleccionar
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          PDF nativo ou digitalizado até {isOperator ? "25MB (limite de Operador)" : "100MB"}
-                        </p>
-                      </div>
-                    )}
-                  </div>
+          <div className="flex flex-wrap gap-1.5">
+            {AVAILABLE_MODULES.map((mod) => {
+              const isChecked = selectedModules.includes(mod.id);
+              return (
+                <button
+                  key={mod.id}
+                  type="button"
+                  title={`${mod.shortDesc} — ${mod.examples}`}
+                  onClick={() => toggleModule(mod.id)}
+                  disabled={extractPreview.isPending}
+                  className={cn(
+                    "rounded-full border px-3 py-1 text-xs transition-colors",
+                    isChecked
+                      ? "border-primary bg-primary text-primary-foreground"
+                      : "border-border text-muted-foreground hover:border-primary/50",
+                  )}
+                >
+                  {mod.label}
+                </button>
+              );
+            })}
+          </div>
 
-                  {/* INTERVALO DE PÁGINAS */}
-                  <div className="rounded-lg border border-border/60 bg-muted/20 p-4 space-y-3">
-                    <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                      <Icon name="SlidersHorizontal" className="h-3.5 w-3.5" />
-                      Filtro de Páginas (Opcional)
-                    </div>
-                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                      <div>
-                        <label className="text-xs text-muted-foreground">Página Inicial</label>
-                        <Input
-                          type="number"
-                          min={1}
-                          placeholder="Ex: 1"
-                          value={startPage}
-                          onChange={(e) => setStartPage(e.target.value)}
-                          disabled={extractPreview.isPending}
-                          className="h-8 text-xs mt-1"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-xs text-muted-foreground">Página Final</label>
-                        <Input
-                          type="number"
-                          min={1}
-                          placeholder="Ex: 50"
-                          value={endPage}
-                          onChange={(e) => setEndPage(e.target.value)}
-                          disabled={extractPreview.isPending}
-                          className="h-8 text-xs mt-1"
-                        />
-                      </div>
-                    </div>
-                  </div>
+          {extractPreview.isPending && <ExtractionProgress progress={progress ?? { stage: "queued", done: 0, total: 0 }} />}
 
-                  <div className="flex flex-col gap-2 pt-2 sm:flex-row sm:justify-between">
-                    <Button
-                      type="button"
-                      onClick={handleExtract}
-                      loading={extractPreview.isPending}
-                      disabled={!file || extractPreview.isPending || selectedModules.length === 0}
-                      className="px-6"
-                    >
-                      <Icon name="Sparkles" className="h-4 w-4" />
-                      {extractPreview.isPending
-                        ? "A processar com IA..."
-                        : "Extrair & Abrir Curadoria"}
-                    </Button>
-                    {file && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => setFile(null)}
-                        disabled={extractPreview.isPending}
-                      >
-                        <Icon name="X" className="h-4 w-4" />
-                        Remover PDF
-                      </Button>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
+          <div className="flex flex-wrap items-center gap-3">
+            <Input
+              type="number"
+              min={1}
+              placeholder="Pág. inicial"
+              value={startPage}
+              onChange={(e) => setStartPage(e.target.value)}
+              disabled={extractPreview.isPending}
+              className="h-9 w-28 text-xs"
+            />
+            <Input
+              type="number"
+              min={1}
+              placeholder="Pág. final"
+              value={endPage}
+              onChange={(e) => setEndPage(e.target.value)}
+              disabled={extractPreview.isPending}
+              className="h-9 w-28 text-xs"
+            />
+            {isOperator && (
+              <span className="text-xs text-muted-foreground">máx. 30 págs · 25MB</span>
+            )}
+            <Button
+              type="button"
+              onClick={handleExtract}
+              loading={extractPreview.isPending}
+              disabled={!file || extractPreview.isPending || selectedModules.length === 0}
+              className="ml-auto"
+            >
+              {extractPreview.isPending ? "A processar..." : "Extrair"}
+            </Button>
+          </div>
 
-              {/* OPÇÃO 2: IMPORTAR FOLHA EXCEL EXISTENTE */}
-              <Card className="rounded-lg border-border">
-                <CardHeader className="pb-3">
-                  <div className="flex items-center gap-2">
-                    <Icon name="FileSpreadsheet" className="h-5 w-5 text-emerald-600" />
-                    <div>
-                      <CardTitle className="text-lg">
-                        Opção B: Importar Ficheiro Excel (.xlsx)
-                      </CardTitle>
-                      <CardDescription>
-                        Carregue uma folha de cálculo Excel gerada anteriormente ou preenchida manualmente para curadoria e validação no ecrã.
-                      </CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div
-                    {...getExcelRootProps()}
-                    className={cn(
-                      "flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-6 text-center transition-colors cursor-pointer",
-                      isExcelDragActive
-                        ? "border-emerald-500 bg-emerald-500/10"
-                        : "border-border hover:border-emerald-500/50 hover:bg-muted/30",
-                      importExcel.isPending && "pointer-events-none opacity-60",
-                    )}
-                  >
-                    <input {...getExcelInputProps()} />
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600">
-                      <Icon name="Table" className="h-5 w-5" />
-                    </div>
-                    <div className="mt-2 space-y-1">
-                      <p className="text-sm font-medium text-foreground">
-                        {importExcel.isPending
-                          ? "A processar folha Excel..."
-                          : "Arraste um ficheiro .xlsx aqui ou clique para carregar"}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        Folhas suportadas: Entradas, Neologismos, Topónimos, Antropónimos, Estrangeirismos
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* PAINEL LATERAL: PIPELINE E INFORMAÇÕES */}
-            <aside className="space-y-4">
-              <Card className="rounded-lg border-border">
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-base">Fluxo de Trabalho</CardTitle>
-                    <Badge variant={extractPreview.isPending ? "default" : "secondary"}>
-                      {extractPreview.isPending ? "Em execução" : "Pronto"}
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-2.5">
-                  <PipelineStep
-                    step="1"
-                    title="Leitura & Extracção"
-                    status={file ? "done" : "idle"}
-                    desc="Processamento PDF ou importação directa de Excel"
-                  />
-                  <PipelineStep
-                    step="2"
-                    title="Curadoria no Ecrã"
-                    status={stagingData ? "done" : extractPreview.isPending ? "active" : "idle"}
-                    desc="Edição, correcção de verbetes e reclassificação de módulos"
-                  />
-                  <PipelineStep
-                    step="3"
-                    title="Exportação Excel"
-                    status={stagingData ? "done" : "idle"}
-                    desc="Geração do ficheiro .xlsx com dados curados"
-                  />
-                  <PipelineStep
-                    step="4"
-                    title="Validação & Registo"
-                    status={commitResult ? "done" : "idle"}
-                    desc="Validação forte de duplicatas e gravação na base de dados"
-                  />
-                </CardContent>
-              </Card>
-
-              {/* CARD DE NORMA ORTOGRÁFICA */}
-              <Card className="rounded-lg border-border bg-muted/20">
-                <CardContent className="p-4 space-y-2">
-                  <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
-                    <Icon name="ShieldCheck" className="h-4 w-4" />
-                    Norma Ortográfica Obrigatória
-                  </div>
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    Este sistema está estritamente afinado para o <strong>Acordo Ortográfico de 1945 (AO45)</strong>,
-                    padrão oficial de Angola. Consoantes mudas (<em>acção</em>, <em>óptimo</em>, <em>facto</em>)
-                    e regras de hifenização tradicionais são preservadas sem brasileirismos.
-                  </p>
-                </CardContent>
-              </Card>
-            </aside>
+          <div
+            {...getExcelRootProps()}
+            className={cn(
+              "cursor-pointer text-center text-xs text-muted-foreground underline-offset-4 hover:underline",
+              importExcel.isPending && "pointer-events-none opacity-60",
+            )}
+          >
+            <input {...getExcelInputProps()} />
+            {importExcel.isPending ? "A importar..." : "ou importar um ficheiro Excel (.xlsx)"}
           </div>
         </TabsContent>
+
 
         {/* ─── TAB 2: CURADORIA & VALIDAÇÃO (STAGING) ───────────────────────── */}
         <TabsContent value="staging" className="space-y-6">
@@ -965,8 +1017,7 @@ export function ManualVocabularyPageContent() {
                 </div>
                 <h3 className="text-lg font-semibold">Nenhum documento em curadoria</h3>
                 <p className="text-sm text-muted-foreground max-w-md">
-                  Extraia o vocabulário de um manual PDF na aba &ldquo;Nova Extracção&rdquo; ou importe um
-                  ficheiro Excel (.xlsx) para visualizar, editar e salvar na base de dados.
+                  Extraia um PDF ou importe um Excel (.xlsx) para começar.
                 </p>
                 <Button
                   type="button"
@@ -975,7 +1026,7 @@ export function ManualVocabularyPageContent() {
                   className="mt-2"
                 >
                   <Icon name="Upload" className="h-4 w-4" />
-                  Ir para Extracção / Importação
+                  Ir para Extracção
                 </Button>
               </div>
             </Card>
@@ -992,9 +1043,6 @@ export function ManualVocabularyPageContent() {
                       {stagingData.stats.totalTerms} itens em curadoria
                     </Badge>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Revise os vocábulos, faça correcções, reclassifique módulos e salve na base de dados com deduplicação rigorosa.
-                  </p>
                 </div>
                 <div className="flex items-center gap-2">
                   <Button
@@ -1035,45 +1083,6 @@ export function ManualVocabularyPageContent() {
                 </div>
               </div>
 
-              {/* CARDS DE KPIS */}
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-7">
-                <MetricCard
-                  label="Total Extraído"
-                  value={stagingData.stats.totalTerms}
-                  icon="Sparkles"
-                  highlight
-                />
-                <MetricCard
-                  label="Entradas"
-                  value={stagingData.entries.length}
-                  icon="BookOpen"
-                />
-                <MetricCard
-                  label="Neologismos"
-                  value={stagingData.neologisms.length}
-                  icon="Sparkles"
-                />
-                <MetricCard
-                  label="Topónimos"
-                  value={stagingData.toponyms.length}
-                  icon="MapPin"
-                />
-                <MetricCard
-                  label="Antropónimos"
-                  value={stagingData.anthroponyms.length}
-                  icon="UserCheck"
-                />
-                <MetricCard
-                  label="Estrangeirismos"
-                  value={stagingData.foreignisms.length}
-                  icon="Globe"
-                />
-                <MetricCard
-                  label="Avisos"
-                  value={stagingData.warnings.length}
-                  icon="CircleAlert"
-                />
-              </div>
 
               {/* TABS DAS TABELAS POR MÓDULO */}
               <Card className="rounded-lg border-border">
@@ -1100,6 +1109,9 @@ export function ManualVocabularyPageContent() {
                         <TabsTrigger value="FOREIGNISM" className="text-xs">
                           Estrangeirismos ({stagingData.foreignisms.length})
                         </TabsTrigger>
+                        <TabsTrigger value="NATIONAL_LANGUAGE" className="text-xs">
+                          Línguas nacionais ({stagingData.nationalLanguages?.length ?? 0})
+                        </TabsTrigger>
                         {stagingData.warnings.length > 0 && (
                           <TabsTrigger value="WARNINGS" className="text-xs text-amber-600">
                             Avisos ({stagingData.warnings.length})
@@ -1110,13 +1122,28 @@ export function ManualVocabularyPageContent() {
 
                     {/* CAMPO DE PESQUISA RÁPIDA */}
                     {activeStagingTab !== "WARNINGS" && (
-                      <div className="w-full sm:w-64">
+                      <div className="flex w-full items-center gap-2 sm:w-auto">
+                        {attentionCount > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => setOnlyAttention((v) => !v)}
+                            className={cn(
+                              "flex shrink-0 items-center gap-1 rounded-full border px-2.5 py-1 text-xs transition-colors",
+                              onlyAttention
+                                ? "border-amber-500 bg-amber-500/15 text-amber-700"
+                                : "border-border text-muted-foreground hover:border-amber-500/50",
+                            )}
+                          >
+                            <Icon name="TriangleAlert" className="h-3 w-3" />
+                            {attentionCount} a rever
+                          </button>
+                        )}
                         <Input
                           type="search"
-                          placeholder="Pesquisar termo ou texto..."
+                          placeholder="Pesquisar..."
                           value={searchQuery}
                           onChange={(e) => setSearchQuery(e.target.value)}
-                          className="h-8 text-xs"
+                          className="h-8 w-full text-xs sm:w-52"
                         />
                       </div>
                     )}
@@ -1131,7 +1158,7 @@ export function ManualVocabularyPageContent() {
                           <TableRow className="bg-muted/30">
                             <TableHead className="w-24">Módulo</TableHead>
                             <TableHead className="w-20">Linha</TableHead>
-                            <TableHead className="w-32">Termo</TableHead>
+                            <TableHead className="w-32">Vocábulo</TableHead>
                             <TableHead className="w-32">Campo</TableHead>
                             <TableHead>Mensagem de Advertência</TableHead>
                           </TableRow>
@@ -1161,174 +1188,131 @@ export function ManualVocabularyPageContent() {
                       <Table>
                         <TableHeader>
                           <TableRow className="bg-muted/30">
-                            <TableHead className="w-10">#</TableHead>
-                            <TableHead className="min-w-[180px]">
-                              {activeStagingTab === "TOPONYM"
-                                ? "Topónimo"
-                                : activeStagingTab === "ANTHROPONYM"
-                                  ? "Nome Próprio"
-                                  : activeStagingTab === "FOREIGNISM"
-                                    ? "Termo Estrangeiro"
-                                    : "Vocábulo / Entrada"}
-                            </TableHead>
-                            <TableHead className="min-w-[240px]">Definição / Significado</TableHead>
-                            <TableHead className="w-36">
-                              {activeStagingTab === "TOPONYM"
-                                ? "Província / Local"
-                                : activeStagingTab === "ANTHROPONYM"
-                                  ? "Género / Apelido"
-                                  : activeStagingTab === "FOREIGNISM"
-                                    ? "Idioma / Integração"
-                                    : "Tipo / Cat. Gramatical"}
-                            </TableHead>
-                            <TableHead className="w-24 text-center">Confiança</TableHead>
-                            <TableHead className="w-32 text-right">Ações</TableHead>
+                            <TableHead className="min-w-[200px]">Vocábulo</TableHead>
+                            <TableHead className="min-w-[260px]">Definição</TableHead>
+                            <TableHead className="w-40">Classe</TableHead>
+                            <TableHead className="w-14 text-right">Freq.</TableHead>
+                            <TableHead className="w-16 text-right">Conf.</TableHead>
+                            <TableHead className="w-28" />
                           </TableRow>
                         </TableHeader>
                         <TableBody>
                           {currentStagingRows.length === 0 ? (
                             <TableRow>
-                              <TableCell colSpan={6} className="h-32 text-center text-muted-foreground text-sm">
-                                Nenhum registo encontrado com o critério de pesquisa.
+                              <TableCell colSpan={6} className="h-28 text-center text-sm text-muted-foreground">
+                                Nenhum registo encontrado.
                               </TableCell>
                             </TableRow>
                           ) : (
-                            currentStagingRows.map((row, idx) => {
+                            currentStagingRows.map(({ item: row, index: idx }) => {
+                              const mod = activeStagingTab as ManualVocabularyModule;
                               const term =
                                 row.entry || row.toponym || row.name || row.term || "Sem título";
                               const definition =
                                 row.firstDefinition || row.meaning || row.definition || "—";
                               const confidence = Number(row.confidence ?? 1);
+                              const attention = getAttention(mod, row);
+                              const kind =
+                                mod === "NATIONAL_LANGUAGE"
+                                  ? [row.language, row.grammaticalCategory].filter(Boolean).join(" · ")
+                                  : mod === "TOPONYM"
+                                  ? [row.province, row.municipality].filter(Boolean).join(" · ")
+                                  : mod === "ANTHROPONYM"
+                                    ? [row.gender, row.surname].filter(Boolean).join(" · ")
+                                    : mod === "FOREIGNISM"
+                                      ? [row.originalLanguage, row.integrationLevel]
+                                          .filter(Boolean)
+                                          .join(" · ")
+                                      : [row.wordType, row.grammaticalCategory]
+                                          .filter(Boolean)
+                                          .join(" · ");
 
                               return (
-                                <TableRow key={idx} className="hover:bg-muted/20">
-                                  <TableCell className="font-mono text-xs text-muted-foreground">
-                                    {idx + 1}
-                                  </TableCell>
-                                  <TableCell className="font-semibold text-sm text-foreground">
-                                    <div className="flex items-center gap-2">
-                                      <span>{term}</span>
-                                      {row.isForeignism && (
-                                        <Badge variant="outline" className="text-[10px] text-blue-600 border-blue-200">
-                                          Estrangeiro
-                                        </Badge>
+                                <TableRow key={idx} className="group align-top hover:bg-muted/20">
+                                  <TableCell className="text-sm font-medium text-foreground">
+                                    <div className="flex items-start gap-1.5">
+                                      {attention.length > 0 && (
+                                        <span title={attention.join("\n")} className="mt-0.5 shrink-0">
+                                          <Icon name="TriangleAlert" className="h-3.5 w-3.5 text-amber-500" />
+                                        </span>
                                       )}
+                                      <span>{term}</span>
                                     </div>
-                                  </TableCell>
-                                  <TableCell className="text-xs text-muted-foreground line-clamp-2 max-w-md">
-                                    {definition}
-                                  </TableCell>
-                                  <TableCell className="text-xs">
-                                    {activeStagingTab === "TOPONYM" ? (
-                                      <span className="font-medium text-foreground">
-                                        {row.province || "Angola"}
-                                        {row.municipality ? ` (${row.municipality})` : ""}
-                                      </span>
-                                    ) : activeStagingTab === "ANTHROPONYM" ? (
-                                      <span>
-                                        {row.gender ? `${row.gender}` : ""}
-                                        {row.surname ? ` / ${row.surname}` : ""}
-                                      </span>
-                                    ) : activeStagingTab === "FOREIGNISM" ? (
-                                      <span>
-                                        {row.originalLanguage || "—"} / {row.integrationLevel || "adaptado"}
-                                      </span>
-                                    ) : (
-                                      <span>
-                                        {row.wordType || "simples"}
-                                        {row.grammaticalCategory ? ` • ${row.grammaticalCategory}` : ""}
-                                      </span>
+                                    {attention.length > 0 && (
+                                      <p className="mt-1 max-w-xs whitespace-normal text-[11px] font-normal leading-snug text-amber-700">
+                                        {attention[0]}
+                                        {attention.length > 1 && ` (+${attention.length - 1})`}
+                                      </p>
                                     )}
                                   </TableCell>
-                                  <TableCell className="text-center">
-                                    <Badge
-                                      variant={
-                                        confidence >= 0.8
-                                          ? "default"
-                                          : confidence >= 0.6
-                                            ? "secondary"
-                                            : "outline"
-                                      }
-                                      className={cn(
-                                        "text-[10px] font-mono",
-                                        confidence >= 0.8 && "bg-emerald-500 text-white",
-                                        confidence < 0.8 && confidence >= 0.6 && "bg-amber-500/20 text-amber-700",
-                                      )}
-                                    >
-                                      {(confidence * 100).toFixed(0)}%
-                                    </Badge>
+                                  <TableCell className="max-w-md whitespace-normal text-xs text-muted-foreground">
+                                    <span className="line-clamp-2">{definition}</span>
+                                  </TableCell>
+                                  <TableCell className="text-xs text-muted-foreground">{kind || "—"}</TableCell>
+                                  <TableCell className="text-right font-mono text-xs">
+                                    {row.frequency ?? 1}
+                                  </TableCell>
+                                  <TableCell
+                                    className={cn(
+                                      "text-right font-mono text-xs",
+                                      confidence >= 0.8
+                                        ? "text-emerald-600"
+                                        : confidence >= 0.6
+                                          ? "text-amber-600"
+                                          : "text-destructive",
+                                    )}
+                                  >
+                                    {(confidence * 100).toFixed(0)}%
                                   </TableCell>
                                   <TableCell className="text-right">
-                                    <div className="flex items-center justify-end gap-1">
-                                      {/* BOTÃO EDITAR */}
+                                    <div className="flex items-center justify-end gap-0.5 opacity-60 transition-opacity group-hover:opacity-100">
                                       <Button
                                         type="button"
                                         variant="ghost"
                                         size="sm"
                                         className="h-7 w-7 p-0"
-                                        title="Editar este registo"
+                                        title="Editar"
                                         onClick={() =>
-                                          setEditingItem({
-                                            module: activeStagingTab as ManualVocabularySourceModel,
-                                            index: idx,
-                                            data: { ...row },
-                                          })
+                                          setEditingItem({ module: mod, index: idx, data: { ...row } })
                                         }
                                       >
                                         <Icon name="Pencil" className="h-3.5 w-3.5" />
                                       </Button>
-
-                                      {/* DROPDOWN RECLASSIFICAR */}
+                                      {mod !== "NATIONAL_LANGUAGE" && (
                                       <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
                                           <Button
                                             type="button"
                                             variant="ghost"
                                             size="sm"
-                                            className="h-7 w-7 p-0 text-primary"
-                                            title="Reclassificar / Mover para outro módulo"
+                                            className="h-7 w-7 p-0"
+                                            title="Mover para outro módulo"
                                           >
                                             <Icon name="RefreshCw" className="h-3.5 w-3.5" />
                                           </Button>
                                         </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="end" className="w-48">
-                                          <div className="px-2 py-1.5 text-[11px] font-semibold text-muted-foreground uppercase">
-                                            Reclassificar para:
-                                          </div>
-                                          {AVAILABLE_MODULES.filter(
-                                            (m) => m.id !== activeStagingTab,
-                                          ).map((m) => (
+                                        <DropdownMenuContent align="end" className="w-44">
+                                          {AVAILABLE_MODULES.filter((m) => m.id !== mod).map((m) => (
                                             <DropdownMenuItem
                                               key={m.id}
                                               onClick={() =>
-                                                handleReclassify(
-                                                  activeStagingTab as ManualVocabularySourceModel,
-                                                  idx,
-                                                  m.id,
-                                                )
+                                                handleReclassify(mod as ManualVocabularySourceModel, idx, m.id)
                                               }
-                                              className="text-xs cursor-pointer flex items-center gap-2"
+                                              className="cursor-pointer text-xs"
                                             >
-                                              <Icon name={m.icon} className="h-3.5 w-3.5" />
                                               {m.label}
                                             </DropdownMenuItem>
                                           ))}
                                         </DropdownMenuContent>
                                       </DropdownMenu>
-
-                                      {/* BOTÃO ELIMINAR */}
+                                      )}
                                       <Button
                                         type="button"
                                         variant="ghost"
                                         size="sm"
                                         className="h-7 w-7 p-0 text-destructive hover:text-destructive"
-                                        title="Eliminar da curadoria"
-                                        onClick={() =>
-                                          handleDeleteItem(
-                                            activeStagingTab as ManualVocabularySourceModel,
-                                            idx,
-                                          )
-                                        }
+                                        title="Eliminar"
+                                        onClick={() => handleDeleteItem(mod, idx)}
                                       >
                                         <Icon name="Trash2" className="h-3.5 w-3.5" />
                                       </Button>
@@ -1353,12 +1337,7 @@ export function ManualVocabularyPageContent() {
           <Card className="rounded-lg border-border">
             <CardHeader className="pb-3">
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <CardTitle className="text-lg">Auditoria de Extracções</CardTitle>
-                  <CardDescription>
-                    Registo completo de todos os manuais processados, modelo de IA e volumes gerados.
-                  </CardDescription>
-                </div>
+                <CardTitle className="text-lg">Extracções recentes</CardTitle>
               </div>
             </CardHeader>
             <CardContent>
@@ -1377,7 +1356,6 @@ export function ManualVocabularyPageContent() {
                       <TableRow>
                         <TableHead>Ficheiro</TableHead>
                         <TableHead>Tamanho</TableHead>
-                        <TableHead>Modelo IA</TableHead>
                         <TableHead className="text-center">Total</TableHead>
                         <TableHead className="text-center">Entradas</TableHead>
                         <TableHead className="text-center">Neologismos</TableHead>
@@ -1397,11 +1375,6 @@ export function ManualVocabularyPageContent() {
                           </TableCell>
                           <TableCell className="text-xs text-muted-foreground">
                             {formatSize(log.fileSize)}
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="outline" className="text-[11px] font-mono">
-                              {log.model}
-                            </Badge>
                           </TableCell>
                           <TableCell className="text-center font-semibold">{log.totalTerms}</TableCell>
                           <TableCell className="text-center text-xs">{log.entries}</TableCell>
@@ -1427,169 +1400,60 @@ export function ManualVocabularyPageContent() {
       {/* ─── MODAL DE EDIÇÃO DE REGISTO ───────────────────────────────────────── */}
       {editingItem && (
         <Dialog open={!!editingItem} onOpenChange={(open) => !open && setEditingItem(null)}>
-          <DialogContent className="max-w-xl">
+          <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <Icon name="Pencil" className="h-4 w-4 text-primary" />
                 Editar {getModuleLabel(editingItem.module)}
               </DialogTitle>
-              <DialogDescription>
-                Ajuste os campos deste termo antes de salvar na base de dados ou exportar para Excel.
-              </DialogDescription>
             </DialogHeader>
+
+            {getAttention(editingItem.module, editingItem.data).length > 0 && (
+              <div className="space-y-1 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 text-xs text-amber-700">
+                <p className="flex items-center gap-1.5 font-semibold">
+                  <Icon name="TriangleAlert" className="h-3.5 w-3.5" />
+                  A rever
+                </p>
+                <ul className="list-disc space-y-0.5 pl-5">
+                  {getAttention(editingItem.module, editingItem.data).map((m) => (
+                    <li key={m}>{m}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
             <form
               onSubmit={(e) => {
                 e.preventDefault();
                 const formData = new FormData(e.currentTarget);
                 const edited: Record<string, any> = {};
-                formData.forEach((val, key) => {
-                  edited[key] = val;
-                });
+                for (const f of MODULE_FIELDS[editingItem.module]) {
+                  const val = formData.get(f.key);
+                  if (f.kind === "boolean") edited[f.key] = val === "on";
+                  else if (f.kind === "list")
+                    edited[f.key] = String(val ?? "")
+                      .split(/[;,]/)
+                      .map((x) => x.trim())
+                      .filter(Boolean);
+                  else if (f.kind === "number")
+                    edited[f.key] = Math.max(1, parseInt(String(val || "1"), 10) || 1);
+                  else edited[f.key] = String(val ?? "").trim();
+                }
+                if ("languageCode" in edited) edited.languageCode = ensurePtAO(edited.languageCode);
                 handleSaveEditedItem(edited);
               }}
               className="space-y-4"
             >
-              {/* Campo Principal */}
-              <div>
-                <label className="text-xs font-semibold text-foreground">
-                  {editingItem.module === "TOPONYM"
-                    ? "Topónimo"
-                    : editingItem.module === "ANTHROPONYM"
-                      ? "Nome Próprio"
-                      : editingItem.module === "FOREIGNISM"
-                        ? "Termo Estrangeiro"
-                        : "Vocábulo / Entrada"}
-                </label>
-                <Input
-                  name={
-                    editingItem.module === "TOPONYM"
-                      ? "toponym"
-                      : editingItem.module === "ANTHROPONYM"
-                        ? "name"
-                        : editingItem.module === "FOREIGNISM"
-                          ? "term"
-                          : "entry"
-                  }
-                  defaultValue={
-                    editingItem.data.entry ||
-                    editingItem.data.toponym ||
-                    editingItem.data.name ||
-                    editingItem.data.term ||
-                    ""
-                  }
-                  required
-                  className="mt-1"
-                />
+              <div className="grid grid-cols-2 gap-3">
+                {MODULE_FIELDS[editingItem.module].map((def) => (
+                  <FieldInput
+                    key={def.key}
+                    def={def}
+                    value={editingItem.data[def.key]}
+                    flagged={getFlaggedFields(editingItem.module, editingItem.data).has(def.key)}
+                  />
+                ))}
               </div>
-
-              {/* Definição / Significado */}
-              <div>
-                <label className="text-xs font-semibold text-foreground">
-                  {editingItem.module === "FOREIGNISM" ? "Definição" : "Primeira Definição / Significado"}
-                </label>
-                <Input
-                  name={
-                    editingItem.module === "FOREIGNISM"
-                      ? "definition"
-                      : editingItem.module === "TOPONYM" || editingItem.module === "ANTHROPONYM"
-                        ? "meaning"
-                        : "firstDefinition"
-                  }
-                  defaultValue={
-                    editingItem.data.firstDefinition ||
-                    editingItem.data.definition ||
-                    editingItem.data.meaning ||
-                    ""
-                  }
-                  className="mt-1"
-                />
-              </div>
-
-              {/* Campos específicos por modelo */}
-              {editingItem.module === "TOPONYM" && (
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-xs font-semibold text-foreground">Província</label>
-                    <Input
-                      name="province"
-                      defaultValue={editingItem.data.province || "Angola"}
-                      className="mt-1"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-semibold text-foreground">Município</label>
-                    <Input
-                      name="municipality"
-                      defaultValue={editingItem.data.municipality || ""}
-                      className="mt-1"
-                    />
-                  </div>
-                </div>
-              )}
-
-              {editingItem.module === "ANTHROPONYM" && (
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-xs font-semibold text-foreground">Género (M/F)</label>
-                    <Input
-                      name="gender"
-                      defaultValue={editingItem.data.gender || "M"}
-                      className="mt-1"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-semibold text-foreground">Apelido / Sobrenome</label>
-                    <Input
-                      name="surname"
-                      defaultValue={editingItem.data.surname || ""}
-                      className="mt-1"
-                    />
-                  </div>
-                </div>
-              )}
-
-              {editingItem.module === "FOREIGNISM" && (
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-xs font-semibold text-foreground">Idioma Original</label>
-                    <Input
-                      name="originalLanguage"
-                      defaultValue={editingItem.data.originalLanguage || "Inglês"}
-                      className="mt-1"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-semibold text-foreground">Nível de Integração</label>
-                    <Input
-                      name="integrationLevel"
-                      defaultValue={editingItem.data.integrationLevel || "adaptado"}
-                      className="mt-1"
-                    />
-                  </div>
-                </div>
-              )}
-
-              {(editingItem.module === "ENTRY" || editingItem.module === "NEOLOGISM") && (
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-xs font-semibold text-foreground">Tipo de Palavra</label>
-                    <Input
-                      name="wordType"
-                      defaultValue={editingItem.data.wordType || "simples"}
-                      className="mt-1"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-semibold text-foreground">Categoria Gramatical</label>
-                    <Input
-                      name="grammaticalCategory"
-                      defaultValue={editingItem.data.grammaticalCategory || ""}
-                      className="mt-1"
-                    />
-                  </div>
-                </div>
-              )}
 
               <DialogFooter className="pt-2">
                 <Button
@@ -1615,30 +1479,32 @@ export function ManualVocabularyPageContent() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Icon name={isOperator ? "Send" : "Database"} className="h-5 w-5 text-primary" />
-              {isOperator ? "Submeter Vocábulos para Revisão Editorial" : "Salvar Tudo na Base de Dados"}
+              {isOperator ? "Submeter para revisão" : "Salvar na base de dados"}
             </DialogTitle>
             <DialogDescription>
               {isOperator
-                ? "Os vocábulos curados serão gravados em estado Rascunho (DRAFT) e associados à sua autoria para revisão pelo seu supervisor."
-                : "Tem a certeza de que deseja persistir os vocábulos curados na base de dados?"}
+                ? "Os vocábulos serão gravados como Rascunho para revisão do seu supervisor."
+                : "Vocábulos já existentes não são duplicados: a frequência é somada à do registo existente."}
             </DialogDescription>
           </DialogHeader>
 
           {stagingData && (
             <div className="space-y-3 py-2 text-sm text-muted-foreground">
-              <div className="rounded-lg border border-border bg-muted/20 p-3 space-y-1.5">
-                <p className="font-semibold text-foreground">Resumo a enviar:</p>
-                <div className="grid grid-cols-2 gap-2 text-xs">
-                  <span>• Entradas: {stagingData.entries.length}</span>
-                  <span>• Neologismos: {stagingData.neologisms.length}</span>
-                  <span>• Topónimos: {stagingData.toponyms.length}</span>
-                  <span>• Antropónimos: {stagingData.anthroponyms.length}</span>
-                  <span>• Estrangeirismos: {stagingData.foreignisms.length}</span>
-                  <span className="font-semibold text-foreground">
-                    • Total: {stagingData.stats.totalTerms}
-                  </span>
-                </div>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-1 rounded-lg border border-border p-3 text-xs">
+                <span>Entradas: {stagingData.entries.length}</span>
+                <span>Neologismos: {stagingData.neologisms.length}</span>
+                <span>Topónimos: {stagingData.toponyms.length}</span>
+                <span>Antropónimos: {stagingData.anthroponyms.length}</span>
+                <span>Estrangeirismos: {stagingData.foreignisms.length}</span>
+                <span>Línguas nacionais: {stagingData.nationalLanguages?.length ?? 0}</span>
+                <span className="font-semibold text-foreground">Total: {stagingData.stats.totalTerms}</span>
               </div>
+              {attentionCount > 0 && (
+                <p className="flex items-center gap-1.5 text-xs text-amber-700">
+                  <Icon name="TriangleAlert" className="h-3.5 w-3.5" />
+                  {attentionCount} registo(s) ainda marcados para rever.
+                </p>
+              )}
 
               {/* Opção de Aprovação Direta para Supervisor e Admin vs Alerta de Submissão de Operador */}
               {isSupervisor || isAdmin ? (
@@ -1650,34 +1516,10 @@ export function ManualVocabularyPageContent() {
                       onChange={(e) => setDirectApproval(e.target.checked)}
                       className="rounded border-gray-300 text-primary focus:ring-primary h-4 w-4"
                     />
-                    Aprovação Direta (marcar imediatamente como APROVADO)
+                    Aprovar directamente (caso contrário, grava como Rascunho)
                   </label>
-                  <p className="text-muted-foreground text-[11px] pl-6">
-                    Se desmarcado, os itens serão gravados como Rascunho (DRAFT) para revisão editorial posterior.
-                  </p>
                 </div>
-              ) : (
-                <div className="rounded-lg border border-blue-500/20 bg-blue-500/5 p-3 text-xs text-blue-700 space-y-1">
-                  <p className="font-semibold flex items-center gap-1.5">
-                    <Icon name="UserCheck" className="h-4 w-4" />
-                    Fluxo de Submissão Editorial (Operador)
-                  </p>
-                  <p>
-                    Os itens serão gravados em estado Rascunho (DRAFT) associados à sua autoria e encaminhados para validação do seu supervisor.
-                  </p>
-                </div>
-              )}
-
-              <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-3 text-xs text-amber-700 space-y-1">
-                <p className="font-semibold flex items-center gap-1.5">
-                  <Icon name="ShieldAlert" className="h-4 w-4" />
-                  Validação Forte de Duplicatas
-                </p>
-                <p>
-                  O servidor PostgreSQL verificará termo a termo. Quaisquer vocábulos que já existam
-                  no dicionário serão automaticamente ignorados para evitar duplicidade e manter a integridade referencial.
-                </p>
-              </div>
+              ) : null}
             </div>
           )}
 
@@ -1717,10 +1559,10 @@ export function ManualVocabularyPageContent() {
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <Icon name="CircleCheck" className="h-5 w-5 text-emerald-500" />
-                Relatório de Gravação na Base de Dados
+                Gravação concluída
               </DialogTitle>
               <DialogDescription>
-                A validação forte de duplicatas e o processo de gravação foram concluídos.
+                Gravação concluída.
               </DialogDescription>
             </DialogHeader>
 
@@ -1734,11 +1576,11 @@ export function ManualVocabularyPageContent() {
                   <p className="text-[11px] text-emerald-600 mt-0.5">Criados como Rascunho (DRAFT)</p>
                 </div>
                 <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3">
-                  <p className="text-xs text-amber-700 font-semibold uppercase">Duplicados Ignorados</p>
+                  <p className="text-xs text-amber-700 font-semibold uppercase">Já existentes</p>
                   <p className="text-3xl font-bold text-amber-700 mt-1">
                     {commitResult.duplicatesCount}
                   </p>
-                  <p className="text-[11px] text-amber-600 mt-0.5">Preservados sem duplicar</p>
+                  <p className="text-[11px] text-amber-600 mt-0.5">Frequência somada: {commitResult.frequencyUpdatedCount ?? 0}</p>
                 </div>
               </div>
 
@@ -1775,6 +1617,13 @@ export function ManualVocabularyPageContent() {
                     ({commitResult.details.anthroponyms.duplicates} duplicadas)
                   </div>
                   <div>
+                    Línguas nacionais:{" "}
+                    <span className="font-semibold text-foreground">
+                      {commitResult.details.nationalLanguages?.inserted ?? 0} inseridas
+                    </span>{" "}
+                    ({commitResult.details.nationalLanguages?.duplicates ?? 0} existentes)
+                  </div>
+                  <div>
                     Estrangeirismos:{" "}
                     <span className="font-semibold text-foreground">
                       {commitResult.details.foreignisms.inserted} inseridas
@@ -1788,7 +1637,7 @@ export function ManualVocabularyPageContent() {
               {commitResult.skippedDuplicates.length > 0 && (
                 <div className="space-y-2">
                   <p className="text-xs font-semibold text-foreground">
-                    Vocábulos Ignorados por Duplicação ({commitResult.skippedDuplicates.length}):
+                    Vocábulos já existentes ({commitResult.skippedDuplicates.length}):
                   </p>
                   <div className="max-h-40 overflow-y-auto rounded-lg border border-border p-2 space-y-1 bg-muted/20 text-xs">
                     {commitResult.skippedDuplicates.map((dup, idx) => (
@@ -1841,64 +1690,6 @@ export function ManualVocabularyPageContent() {
 }
 
 // ─── Sub-componentes auxiliares ─────────────────────────────────────────────
-
-function PipelineStep({
-  step,
-  title,
-  desc,
-  status,
-}: {
-  step: string;
-  title: string;
-  desc: string;
-  status: "idle" | "active" | "done";
-}) {
-  return (
-    <div className="flex items-start gap-3 rounded-md border bg-card p-2.5">
-      <div
-        className={cn(
-          "flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold",
-          status === "done" && "bg-emerald-500 text-white",
-          status === "active" && "bg-primary text-primary-foreground animate-pulse",
-          status === "idle" && "bg-muted text-muted-foreground",
-        )}
-      >
-        {status === "done" ? <Icon name="Check" className="h-3.5 w-3.5" /> : step}
-      </div>
-      <div className="min-w-0 flex-1">
-        <p className="text-xs font-semibold text-foreground">{title}</p>
-        <p className="text-[11px] text-muted-foreground truncate">{desc}</p>
-      </div>
-    </div>
-  );
-}
-
-function MetricCard({
-  label,
-  value,
-  icon,
-  highlight,
-}: {
-  label: string;
-  value: number;
-  icon: React.ComponentProps<typeof Icon>["name"];
-  highlight?: boolean;
-}) {
-  return (
-    <div
-      className={cn(
-        "rounded-lg border p-3 transition-colors",
-        highlight ? "border-primary bg-primary/10" : "border-border bg-card",
-      )}
-    >
-      <div className="flex items-center justify-between gap-1">
-        <p className="text-xs font-medium text-muted-foreground truncate">{label}</p>
-        <Icon name={icon} className="h-3.5 w-3.5 text-muted-foreground" />
-      </div>
-      <p className="mt-1 text-2xl font-bold tracking-tight text-foreground">{value}</p>
-    </div>
-  );
-}
 
 function formatSize(bytes: number) {
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;

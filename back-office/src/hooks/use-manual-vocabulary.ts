@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { manualVocabularyService } from "@/services";
 import {
+  ExtractionProgress,
   ManualVocabularyCommitPayload,
   ManualVocabularySourceModel,
   ManualVocabularyWorkbookData,
@@ -11,6 +12,7 @@ export interface ExtractPayload {
   modules?: ManualVocabularySourceModel[];
   startPage?: number;
   endPage?: number;
+  onProgress?: (progress: ExtractionProgress) => void;
 }
 
 /**
@@ -20,8 +22,8 @@ export function useExtractManualVocabularyPreview() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ file, modules, startPage, endPage }: ExtractPayload) =>
-      manualVocabularyService.extractPreview(file, modules, { startPage, endPage }),
+    mutationFn: ({ file, modules, startPage, endPage, onProgress }: ExtractPayload) =>
+      manualVocabularyService.extractPreview(file, modules, { startPage, endPage }, onProgress),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["manual-vocabulary-logs"] });
     },
