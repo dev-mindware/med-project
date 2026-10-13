@@ -153,3 +153,26 @@ export type ExtractionProgress = {
   done: number;
   total: number;
 };
+
+/** Estado de uma extracção na fila do servidor. */
+export type ManualExtractionJobState = {
+  status: "running" | "done" | "error";
+  cancelled?: boolean;
+  filename?: string;
+  progress: ExtractionProgress;
+  result?: ManualVocabularyExtractPreviewResult & { draftId?: string };
+  error?: { message: string; statusCode: number };
+};
+
+/** Curadoria guardada no servidor (sem os dados). */
+export type ManualVocabularyDraftSummary = {
+  id: string;
+  filename: string;
+  jobId?: string | null;
+  createdAt?: string;
+  updatedAt: string;
+};
+
+export type ManualVocabularyDraft = ManualVocabularyDraftSummary & {
+  data: ManualVocabularyWorkbookData;
+};

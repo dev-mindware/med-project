@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useDropzone } from "react-dropzone";
 import {
@@ -40,7 +41,6 @@ import {
   useAuth,
   useCommitManualVocabularyToDatabase,
   useExportExcelManualVocabulary,
-  useExtractManualVocabularyPreview,
   useImportExcelManualVocabulary,
   useManualVocabularyLogs,
 } from "@/hooks";
@@ -48,16 +48,90 @@ import {
   ExtractionProgress as ExtractionProgressState,
   ManualExtractionLogItem,
   ManualVocabularyCommitResult,
+  ManualVocabularyDraftSummary,
+  ManualVocabularyExtractPreviewResult,
   ManualVocabularyModule,
   ManualVocabularySourceModel,
   ManualVocabularyWorkbookData,
 } from "@/types";
 import { cn } from "@/lib/utils";
 import { ensurePtAO, MODULE_FIELDS, type FieldDef } from "./manual-vocabulary-fields";
-import { ErrorMessage, SucessMessage, WarningMessage } from "@/utils/messages";
+import { manualVocabularyService } from "@/services";
+import { ErrorMessage, InfoMessage, SucessMessage, WarningMessage } from "@/utils/messages";
 
 const MAX_PDF_SIZE = 100 * 1024 * 1024;
 const MAX_EXCEL_SIZE = 50 * 1024 * 1024;
+/** Extracção em curso (id), para retomar o acompanhamento depois de recarregar a página. */
+const ACTIVE_JOB_KEY = "manual-vocabulary:active-job";
+/** Linhas por página na tabela de curadoria. */
+const PAGE_SIZE = 50;
+
+function readActiveJob(): string | null {
+  try {
+    return localStorage.getItem(ACTIVE_JOB_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function writeActiveJob(jobId: string | null) {
+  try {
+    if (jobId) localStorage.setItem(ACTIVE_JOB_KEY, jobId);
+    else localStorage.removeItem(ACTIVE_JOB_KEY);
+  } catch {
+    /* armazenamento indisponível: o acompanhamento só não sobrevive a recarregar */
+  }
+}
+
+/** Paginação simples da tabela de curadoria. */
+function TablePager({
+  page,
+  total,
+  onPage,
+}: {
+  page: number;
+  total: number;
+  onPage: (page: number) => void;
+}) {
+  const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  if (total <= PAGE_SIZE) return null;
+  const from = page * PAGE_SIZE + 1;
+  const to = Math.min(total, (page + 1) * PAGE_SIZE);
+  return (
+    <div className="flex items-center justify-between gap-3 border-t border-border px-3 py-2 text-xs text-muted-foreground">
+      <span>
+        {from}–{to} de {total}
+      </span>
+      <div className="flex items-center gap-1">
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="h-7 px-2"
+          disabled={page === 0}
+          onClick={() => onPage(page - 1)}
+        >
+          <Icon name="ChevronLeft" className="h-3.5 w-3.5" />
+          Anterior
+        </Button>
+        <span className="font-mono">
+          {page + 1}/{pages}
+        </span>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="h-7 px-2"
+          disabled={page >= pages - 1}
+          onClick={() => onPage(page + 1)}
+        >
+          Seguinte
+          <Icon name="ChevronRight" className="h-3.5 w-3.5" />
+        </Button>
+      </div>
+    </div>
+  );
+}
 
 interface ModuleOption {
   id: ManualVocabularySourceModel;
@@ -366,7 +440,7 @@ function FieldInput({
 const STAGE_ORDER = ["queued", "reading", "extracting", "processing", "verifying", "done"];
 
 const STAGE_STEPS: { id: string; label: string; unit?: string }[] = [
-  { id: "reading", label: "A ler o PDF" },
+  { id: "reading", label: "A ler o PDF", unit: "grupos de páginas" },
   { id: "extracting", label: "A identificar e classificar vocábulos", unit: "blocos" },
   { id: "processing", label: "A validar e contar frequências" },
   { id: "verifying", label: "A confirmar vocábulos das línguas nacionais na web", unit: "vocábulos" },
@@ -392,7 +466,15 @@ function overallPercent(p: ExtractionProgressState): number {
 }
 
 /** Feedback visual durante a extracção, alimentado pelo progresso real do servidor. */
-function ExtractionProgress({ progress }: { progress: ExtractionProgressState }) {
+function ExtractionProgress({
+  progress,
+  onCancel,
+  cancelling,
+}: {
+  progress: ExtractionProgressState;
+  onCancel?: () => void;
+  cancelling?: boolean;
+}) {
   const [seconds, setSeconds] = useState(0);
 
   useEffect(() => {
@@ -415,7 +497,9 @@ function ExtractionProgress({ progress }: { progress: ExtractionProgressState })
         @keyframes mv-shine { 0% { transform: translateX(-100%); } 100% { transform: translateX(400%); } }
       `}</style>
       <div className="flex items-center justify-between text-sm">
-        <span className="font-medium text-foreground">A extrair vocabulário · {percent}%</span>
+        <span className="font-medium text-foreground">
+          {progress.stage === "queued" ? "Na fila de extracção" : `A extrair vocabulário · ${percent}%`}
+        </span>
         <span className="font-mono text-xs text-muted-foreground">
           {mm}:{ss}
         </span>
@@ -459,9 +543,23 @@ function ExtractionProgress({ progress }: { progress: ExtractionProgressState })
           );
         })}
       </ul>
-      <p className="text-xs text-muted-foreground">
-        Manuais grandes podem demorar vários minutos. Pode limitar o intervalo de páginas para acelerar.
-      </p>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-xs text-muted-foreground">
+          A extracção corre no servidor: pode fechar ou recarregar esta página e voltar mais tarde.
+        </p>
+        {onCancel && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-7 text-xs text-destructive hover:text-destructive"
+            onClick={onCancel}
+            loading={cancelling}
+          >
+            Cancelar extracção
+          </Button>
+        )}
+      </div>
     </div>
   );
 }
@@ -486,6 +584,18 @@ export function ManualVocabularyPageContent() {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [onlyAttention, setOnlyAttention] = useState<boolean>(false);
   const [progress, setProgress] = useState<ExtractionProgressState | null>(null);
+  // Extracção na fila do servidor (sobrevive a recarregar a página)
+  const [activeJobId, setActiveJobId] = useState<string | null>(null);
+  const [isStarting, setIsStarting] = useState<boolean>(false);
+  const [cancelling, setCancelling] = useState<boolean>(false);
+  const pollAbort = useRef<AbortController | null>(null);
+  const isExtracting = isStarting || Boolean(activeJobId);
+  // Curadoria guardada no servidor (gravação automática)
+  const [draftId, setDraftId] = useState<string | null>(null);
+  const [savedDrafts, setSavedDrafts] = useState<ManualVocabularyDraftSummary[]>([]);
+  const [saveState, setSaveState] = useState<"pending" | "saving" | "saved" | "error" | null>(null);
+  const lastSavedRef = useRef<ManualVocabularyWorkbookData | null>(null);
+  const [tablePage, setTablePage] = useState<number>(0);
   const [editingItem, setEditingItem] = useState<{
     module: ManualVocabularyModule;
     index: number;
@@ -505,7 +615,7 @@ export function ManualVocabularyPageContent() {
   const [directApproval, setDirectApproval] = useState<boolean>(false);
 
   // Mutations & Queries
-  const extractPreview = useExtractManualVocabularyPreview();
+  const queryClient = useQueryClient();
   const importExcel = useImportExcelManualVocabulary();
   const exportExcel = useExportExcelManualVocabulary();
   const commitToDb = useCommitManualVocabularyToDatabase();
@@ -548,7 +658,7 @@ export function ManualVocabularyPageContent() {
     accept: { "application/pdf": [".pdf"] },
     maxSize: MAX_PDF_SIZE,
     multiple: false,
-    disabled: extractPreview.isPending,
+    disabled: isExtracting,
   });
 
   const onDropExcel = useCallback(
@@ -570,6 +680,16 @@ export function ManualVocabularyPageContent() {
         const result = await importExcel.mutateAsync(nextFile);
         setStagingData(result.workbookData);
         setSourceFilename(result.filename || nextFile.name);
+        // Guarda a curadoria no servidor para não se perder ao recarregar
+        lastSavedRef.current = result.workbookData;
+        setDraftId(null);
+        manualVocabularyService
+          .createDraft(result.filename || nextFile.name, result.workbookData)
+          .then((draft) => {
+            setDraftId(draft.id);
+            setSaveState("saved");
+          })
+          .catch(() => setSaveState("error"));
         setActiveTab("staging");
         SucessMessage(
           `Folha Excel importada e validada! ${result.stats.totalTerms} vocábulos carregados para curadoria.`,
@@ -600,7 +720,7 @@ export function ManualVocabularyPageContent() {
   // ─── Module Selection Helpers ──────────────────────────────────────────────
 
   const toggleModule = (moduleId: ManualVocabularySourceModel) => {
-    if (extractPreview.isPending) return;
+    if (isExtracting) return;
     setSelectedModules((prev) =>
       prev.includes(moduleId)
         ? prev.filter((id) => id !== moduleId)
@@ -609,12 +729,12 @@ export function ManualVocabularyPageContent() {
   };
 
   const selectAllModules = () => {
-    if (extractPreview.isPending) return;
+    if (isExtracting) return;
     setSelectedModules(AVAILABLE_MODULES.map((m) => m.id));
   };
 
   const clearAllModules = () => {
-    if (extractPreview.isPending) return;
+    if (isExtracting) return;
     setSelectedModules([]);
   };
 
@@ -640,44 +760,172 @@ export function ManualVocabularyPageContent() {
     }
 
     setProgress({ stage: "queued", done: 0, total: 0 });
+    setIsStarting(true);
     try {
-      const result = await extractPreview.mutateAsync({
-        file,
-        modules: selectedModules,
+      const jobId = await manualVocabularyService.startExtraction(file, selectedModules, {
         startPage: parsedStart,
         endPage: parsedEnd,
-        onProgress: setProgress,
       });
-
-      setStagingData(result.workbookData);
-      setSourceFilename(file.name);
-      setActiveTab("staging");
-      SucessMessage(
-        `Extracção concluída! ${result.stats.totalTerms} vocábulos carregados para curadoria.`,
-      );
-      if (result.stats.failedChunks) {
-        WarningMessage(
-          `${result.stats.failedChunks} de ${result.stats.totalChunks} blocos do manual não foram lidos pela IA. Reveja o aviso na curadoria.`,
-        );
-      }
-      if (result.stats.incompleteTerms) {
-        WarningMessage(
-          `${result.stats.incompleteTerms} vocábulos ficaram só com o termo (verbete por completar). Estão marcados nos avisos.`,
-        );
-      }
+      writeActiveJob(jobId);
+      void trackJob(jobId, file.name);
     } catch (error: any) {
-      let message =
-        "Não foi possível processar o manual. Verifique os parâmetros ou a ligação à API.";
-      if (error?.response?.data?.message) {
-        message = error.response.data.message;
-      } else if (error?.message) {
-        message = error.message;
-      }
-      ErrorMessage(message);
-    } finally {
       setProgress(null);
+      ErrorMessage(
+        error?.response?.data?.message ||
+          error?.message ||
+          "Não foi possível processar o manual. Verifique os parâmetros ou a ligação à API.",
+      );
+    } finally {
+      setIsStarting(false);
     }
   };
+
+  /** Mostra o resultado de uma extracção concluída na curadoria. */
+  const applyExtractionResult = (
+    result: ManualVocabularyExtractPreviewResult & { draftId?: string },
+    filename: string,
+  ) => {
+    setStagingData(result.workbookData);
+    lastSavedRef.current = result.workbookData;
+    setDraftId(result.draftId ?? null);
+    setSaveState(result.draftId ? "saved" : null);
+    setSourceFilename(filename);
+    setActiveTab("staging");
+    queryClient.invalidateQueries({ queryKey: ["manual-vocabulary-logs"] });
+    SucessMessage(
+      `Extracção concluída! ${result.stats.totalTerms} vocábulos carregados para curadoria.`,
+    );
+    if (result.stats.failedChunks) {
+      WarningMessage(
+        `${result.stats.failedChunks} de ${result.stats.totalChunks} blocos do manual não foram lidos pela IA. Reveja o aviso na curadoria.`,
+      );
+    }
+    if (result.stats.incompleteTerms) {
+      WarningMessage(
+        `${result.stats.incompleteTerms} vocábulos ficaram só com o termo (verbete por completar). Estão marcados nos avisos.`,
+      );
+    }
+  };
+
+  /** Acompanha uma extracção da fila do servidor até terminar (também após recarregar). */
+  const trackJob = async (jobId: string, filename?: string) => {
+    pollAbort.current?.abort();
+    const controller = new AbortController();
+    pollAbort.current = controller;
+    setActiveJobId(jobId);
+    try {
+      let name = filename;
+      if (!name) {
+        const job = await manualVocabularyService.getExtractionJob(jobId);
+        name = job.filename || "manual.pdf";
+        setProgress(job.progress);
+      }
+      const result = await manualVocabularyService.waitForExtraction(
+        jobId,
+        setProgress,
+        controller.signal,
+      );
+      writeActiveJob(null);
+      applyExtractionResult(result, name);
+    } catch (error: any) {
+      if (error?.aborted) return;
+      writeActiveJob(null);
+      if (error?.cancelled) {
+        InfoMessage("Extracção cancelada.");
+      } else if (error?.response?.status === 404) {
+        // Extracção antiga já removida do servidor: nada a retomar
+      } else {
+        ErrorMessage(
+          error?.response?.data?.message ||
+            error?.message ||
+            "Não foi possível processar o manual. Verifique os parâmetros ou a ligação à API.",
+        );
+      }
+    } finally {
+      if (pollAbort.current === controller) {
+        pollAbort.current = null;
+        setActiveJobId(null);
+        setProgress(null);
+      }
+    }
+  };
+
+  const handleCancelExtraction = async () => {
+    if (!activeJobId) return;
+    setCancelling(true);
+    try {
+      await manualVocabularyService.cancelExtraction(activeJobId);
+      pollAbort.current?.abort();
+      pollAbort.current = null;
+      writeActiveJob(null);
+      setActiveJobId(null);
+      setProgress(null);
+      InfoMessage("Extracção cancelada.");
+    } catch (error: any) {
+      ErrorMessage(error?.response?.data?.message || "Não foi possível cancelar a extracção.");
+    } finally {
+      setCancelling(false);
+    }
+  };
+
+  /** Abre uma curadoria guardada no servidor. */
+  const openDraft = async (id: string) => {
+    try {
+      const draft = await manualVocabularyService.getDraft(id);
+      setStagingData(draft.data);
+      lastSavedRef.current = draft.data;
+      setDraftId(draft.id);
+      setSaveState("saved");
+      setSourceFilename(draft.filename);
+      setActiveTab("staging");
+    } catch {
+      ErrorMessage("Não foi possível abrir a curadoria guardada.");
+    }
+  };
+
+  const discardDraft = async (id: string) => {
+    try {
+      await manualVocabularyService.deleteDraft(id);
+    } finally {
+      setSavedDrafts((prev) => prev.filter((d) => d.id !== id));
+      if (draftId === id) setDraftId(null);
+    }
+  };
+
+  // Ao abrir a página: retoma a extracção em curso e lista as curadorias guardadas
+  useEffect(() => {
+    const jobId = readActiveJob();
+    if (jobId) void trackJob(jobId);
+    manualVocabularyService
+      .listDrafts()
+      .then(setSavedDrafts)
+      .catch(() => undefined);
+    return () => pollAbort.current?.abort();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Gravação automática da curadoria (2 s depois da última alteração)
+  useEffect(() => {
+    if (!draftId || !stagingData || stagingData === lastSavedRef.current) return;
+    setSaveState("pending");
+    const snapshot = stagingData;
+    const timer = setTimeout(async () => {
+      setSaveState("saving");
+      try {
+        await manualVocabularyService.updateDraft(draftId, snapshot);
+        lastSavedRef.current = snapshot;
+        setSaveState("saved");
+      } catch {
+        setSaveState("error");
+      }
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, [stagingData, draftId]);
+
+  // A paginação volta ao início quando muda o módulo, a pesquisa ou o filtro
+  useEffect(() => {
+    setTablePage(0);
+  }, [activeStagingTab, searchQuery, onlyAttention]);
 
   const handleExportExcel = async () => {
     if (!stagingData) return;
@@ -709,6 +957,11 @@ export function ManualVocabularyPageContent() {
       setCommitResult(result);
       setCommitDialogOpen(false);
       setResultDialogOpen(true);
+      // Gravado na base de dados: a cópia de trabalho no servidor deixa de ser precisa
+      if (draftId) {
+        void discardDraft(draftId);
+        setSaveState(null);
+      }
 
       if (result.insertedCount > 0) {
         if (shouldApproveDirectly) {
@@ -922,6 +1175,37 @@ export function ManualVocabularyPageContent() {
 
         {/* ─── TAB 1: EXTRACÇÃO ─────────────────────────────────────────────── */}
         <TabsContent value="extract" className="mx-auto max-w-2xl space-y-5">
+          {!stagingData && savedDrafts.length > 0 && (
+            <div className="space-y-2 rounded-lg border border-border bg-muted/30 p-4">
+              <p className="text-sm font-medium">Curadorias guardadas</p>
+              <ul className="space-y-1.5">
+                {savedDrafts.slice(0, 5).map((draft) => (
+                  <li key={draft.id} className="flex items-center justify-between gap-3 text-xs">
+                    <span className="truncate">
+                      <span className="font-medium text-foreground">{draft.filename}</span>{" "}
+                      <span className="text-muted-foreground">
+                        · alterada em {new Date(draft.updatedAt).toLocaleString("pt-PT")}
+                      </span>
+                    </span>
+                    <span className="flex shrink-0 items-center gap-1">
+                      <Button type="button" size="sm" variant="outline" className="h-7 text-xs" onClick={() => openDraft(draft.id)}>
+                        Retomar
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        className="h-7 text-xs text-muted-foreground"
+                        onClick={() => discardDraft(draft.id)}
+                      >
+                        Descartar
+                      </Button>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
           <div
             {...getPdfRootProps()}
             className={cn(
@@ -929,7 +1213,7 @@ export function ManualVocabularyPageContent() {
               isPdfDragActive || file
                 ? "border-primary bg-primary/5"
                 : "border-border hover:border-primary/50",
-              extractPreview.isPending && "pointer-events-none opacity-60",
+              isExtracting && "pointer-events-none opacity-60",
             )}
           >
             <input {...getPdfInputProps()} />
@@ -955,7 +1239,7 @@ export function ManualVocabularyPageContent() {
                   type="button"
                   title={`${mod.shortDesc} — ${mod.examples}`}
                   onClick={() => toggleModule(mod.id)}
-                  disabled={extractPreview.isPending}
+                  disabled={isExtracting}
                   className={cn(
                     "rounded-full border px-3 py-1 text-xs transition-colors",
                     isChecked
@@ -969,7 +1253,13 @@ export function ManualVocabularyPageContent() {
             })}
           </div>
 
-          {extractPreview.isPending && <ExtractionProgress progress={progress ?? { stage: "queued", done: 0, total: 0 }} />}
+          {isExtracting && (
+            <ExtractionProgress
+              progress={progress ?? { stage: "queued", done: 0, total: 0 }}
+              onCancel={activeJobId ? handleCancelExtraction : undefined}
+              cancelling={cancelling}
+            />
+          )}
 
           <div className="flex flex-wrap items-center gap-3">
             <Input
@@ -978,7 +1268,7 @@ export function ManualVocabularyPageContent() {
               placeholder="Pág. inicial"
               value={startPage}
               onChange={(e) => setStartPage(e.target.value)}
-              disabled={extractPreview.isPending}
+              disabled={isExtracting}
               className="h-9 w-28 text-xs"
             />
             <Input
@@ -987,7 +1277,7 @@ export function ManualVocabularyPageContent() {
               placeholder="Pág. final"
               value={endPage}
               onChange={(e) => setEndPage(e.target.value)}
-              disabled={extractPreview.isPending}
+              disabled={isExtracting}
               className="h-9 w-28 text-xs"
             />
             {isOperator && (
@@ -996,11 +1286,11 @@ export function ManualVocabularyPageContent() {
             <Button
               type="button"
               onClick={handleExtract}
-              loading={extractPreview.isPending}
-              disabled={!file || extractPreview.isPending || selectedModules.length === 0}
+              loading={isExtracting}
+              disabled={!file || isExtracting || selectedModules.length === 0}
               className="ml-auto"
             >
-              {extractPreview.isPending ? "A processar..." : "Extrair"}
+              {isExtracting ? "A processar..." : "Extrair"}
             </Button>
           </div>
 
@@ -1074,6 +1364,20 @@ export function ManualVocabularyPageContent() {
                     <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-600 font-medium text-xs">
                       {stagingData.stats.totalTerms} itens em curadoria
                     </Badge>
+                    {saveState && (
+                      <span
+                        className={cn(
+                          "text-[11px]",
+                          saveState === "error" ? "text-destructive" : "text-muted-foreground",
+                        )}
+                      >
+                        {saveState === "saved"
+                          ? "Guardado no servidor"
+                          : saveState === "error"
+                            ? "Não foi possível guardar"
+                            : "A guardar…"}
+                      </span>
+                    )}
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -1104,7 +1408,10 @@ export function ManualVocabularyPageContent() {
                     variant="ghost"
                     size="sm"
                     onClick={() => {
+                      if (draftId) void discardDraft(draftId);
                       setStagingData(null);
+                      setDraftId(null);
+                      setSaveState(null);
                       setFile(null);
                       setActiveTab("extract");
                     }}
@@ -1196,7 +1503,9 @@ export function ManualVocabularyPageContent() {
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {stagingData.warnings.map((w, idx) => (
+                          {stagingData.warnings
+                            .slice(tablePage * PAGE_SIZE, (tablePage + 1) * PAGE_SIZE)
+                            .map((w, idx) => (
                             <TableRow key={idx}>
                               <TableCell>
                                 <Badge variant="outline" className="text-[10px]">
@@ -1213,6 +1522,7 @@ export function ManualVocabularyPageContent() {
                           ))}
                         </TableBody>
                       </Table>
+                      <TablePager page={tablePage} total={stagingData.warnings.length} onPage={setTablePage} />
                     </div>
                   ) : (
                     /* TABELA DO MÓDULO ACTUAL */
@@ -1236,7 +1546,9 @@ export function ManualVocabularyPageContent() {
                               </TableCell>
                             </TableRow>
                           ) : (
-                            currentStagingRows.map(({ item: row, index: idx }) => {
+                            currentStagingRows
+                              .slice(tablePage * PAGE_SIZE, (tablePage + 1) * PAGE_SIZE)
+                              .map(({ item: row, index: idx }) => {
                               const mod = activeStagingTab as ManualVocabularyModule;
                               const term =
                                 row.entry || row.toponym || row.name || row.term || "Sem título";
@@ -1270,6 +1582,11 @@ export function ManualVocabularyPageContent() {
                                       )}
                                       <span>{term}</span>
                                     </div>
+                                    {row.sourcePages && (
+                                      <p className="mt-0.5 text-[11px] font-normal text-muted-foreground">
+                                        pág. {row.sourcePages}
+                                      </p>
+                                    )}
                                     {attention.length > 0 && (
                                       <p className="mt-1 max-w-xs whitespace-normal text-[11px] font-normal leading-snug text-amber-700">
                                         {attention[0]}
@@ -1356,6 +1673,7 @@ export function ManualVocabularyPageContent() {
                           )}
                         </TableBody>
                       </Table>
+                      <TablePager page={tablePage} total={currentStagingRows.length} onPage={setTablePage} />
                     </div>
                   )}
                 </CardContent>

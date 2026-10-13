@@ -1,6 +1,9 @@
 import {
   ExtractionProgress,
+  ManualExtractionJobState,
   ManualExtractionLogsResponse,
+  ManualVocabularyDraft,
+  ManualVocabularyDraftSummary,
   ManualVocabularyCommitPayload,
   ManualVocabularyCommitResult,
   ManualVocabularyExtractPreviewResult,
@@ -29,7 +32,20 @@ export const manualVocabularyService = {
     modules?: ManualVocabularySourceModel[],
     options?: { startPage?: number; endPage?: number },
     onProgress?: (progress: ExtractionProgress) => void,
+    onJobId?: (jobId: string) => void,
+    signal?: AbortSignal,
   ): Promise<ManualVocabularyExtractPreviewResult> => {
+    const jobId = await manualVocabularyService.startExtraction(file, modules, options);
+    onJobId?.(jobId);
+    return manualVocabularyService.waitForExtraction(jobId, onProgress, signal);
+  },
+
+  /** Envia o PDF para a fila de extracção (persistente no servidor) e devolve o id. */
+  startExtraction: async (
+    file: File,
+    modules?: ManualVocabularySourceModel[],
+    options?: { startPage?: number; endPage?: number },
+  ): Promise<string> => {
     const formData = new FormData();
     formData.append("file", file);
     formData.append("format", "json");
@@ -44,7 +60,6 @@ export const manualVocabularyService = {
       formData.append("endPage", String(options.endPage));
     }
 
-    // 1. Inicia a extracção em segundo plano; 2. acompanha o progresso real por polling.
     const start = await api.post<{ jobId: string }>(
       "/manuals/vocabulary/extract?format=json&async=true",
       formData,
@@ -53,24 +68,32 @@ export const manualVocabularyService = {
           "Content-Type": "multipart/form-data",
           Accept: "application/json",
         },
-        timeout: 120000,
+        timeout: 300000,
       },
     );
-    const { jobId } = start.data;
+    return start.data.jobId;
+  },
 
+  /**
+   * Acompanha uma extracção por polling até terminar. A extracção corre no servidor e
+   * sobrevive a reinícios, por isso pode ser retomada depois de recarregar a página.
+   */
+  waitForExtraction: async (
+    jobId: string,
+    onProgress?: (progress: ExtractionProgress) => void,
+    signal?: AbortSignal,
+  ): Promise<ManualVocabularyExtractPreviewResult> => {
     const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-    const deadline = Date.now() + 60 * 60 * 1000;
+    // Manuais de centenas de páginas podem demorar mais de uma hora na fila
+    const deadline = Date.now() + 6 * 60 * 60 * 1000;
     let pollErrors = 0;
 
     while (Date.now() < deadline) {
-      await sleep(1500);
+      if (signal?.aborted) throw Object.assign(new Error("Acompanhamento interrompido"), { aborted: true });
+      await sleep(2000);
+      if (signal?.aborted) throw Object.assign(new Error("Acompanhamento interrompido"), { aborted: true });
       try {
-        const { data } = await api.get<{
-          status: "running" | "done" | "error";
-          progress: ExtractionProgress;
-          result?: ManualVocabularyExtractPreviewResult;
-          error?: { message: string; statusCode: number };
-        }>(`/manuals/vocabulary/extract/jobs/${jobId}`);
+        const data = await manualVocabularyService.getExtractionJob(jobId);
         pollErrors = 0;
         onProgress?.(data.progress);
 
@@ -79,13 +102,58 @@ export const manualVocabularyService = {
           throw Object.assign(new Error(data.error?.message || "Falha na extracção"), {
             response: { data: { message: data.error?.message } },
             fatal: true,
+            cancelled: Boolean(data.cancelled),
           });
         }
       } catch (err: any) {
-        if (err?.fatal || ++pollErrors > 5) throw err;
+        if (err?.fatal || err?.response?.status === 404 || ++pollErrors > 10) {
+          throw Object.assign(err, { fatal: true });
+        }
       }
     }
     throw new Error("A extracção excedeu o tempo máximo de espera.");
+  },
+
+  getExtractionJob: async (jobId: string): Promise<ManualExtractionJobState> => {
+    const { data } = await api.get<ManualExtractionJobState>(
+      `/manuals/vocabulary/extract/jobs/${jobId}`,
+    );
+    return data;
+  },
+
+  cancelExtraction: async (jobId: string): Promise<void> => {
+    await api.post(`/manuals/vocabulary/extract/jobs/${jobId}/cancel`);
+  },
+
+  // ─── Rascunhos de curadoria (guardados no servidor) ────────────────────────
+
+  listDrafts: async (): Promise<ManualVocabularyDraftSummary[]> => {
+    const { data } = await api.get<ManualVocabularyDraftSummary[]>("/manuals/vocabulary/drafts");
+    return data;
+  },
+
+  getDraft: async (id: string): Promise<ManualVocabularyDraft> => {
+    const { data } = await api.get<ManualVocabularyDraft>(`/manuals/vocabulary/drafts/${id}`);
+    return data;
+  },
+
+  createDraft: async (
+    filename: string,
+    workbookData: ManualVocabularyWorkbookData,
+  ): Promise<ManualVocabularyDraftSummary> => {
+    const { data } = await api.post<ManualVocabularyDraftSummary>("/manuals/vocabulary/drafts", {
+      filename,
+      workbookData,
+    });
+    return data;
+  },
+
+  updateDraft: async (id: string, workbookData: ManualVocabularyWorkbookData): Promise<void> => {
+    await api.patch(`/manuals/vocabulary/drafts/${id}`, { workbookData }, { timeout: 60000 });
+  },
+
+  deleteDraft: async (id: string): Promise<void> => {
+    await api.delete(`/manuals/vocabulary/drafts/${id}`);
   },
 
   /**

@@ -13,6 +13,9 @@ export interface ExtractPayload {
   startPage?: number;
   endPage?: number;
   onProgress?: (progress: ExtractionProgress) => void;
+  /** Recebe o id da extracção logo que entra na fila (para a retomar após recarregar) */
+  onJobId?: (jobId: string) => void;
+  signal?: AbortSignal;
 }
 
 /**
@@ -22,8 +25,15 @@ export function useExtractManualVocabularyPreview() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ file, modules, startPage, endPage, onProgress }: ExtractPayload) =>
-      manualVocabularyService.extractPreview(file, modules, { startPage, endPage }, onProgress),
+    mutationFn: ({ file, modules, startPage, endPage, onProgress, onJobId, signal }: ExtractPayload) =>
+      manualVocabularyService.extractPreview(
+        file,
+        modules,
+        { startPage, endPage },
+        onProgress,
+        onJobId,
+        signal,
+      ),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["manual-vocabulary-logs"] });
     },
