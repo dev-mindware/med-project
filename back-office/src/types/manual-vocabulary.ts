@@ -19,6 +19,21 @@ export type ManualVocabularyStats = {
   nationalLanguages: number;
   warnings: number;
   duplicatesRemoved: number;
+  /** Itens descartados por confiança da IA abaixo do limiar */
+  lowConfidenceDiscarded?: number;
+  /** Blocos de texto enviados à IA */
+  totalChunks?: number;
+  /** Blocos que falharam após todas as tentativas (parte do manual não lida) */
+  failedChunks?: number;
+  /** Blocos com resposta truncada (podem faltar termos no fim) */
+  truncatedChunks?: number;
+};
+
+/** Bloco do manual que a IA não conseguiu processar. */
+export type ManualVocabularyFailedChunk = {
+  chunk: number;
+  excerpt: string;
+  message: string;
 };
 
 export type ManualVocabularyWarning = {
@@ -37,6 +52,8 @@ export type ManualVocabularyWorkbookData = {
   foreignisms: Record<string, any>[];
   nationalLanguages: Record<string, any>[];
   warnings: ManualVocabularyWarning[];
+  /** Blocos do manual que a IA não processou (só presente após uma extracção). */
+  failedChunks?: ManualVocabularyFailedChunk[];
   stats: ManualVocabularyStats;
 };
 

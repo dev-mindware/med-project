@@ -54,7 +54,7 @@ import {
 } from "@/types";
 import { cn } from "@/lib/utils";
 import { ensurePtAO, MODULE_FIELDS, type FieldDef } from "./manual-vocabulary-fields";
-import { ErrorMessage, SucessMessage } from "@/utils/messages";
+import { ErrorMessage, SucessMessage, WarningMessage } from "@/utils/messages";
 
 const MAX_PDF_SIZE = 100 * 1024 * 1024;
 const MAX_EXCEL_SIZE = 50 * 1024 * 1024;
@@ -655,6 +655,11 @@ export function ManualVocabularyPageContent() {
       SucessMessage(
         `Extracção concluída! ${result.stats.totalTerms} vocábulos carregados para curadoria.`,
       );
+      if (result.stats.failedChunks) {
+        WarningMessage(
+          `${result.stats.failedChunks} de ${result.stats.totalChunks} blocos do manual não foram lidos pela IA. Reveja o aviso na curadoria.`,
+        );
+      }
     } catch (error: any) {
       let message =
         "Não foi possível processar o manual. Verifique os parâmetros ou a ligação à API.";
@@ -981,7 +986,7 @@ export function ManualVocabularyPageContent() {
               className="h-9 w-28 text-xs"
             />
             {isOperator && (
-              <span className="text-xs text-muted-foreground">máx. 30 págs · 25MB</span>
+              <span className="text-xs text-muted-foreground">máx. 30 págs (sem intervalo: 1–30) · 25MB</span>
             )}
             <Button
               type="button"
@@ -1032,6 +1037,28 @@ export function ManualVocabularyPageContent() {
             </Card>
           ) : (
             <div className="space-y-6">
+              {/* PARTES DO MANUAL QUE A IA NÃO LEU */}
+              {(stagingData.failedChunks?.length ?? 0) > 0 && (
+                <div className="space-y-2 rounded-lg border border-amber-500/30 bg-amber-500/5 p-4 text-sm text-amber-700">
+                  <p className="font-semibold">
+                    {stagingData.failedChunks!.length} de {stagingData.stats.totalChunks ?? "?"} blocos do manual
+                    não foram lidos pela IA — os vocábulos dessas partes não estão nesta curadoria.
+                  </p>
+                  <p className="text-xs">
+                    Repita a extracção apenas para as páginas correspondentes ou complete estes vocábulos à mão.
+                  </p>
+                  <ul className="max-h-40 space-y-1 overflow-y-auto text-xs">
+                    {stagingData.failedChunks!.map((failed) => (
+                      <li key={failed.chunk}>
+                        <span className="font-medium">Bloco {failed.chunk}:</span>{" "}
+                        <span className="italic">“{failed.excerpt}”</span>{" "}
+                        <span className="text-amber-600/80">({failed.message})</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
               {/* BARRA SUPERIOR DE ACÇÕES DA CURADORIA */}
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between bg-card p-4 rounded-lg border border-border shadow-sm">
                 <div>
