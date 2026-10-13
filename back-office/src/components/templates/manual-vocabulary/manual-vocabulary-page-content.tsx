@@ -660,6 +660,11 @@ export function ManualVocabularyPageContent() {
           `${result.stats.failedChunks} de ${result.stats.totalChunks} blocos do manual não foram lidos pela IA. Reveja o aviso na curadoria.`,
         );
       }
+      if (result.stats.incompleteTerms) {
+        WarningMessage(
+          `${result.stats.incompleteTerms} vocábulos ficaram só com o termo (verbete por completar). Estão marcados nos avisos.`,
+        );
+      }
     } catch (error: any) {
       let message =
         "Não foi possível processar o manual. Verifique os parâmetros ou a ligação à API.";

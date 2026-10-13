@@ -27,6 +27,8 @@ export type ManualVocabularyStats = {
   failedChunks?: number;
   /** Blocos com resposta truncada (podem faltar termos no fim) */
   truncatedChunks?: number;
+  /** Termos identificados cujo verbete a IA não completou (ficam só com o termo) */
+  incompleteTerms?: number;
 };
 
 /** Bloco do manual que a IA não conseguiu processar. */
