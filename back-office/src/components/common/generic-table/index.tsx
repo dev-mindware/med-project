@@ -20,6 +20,7 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { EmptyState } from "@/components/common/empty-state";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export interface Column<T> {
   key: keyof T | string;
@@ -45,6 +46,10 @@ export interface DataTableProps<T> {
   setPage: (page: number) => void;
   goToNextPage: () => void;
   goToPreviousPage: () => void;
+  selectable?: boolean;
+  selectedIds?: string[];
+  onSelectChange?: (ids: string[]) => void;
+  batchActions?: React.ReactNode;
 }
 
 export function GenericTable<T extends { id: string }>({
@@ -62,10 +67,36 @@ export function GenericTable<T extends { id: string }>({
   goToNextPage,
   goToPreviousPage,
   route,
+  selectable = false,
+  selectedIds = [],
+  onSelectChange,
+  batchActions,
 }: DataTableProps<T>) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const newId = searchParams.get("newId");
+
+  const pageIds = data.map((d) => d.id);
+  const isAllSelected = data.length > 0 && pageIds.every((id) => selectedIds.includes(id));
+  const isSomeSelected = selectedIds.length > 0 && !isAllSelected;
+
+  const handleSelectAll = () => {
+    if (!onSelectChange) return;
+    if (isAllSelected) {
+      onSelectChange(selectedIds.filter((id) => !pageIds.includes(id)));
+    } else {
+      onSelectChange(Array.from(new Set([...selectedIds, ...pageIds])));
+    }
+  };
+
+  const handleToggleRow = (id: string) => {
+    if (!onSelectChange) return;
+    if (selectedIds.includes(id)) {
+      onSelectChange(selectedIds.filter((item) => item !== id));
+    } else {
+      onSelectChange([...selectedIds, id]);
+    }
+  };
 
   const getValue = (item: T, key: keyof T | string): any => {
     if (typeof key === "string" && key.includes(".")) {
@@ -81,10 +112,36 @@ export function GenericTable<T extends { id: string }>({
   return (
     <div className={cn("w-full", className)}>
       <div className="rounded-lg border border-border bg-card overflow-hidden">
+        {selectable && selectedIds.length > 0 && (
+          <div className="flex flex-wrap items-center justify-between gap-4 px-4 py-2.5 bg-primary/10 border-b border-primary/20 text-sm animate-in fade-in duration-200">
+            <div className="flex items-center gap-2">
+              <span className="font-medium text-foreground">
+                {selectedIds.length} {selectedIds.length === 1 ? "item seleccionado" : "itens seleccionados"}
+              </span>
+              <button
+                type="button"
+                onClick={() => onSelectChange?.([])}
+                className="text-xs text-muted-foreground hover:text-foreground underline ml-2 transition-colors cursor-pointer"
+              >
+                Limpar selecção
+              </button>
+            </div>
+            {batchActions && <div className="flex items-center gap-2">{batchActions}</div>}
+          </div>
+        )}
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
+                {selectable && (
+                  <TableHead className="w-12 px-4 text-center">
+                    <Checkbox
+                      checked={isAllSelected ? true : isSomeSelected ? "indeterminate" : false}
+                      onCheckedChange={handleSelectAll}
+                      aria-label="Seleccionar todos nesta página"
+                    />
+                  </TableHead>
+                )}
                 {columns.map((column, index) => (
                   <TableHead
                     key={index}
@@ -103,7 +160,7 @@ export function GenericTable<T extends { id: string }>({
               {data.length === 0 ? (
                 <TableRow>
                   <TableCell
-                    colSpan={columns.length}
+                    colSpan={columns.length + (selectable ? 1 : 0)}
                     className="py-8"
                   >
                     <EmptyState
@@ -115,31 +172,44 @@ export function GenericTable<T extends { id: string }>({
                   </TableCell>
                 </TableRow>
               ) : (
-                data.map((item, rowIndex) => (
-                  <TableRow
-                    key={rowIndex}
-                    className={cn(
-                      "hover:bg-muted/50 transition-colors",
-                      route && "cursor-pointer",
-                      item.id === newId && "animate-pulse-twice"
-                    )}
-                    onDoubleClick={() => handleRowDoubleClick(item)}
-                  >
-                    {columns.map((column, colIndex) => (
-                      <TableCell
-                        key={colIndex}
-                        className={cn(
-                          "text-sm text-foreground",
-                          column.className
-                        )}
-                      >
-                        {column.render
-                          ? column.render(getValue(item, column.key), item)
-                          : getValue(item, column.key)}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
+                data.map((item, rowIndex) => {
+                  const isSelected = selectedIds.includes(item.id);
+                  return (
+                    <TableRow
+                      key={rowIndex}
+                      className={cn(
+                        "hover:bg-muted/50 transition-colors",
+                        isSelected && "bg-primary/5 hover:bg-primary/10",
+                        route && "cursor-pointer",
+                        item.id === newId && "animate-pulse-twice"
+                      )}
+                      onDoubleClick={() => handleRowDoubleClick(item)}
+                    >
+                      {selectable && (
+                        <TableCell className="w-12 px-4 text-center" onClick={(e) => e.stopPropagation()}>
+                          <Checkbox
+                            checked={isSelected}
+                            onCheckedChange={() => handleToggleRow(item.id)}
+                            aria-label={`Seleccionar item ${item.id}`}
+                          />
+                        </TableCell>
+                      )}
+                      {columns.map((column, colIndex) => (
+                        <TableCell
+                          key={colIndex}
+                          className={cn(
+                            "text-sm text-foreground",
+                            column.className
+                          )}
+                        >
+                          {column.render
+                            ? column.render(getValue(item, column.key), item)
+                            : getValue(item, column.key)}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  );
+                })
               )}
             </TableBody>
           </Table>

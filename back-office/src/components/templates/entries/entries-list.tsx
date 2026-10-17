@@ -13,11 +13,26 @@ import {
 import { EntryResponse } from "@/types";
 import { formatDateTime } from "@/utils";
 import { useDebounce } from "use-debounce";
+import { useState } from "react";
+import { CheckCircle2, Globe, Trash2, XCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { EntriesFiltersTSX } from "./common/entries-filters";
 import {
   useEntryActions,
   useEntriesFilters,
   useReviewEntry,
+  useBulkReviewEntries,
+  useBulkDeleteEntries,
   useAuth,
   useVonalpActions,
 } from "@/hooks";
@@ -34,6 +49,104 @@ export function EntriesList() {
   const { handleEdit, handleDetails, handleDelete, handleReview } = useEntryActions();
   const { markOrUnmark } = useVonalpActions("ENTRY");
   const { mutate: reviewEntry } = useReviewEntry();
+  const { mutate: bulkReview, isPending: isBulkReviewing } = useBulkReviewEntries();
+  const { mutate: bulkDelete, isPending: isBulkDeleting } = useBulkDeleteEntries();
+
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [bulkActionType, setBulkActionType] = useState<"approve" | "publish" | "reject" | "delete" | null>(null);
+
+  const { user } = useAuth();
+  const isAdmin = user?.role === "ADMIN";
+  const isSupervisor = user?.role === "SUPERVISOR";
+  const canBulkReview = isAdmin || isSupervisor;
+  const canBulkDelete = isAdmin;
+
+  const handleConfirmBulkAction = () => {
+    if (!bulkActionType || selectedIds.length === 0) return;
+
+    if (bulkActionType === "approve" || bulkActionType === "publish") {
+      bulkReview(
+        { ids: selectedIds, status: "APPROVED" },
+        {
+          onSuccess: () => {
+            setSelectedIds([]);
+            setBulkActionType(null);
+          },
+        }
+      );
+    } else if (bulkActionType === "reject") {
+      bulkReview(
+        { ids: selectedIds, status: "REJECTED", reason: "Rejeição em massa via painel administrativo" },
+        {
+          onSuccess: () => {
+            setSelectedIds([]);
+            setBulkActionType(null);
+          },
+        }
+      );
+    } else if (bulkActionType === "delete") {
+      bulkDelete(selectedIds, {
+        onSuccess: () => {
+          setSelectedIds([]);
+          setBulkActionType(null);
+        },
+      });
+    }
+  };
+
+  const batchActions = (
+    <div className="flex flex-wrap items-center gap-2">
+      {canBulkReview && (
+        <>
+          <Button
+            size="sm"
+            variant="default"
+            className="h-8 gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs"
+            onClick={() => setBulkActionType("approve")}
+            disabled={isBulkReviewing || isBulkDeleting}
+          >
+            <CheckCircle2 className="w-3.5 h-3.5" />
+            Aprovar ({selectedIds.length})
+          </Button>
+
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-8 gap-1.5 text-xs border-emerald-500/40 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10"
+            onClick={() => setBulkActionType("publish")}
+            disabled={isBulkReviewing || isBulkDeleting}
+          >
+            <Globe className="w-3.5 h-3.5" />
+            Publicar ({selectedIds.length})
+          </Button>
+
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-8 gap-1.5 text-xs text-amber-600 dark:text-amber-400 border-amber-500/40 hover:bg-amber-500/10"
+            onClick={() => setBulkActionType("reject")}
+            disabled={isBulkReviewing || isBulkDeleting}
+          >
+            <XCircle className="w-3.5 h-3.5" />
+            Rejeitar ({selectedIds.length})
+          </Button>
+        </>
+      )}
+
+      {canBulkDelete && (
+        <Button
+          size="sm"
+          variant="destructive"
+          className="h-8 gap-1.5 text-xs"
+          onClick={() => setBulkActionType("delete")}
+          disabled={isBulkReviewing || isBulkDeleting}
+        >
+          <Trash2 className="w-3.5 h-3.5" />
+          Eliminar ({selectedIds.length})
+        </Button>
+      )}
+    </div>
+  );
 
   const cleanQueryParams = Object.fromEntries(
     Object.entries(filters).filter(([_, v]) => v !== null && v !== undefined && v !== "")
@@ -58,8 +171,6 @@ export function EntriesList() {
     },
   });
 
-  const { user } = useAuth();
-
   const columns: Column<EntryResponse>[] = [
     { key: "entry", header: "Entrada" },
     { key: "syllabicDivision", header: "Divisão Silábica" },
@@ -67,7 +178,11 @@ export function EntriesList() {
       key: "grammaticalCategory",
       header: "Categoria",
       render: (_, item) => {
-        const category = grammatical_category.find((c) => c.value === item.grammaticalCategory);
+        const itemCat = item.grammaticalCategory?.toLowerCase();
+        const category = grammatical_category.find((c) => 
+          c.value.toLowerCase() === itemCat || 
+          c.label.toLowerCase() === itemCat
+        );
         const subcategory = category?.subcategories.find((s) => s.value === item.grammaticalSubcategory);
         
         const label = subcategory 
@@ -237,6 +352,10 @@ export function EntriesList() {
           setPage={setPage}
           goToNextPage={goToNextPage}
           goToPreviousPage={goToPreviousPage}
+          selectable={canBulkReview || canBulkDelete}
+          selectedIds={selectedIds}
+          onSelectChange={setSelectedIds}
+          batchActions={batchActions}
           emptyMessage="Nenhum registro encontrado"
         />
       ) : (
@@ -246,6 +365,46 @@ export function EntriesList() {
           icon="BookA"
         />
       )}
+
+      <AlertDialog open={!!bulkActionType} onOpenChange={(open) => !open && setBulkActionType(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {bulkActionType === "approve" && `Aprovar ${selectedIds.length} ${selectedIds.length === 1 ? "entrada seleccionada" : "entradas seleccionadas"}?`}
+              {bulkActionType === "publish" && `Publicar ${selectedIds.length} ${selectedIds.length === 1 ? "entrada seleccionada" : "entradas seleccionadas"}?`}
+              {bulkActionType === "reject" && `Rejeitar ${selectedIds.length} ${selectedIds.length === 1 ? "entrada seleccionada" : "entradas seleccionadas"}?`}
+              {bulkActionType === "delete" && `Eliminar permanentemente ${selectedIds.length} ${selectedIds.length === 1 ? "entrada" : "entradas"}?`}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {bulkActionType === "approve" && "As entradas seleccionadas serão aprovadas e ficarão disponíveis com estado APROVADO."}
+              {bulkActionType === "publish" && "As entradas seleccionadas serão aprovadas e publicadas imediatamente no portal público."}
+              {bulkActionType === "reject" && "O estado de revisão das entradas seleccionadas será alterado para REJEITADO."}
+              {bulkActionType === "delete" && "Esta acção é irreversível. As entradas seleccionadas serão permanentemente removidas da base de dados."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isBulkReviewing || isBulkDeleting}>
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                handleConfirmBulkAction();
+              }}
+              className={
+                bulkActionType === "delete"
+                  ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  : bulkActionType === "reject"
+                  ? "bg-amber-600 text-white hover:bg-amber-700"
+                  : "bg-emerald-600 text-white hover:bg-emerald-700"
+              }
+              disabled={isBulkReviewing || isBulkDeleting}
+            >
+              {(isBulkReviewing || isBulkDeleting) ? "A processar..." : "Confirmar"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <DetailsEntryModal />
       <DeleteEntryModal />

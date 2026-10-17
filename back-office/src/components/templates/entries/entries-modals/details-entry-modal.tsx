@@ -103,18 +103,18 @@ export function DetailsEntryModal() {
           </div>
           <div className="space-y-2">
             <div className="p-3 rounded-lg bg-muted/40 border border-border/60">
-              <span className="text-xs font-semibold text-primary block mb-1">1ª Definição:</span>
+              <span className="text-xs font-semibold text-primary block mb-1">1.ª Definição:</span>
               <p className="text-foreground leading-relaxed">{entry.firstDefinition || "—"}</p>
             </div>
             {entry.secondDefinition && (
               <div className="p-3 rounded-lg bg-muted/30 border border-border/50">
-                <span className="text-xs font-semibold text-muted-foreground block mb-1">2ª Definição:</span>
+                <span className="text-xs font-semibold text-muted-foreground block mb-1">2.ª Definição:</span>
                 <p className="text-foreground leading-relaxed">{entry.secondDefinition}</p>
               </div>
             )}
             {entry.thirdDefinition && (
               <div className="p-3 rounded-lg bg-muted/20 border border-border/40">
-                <span className="text-xs font-semibold text-muted-foreground block mb-1">3ª Definição:</span>
+                <span className="text-xs font-semibold text-muted-foreground block mb-1">3.ª Definição:</span>
                 <p className="text-foreground leading-relaxed">{entry.thirdDefinition}</p>
               </div>
             )}

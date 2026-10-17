@@ -80,18 +80,18 @@ export function DetailsNeologismModal() {
           </div>
           <div className="space-y-2">
             <div className="p-3 rounded-lg bg-muted/40 border border-border/60">
-              <span className="text-xs font-semibold text-primary block mb-1">1ª Definição:</span>
+              <span className="text-xs font-semibold text-primary block mb-1">1.ª Definição:</span>
               <p className="text-foreground leading-relaxed">{currentNeologism.firstDefinition || "—"}</p>
             </div>
             {currentNeologism.secondDefinition && (
               <div className="p-3 rounded-lg bg-muted/30 border border-border/50">
-                <span className="text-xs font-semibold text-muted-foreground block mb-1">2ª Definição:</span>
+                <span className="text-xs font-semibold text-muted-foreground block mb-1">2.ª Definição:</span>
                 <p className="text-foreground leading-relaxed">{currentNeologism.secondDefinition}</p>
               </div>
             )}
             {currentNeologism.thirdDefinition && (
               <div className="p-3 rounded-lg bg-muted/20 border border-border/40">
-                <span className="text-xs font-semibold text-muted-foreground block mb-1">3ª Definição:</span>
+                <span className="text-xs font-semibold text-muted-foreground block mb-1">3.ª Definição:</span>
                 <p className="text-foreground leading-relaxed">{currentNeologism.thirdDefinition}</p>
               </div>
             )}

@@ -11,6 +11,8 @@ export type EntriesFilters = {
   createdById: string | null;
   languageCode: string | null;
   grammaticalCategory: string | null;
+  entryType: string | null;
+  letter: string | null;
   startDate: string | null;
   endDate: string | null;
   search: string | null;
@@ -37,6 +39,8 @@ export function useEntriesFilters() {
     createdById: getParam("createdById"),
     languageCode: getParam("languageCode"),
     grammaticalCategory: getParam("grammaticalCategory"),
+    entryType: getParam("entryType"),
+    letter: getParam("letter"),
     startDate: getParam("startDate"),
     endDate: getParam("endDate"),
     search: getParam("search") || urlSearch,
