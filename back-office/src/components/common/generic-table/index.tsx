@@ -146,59 +146,132 @@ export function GenericTable<T extends { id: string }>({
         </div>
 
         {totalPages > 1 && (
-          <div className="flex items-center justify-between px-6 py-4 border-t border-border bg-muted/20">
-            <div className="text-sm text-muted-foreground">
-              Página {page} de {totalPages} — Total: {total}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 border-t border-border bg-muted/20">
+            <div className="text-sm text-muted-foreground whitespace-nowrap">
+              Página <span className="font-semibold text-foreground">{page}</span> de{" "}
+              <span className="font-semibold text-foreground">{totalPages.toLocaleString("pt-PT")}</span> — Total:{" "}
+              <span className="font-semibold text-foreground">{total.toLocaleString("pt-PT")}</span>
             </div>
 
-            <Pagination className="w-max">
-              <PaginationContent>
-                <PaginationItem>
-                  <PaginationPrevious
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      goToPreviousPage();
-                    }}
-                    // aria-disabled={page === 1}
-                  />
-                </PaginationItem>
+            <div className="flex flex-wrap items-center gap-4">
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <span>Ir para:</span>
+                <input
+                  type="number"
+                  min={1}
+                  max={totalPages}
+                  defaultValue={page}
+                  key={`jump-${page}`}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      const target = parseInt((e.target as HTMLInputElement).value);
+                      if (!isNaN(target) && target >= 1 && target <= totalPages) {
+                        setPage(target);
+                      }
+                    }
+                  }}
+                  className="w-14 h-8 px-2 text-center text-xs rounded border border-input bg-background focus:outline-none focus:ring-1 focus:ring-primary"
+                />
+              </div>
 
-                {Array.from({ length: totalPages }, (_, i) => i + 1)
-                  .slice(Math.max(0, page - 3), Math.min(totalPages, page + 2))
-                  .map((pageNumber) => (
-                    <PaginationItem key={pageNumber}>
-                      <PaginationLink
-                        href="#"
-                        isActive={page === pageNumber}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          setPage(pageNumber);
-                        }}
-                      >
-                        {pageNumber}
-                      </PaginationLink>
-                    </PaginationItem>
-                  ))}
-
-                {totalPages > page + 2 && (
+              <Pagination className="w-max">
+                <PaginationContent className="gap-1">
                   <PaginationItem>
-                    <PaginationEllipsis />
+                    <PaginationPrevious
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        if (page > 1) goToPreviousPage();
+                      }}
+                      className={cn(
+                        page <= 1 && "pointer-events-none opacity-40 cursor-not-allowed"
+                      )}
+                    />
                   </PaginationItem>
-                )}
 
-                <PaginationItem>
-                  <PaginationNext
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      goToNextPage();
-                    }}
-                    // aria-disabled={page === totalPages}
-                  />
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
+                  {/* First page link if far from start */}
+                  {page > 3 && (
+                    <>
+                      <PaginationItem>
+                        <PaginationLink
+                          href="#"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            setPage(1);
+                          }}
+                        >
+                          1
+                        </PaginationLink>
+                      </PaginationItem>
+                      {page > 4 && (
+                        <PaginationItem>
+                          <PaginationEllipsis />
+                        </PaginationItem>
+                      )}
+                    </>
+                  )}
+
+                  {/* Window of surrounding pages */}
+                  {Array.from(
+                    { length: Math.min(5, totalPages) },
+                    (_, i) => {
+                      const start = Math.max(1, Math.min(page - 2, totalPages - 4));
+                      return start + i;
+                    }
+                  )
+                    .filter((p) => p >= 1 && p <= totalPages)
+                    .map((pageNumber) => (
+                      <PaginationItem key={pageNumber}>
+                        <PaginationLink
+                          href="#"
+                          isActive={page === pageNumber}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            setPage(pageNumber);
+                          }}
+                        >
+                          {pageNumber}
+                        </PaginationLink>
+                      </PaginationItem>
+                    ))}
+
+                  {/* Last page link if far from end */}
+                  {page < totalPages - 2 && (
+                    <>
+                      {page < totalPages - 3 && (
+                        <PaginationItem>
+                          <PaginationEllipsis />
+                        </PaginationItem>
+                      )}
+                      <PaginationItem>
+                        <PaginationLink
+                          href="#"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            setPage(totalPages);
+                          }}
+                        >
+                          {totalPages}
+                        </PaginationLink>
+                      </PaginationItem>
+                    </>
+                  )}
+
+                  <PaginationItem>
+                    <PaginationNext
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        if (page < totalPages) goToNextPage();
+                      }}
+                      className={cn(
+                        page >= totalPages && "pointer-events-none opacity-40 cursor-not-allowed"
+                      )}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
           </div>
         )}
       </div>

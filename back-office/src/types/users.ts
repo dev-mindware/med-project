@@ -7,6 +7,7 @@ export type UserData = {
   role?: UserRole;
   isActive?: boolean;
   supervisorId?: string | null;
+  assignedLetters?: string[];
 };
 
 export type UserResponse = Omit<UserData, "password"> &

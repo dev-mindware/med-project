@@ -69,7 +69,7 @@ export function ForeignismsList() {
       key: "status",
       header: "Estado",
       render: (_, item) => {
-        const status = (item as any).status || (item as any).approvalStatus || ((item as any).isActive ? "ACTIVE" : "INACTIVE");
+        const status = item.approvalStatus || (item as any).status || ((item as any).isActive ? "ACTIVE" : "INACTIVE");
         return <ItemStatusBadge status={status} />;
       },
     },

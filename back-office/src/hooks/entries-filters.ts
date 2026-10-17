@@ -10,6 +10,7 @@ export type EntriesFilters = {
   isForeignism: string | null;
   createdById: string | null;
   languageCode: string | null;
+  grammaticalCategory: string | null;
   startDate: string | null;
   endDate: string | null;
   search: string | null;
@@ -35,6 +36,7 @@ export function useEntriesFilters() {
     isForeignism: getParam("isForeignism"),
     createdById: getParam("createdById"),
     languageCode: getParam("languageCode"),
+    grammaticalCategory: getParam("grammaticalCategory"),
     startDate: getParam("startDate"),
     endDate: getParam("endDate"),
     search: getParam("search") || urlSearch,
@@ -42,11 +44,14 @@ export function useEntriesFilters() {
   };
 
   const setFilters = useCallback((newFilters: Partial<EntriesFilters>) => {
-    setParams(newFilters as Record<string, string | null | undefined>);
+    setParams({
+      page: "1",
+      ...newFilters,
+    } as unknown as Record<string, string | null | undefined>);
   }, [setParams]);
 
   const clearAllFilters = useCallback(() => {
-    clearParams();
+    clearParams({ page: "1" });
   }, [clearParams]);
 
   return {

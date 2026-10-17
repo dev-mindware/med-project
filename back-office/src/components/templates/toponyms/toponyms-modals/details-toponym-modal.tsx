@@ -11,6 +11,12 @@ export function DetailsToponymModal() {
 
   if (!currentToponym || !isOpen) return null;
 
+  const sourceName =
+    currentToponym.firstSource ||
+    currentToponym.sourceDocument?.filename ||
+    "Atlas Toponímico Nacional de Angola (AO45)";
+  const frequency = currentToponym.frequency || 1;
+
   return (
     <GlobalModal
       canClose
@@ -21,9 +27,22 @@ export function DetailsToponymModal() {
             <Icon name="MapPin" className="w-10 h-10 text-primary" />
           </div>
 
-          <div className="text-center space-y-1 mt-4">
-            <h2 className="text-2xl font-bold">{currentToponym.toponym}</h2>
-            <ItemStatusBadge status={currentToponym.approvalStatus} />
+          <div className="text-center space-y-2 mt-4">
+            <h2 className="text-2xl font-bold text-foreground">{currentToponym.toponym}</h2>
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              <ItemStatusBadge status={currentToponym.approvalStatus} />
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
+                <Icon name="Activity" className="w-3.5 h-3.5" />
+                {frequency} {frequency === 1 ? "ocorrência" : "ocorrências"}
+              </span>
+              <span
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-blue-500/10 text-blue-700 dark:text-blue-400 border border-blue-500/20 max-w-sm truncate"
+                title={sourceName}
+              >
+                <Icon name="FileText" className="w-3.5 h-3.5 shrink-0" />
+                <span className="truncate">{sourceName}</span>
+              </span>
+            </div>
           </div>
         </>
       }
@@ -38,14 +57,17 @@ export function DetailsToponymModal() {
     >
       <div className="space-y-6 text-sm">
         <section className="space-y-4">
-          <h3 className="font-semibold text-foreground border-b pb-2">Informações do Topónimo</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2">
+          <div className="flex items-center gap-2 border-b pb-2">
+            <Icon name="Map" className="w-4 h-4 text-primary" />
+            <h3 className="font-semibold text-foreground">Identificação Geográfica & Histórica</h3>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2.5">
             <DetailRow label="Topónimo" value={currentToponym.toponym} />
             <DetailRow label="Pronúncia" value={currentToponym.pronunciation || "—"} />
             <DetailRow label="Gentílico" value={currentToponym.gentilic || "—"} />
             <DetailRow label="Província" value={currentToponym.province || "—"} />
             <DetailRow label="Município" value={currentToponym.municipality || "—"} />
-            <DetailRow label="Localização" value={currentToponym.location || "—"} />
+            <DetailRow label="Localização / Comuna" value={currentToponym.location || "—"} />
             <DetailRow label="Significado" value={currentToponym.meaning || "—"} />
             <DetailRow label="História" value={currentToponym.toponymHistory || "—"} />
             <DetailRow label="Proveniência" value={currentToponym.toponymProvenance || "—"} />
@@ -53,8 +75,8 @@ export function DetailsToponymModal() {
             <DetailRow label="Variação Gráfica" value={currentToponym.graphicVariation || "—"} />
             <DetailRow label="Classes" value={currentToponym.toponymClasses?.join(", ") || "—"} />
             <DetailRow label="Subclasses" value={currentToponym.toponymSubclasses?.join(", ") || "—"} />
-            <DetailRow label="Código da Língua" value={currentToponym.languageCode || "—"} />
-            <DetailRow label="É Vocabulário?" value={currentToponym.isVocabulary ? "Sim" : "Não"} />
+            <DetailRow label="Código da Língua" value={currentToponym.languageCode || "pt-AO"} />
+            <DetailRow label="É Vocabulário (VONALP)?" value={currentToponym.isVocabulary ? "Sim" : "Não"} />
             <DetailRow label="É Estrangeirismo?" value={currentToponym.isForeignism ? "Sim" : "Não"} />
           </div>
         </section>
@@ -75,12 +97,37 @@ export function DetailsToponymModal() {
           </section>
         )}
 
+        {/* Proveniência Documental */}
+        <section className="space-y-3 border-t pt-4">
+          <div className="flex items-center gap-2 pb-1">
+            <Icon name="FileCheck" className="w-4 h-4 text-primary" />
+            <h3 className="font-semibold text-foreground">Proveniência & Evidência Documental</h3>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2.5">
+            <DetailRow label="Fonte / Documento" value={sourceName} />
+            <DetailRow
+              label="Categoria da Fonte"
+              value={currentToponym.sourceDocument?.category || "Divisão Político-Administrativa"}
+            />
+            <DetailRow
+              label="Frequência Registada"
+              value={`${frequency} ${frequency === 1 ? "ocorrência" : "ocorrências"}`}
+            />
+            <DetailRow
+              label="Lote de Processamento"
+              value={currentToponym.importBatchId || "Acervo Toponímico Nacional"}
+            />
+          </div>
+        </section>
+
         {(currentToponym.createdAt || currentToponym.updatedAt) && (
           <section className="space-y-2 border-t pt-4">
-            <h3 className="font-semibold text-foreground">
-              Informações Técnicas
-            </h3>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="flex items-center gap-2 pb-1">
+              <Icon name="Clock" className="w-4 h-4 text-muted-foreground" />
+              <h3 className="font-semibold text-muted-foreground">Informações Técnicas</h3>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+              <DetailRow label="ID" value={currentToponym.id} />
               {currentToponym.createdAt && (
                 <DetailRow
                   label="Criado em"

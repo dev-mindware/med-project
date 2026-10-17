@@ -31,11 +31,13 @@ import { VonalpBadges, VonalpModal } from "@/components/templates/vonalp";
 
 export function EntriesList() {
   const { filters, page, setPage } = useEntriesFilters();
-  const [debounceSearch] = useDebounce(filters.search, 200);
   const { handleEdit, handleDetails, handleDelete, handleReview } = useEntryActions();
   const { markOrUnmark } = useVonalpActions("ENTRY");
-  
   const { mutate: reviewEntry } = useReviewEntry();
+
+  const cleanQueryParams = Object.fromEntries(
+    Object.entries(filters).filter(([_, v]) => v !== null && v !== undefined && v !== "")
+  );
 
   const {
     data: items,
@@ -49,7 +51,11 @@ export function EntriesList() {
   } = usePagination<EntryResponse>({
     endpoint: "/entries",
     queryKey: ["entries"],
-    queryParams: { ...filters, search: debounceSearch, page },
+    queryParams: {
+      ...cleanQueryParams,
+      page,
+      limit: filters.limit || 20,
+    },
   });
 
   const { user } = useAuth();
@@ -85,6 +91,15 @@ export function EntriesList() {
       ),
     },
     {
+      key: "frequency",
+      header: "Frequência",
+      render: (_, item) => (
+        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
+          {item.frequency || 1}×
+        </span>
+      ),
+    },
+    {
       key: "createdAt",
       header: "Criado em",
       render: (_, item) => (
@@ -97,7 +112,7 @@ export function EntriesList() {
       key: "status",
       header: "Estado",
       render: (_, item) => {
-        const status = (item as any).status || (item as any).approvalStatus || ((item as any).isActive ? "ACTIVE" : "INACTIVE");
+        const status = item.approvalStatus || (item as any).status || ((item as any).isActive ? "ACTIVE" : "INACTIVE");
         return <ItemStatusBadge status={status} />;
       },
     },
@@ -189,7 +204,7 @@ export function EntriesList() {
   ];
 
   if (isLoading) {
-    return <ListPageSkeleton cols={8} />;
+    return <ListPageSkeleton cols={9} />;
   }
 
   if (isError) {

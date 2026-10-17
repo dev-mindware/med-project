@@ -4,14 +4,30 @@ import { FilterPopover, PaginatedSelect } from "@/components/shared";
 import { useEntriesFilters, useAuth } from "@/hooks";
 import { Button, Input } from "@/components";
 import { DatePicker } from "@/components/ui/date-picker";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { usePagination } from "@/hooks/common";
 import { UserResponse } from "@/types";
+import { useDebounce } from "use-debounce";
 
 export function EntriesFiltersTSX() {
   const { filters, setFilters, clearAllFilters } = useEntriesFilters();
   const { user } = useAuth();
   const [usersPage, setUsersPage] = useState(1);
+  const [searchValue, setSearchValue] = useState(filters.search || "");
+  const [debouncedSearch] = useDebounce(searchValue, 350);
+
+  // Synchronize local input state if URL search changes externally (e.g. clear filters)
+  useEffect(() => {
+    setSearchValue(filters.search || "");
+  }, [filters.search]);
+
+  // Push debounced search to URL filters
+  useEffect(() => {
+    const current = filters.search || "";
+    if (debouncedSearch !== current) {
+      setFilters({ search: debouncedSearch || null });
+    }
+  }, [debouncedSearch, filters.search, setFilters]);
 
   const { data: users, totalPages: usersTotalPages, isLoading: isLoadingUsers } = usePagination<UserResponse>({
     endpoint: "/users",
@@ -24,7 +40,8 @@ export function EntriesFiltersTSX() {
   const hasActiveFilters = !!(
     filters.approvalStatus || filters.search || filters.startDate ||
     filters.endDate || filters.orderBy || filters.isVocabulary ||
-    filters.isVocabularyEP || filters.isForeignism || filters.createdById || filters.languageCode
+    filters.isVocabularyEP || filters.isForeignism || filters.createdById ||
+    filters.languageCode || filters.grammaticalCategory
   );
 
   return (
@@ -32,13 +49,24 @@ export function EntriesFiltersTSX() {
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="flex-1 max-w-sm">
           <SearchHandlerWrapper 
-            search={filters.search || ""}
-            setSearch={(val) => setFilters({ search: val })}
+            search={searchValue}
+            setSearch={setSearchValue}
             placeholder="Pesquisar entradas..." 
             className="w-full"
           />
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          <FilterPopover
+            label="Categoria"
+            icon="Bookmark"
+            options={[
+              { label: "Substantivo", value: "substantivo" },
+              { label: "Verbo", value: "verbo" },
+              { label: "Adjectivo", value: "adjectivo" },
+            ]}
+            value={filters.grammaticalCategory}
+            onChange={(val) => setFilters({ grammaticalCategory: val ?? null })}
+          />
           <FilterPopover
             label="Estado"
             icon="Activity"

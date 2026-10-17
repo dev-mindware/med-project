@@ -176,7 +176,7 @@ export const helpCardsData: HelpCardItem[] = [
     description: "Métricas globais, geração de relatórios (XLSX/PDF) e auditoria técnica.",
     searchKeywords: "relatórios métricas estatísticas excel pdf auditoria logs",
     dialogTitle: "Métricas e Extração de Dados",
-    dialogDescription: "Ferramentas para acompanhar o desempenho e auditar a evolução do projeto.",
+    dialogDescription: "Ferramentas para acompanhar o desempenho e auditar a evolução do projecto.",
     dialogBody: (
       <>
         <p className="mb-4">
@@ -191,7 +191,7 @@ export const helpCardsData: HelpCardItem[] = [
     roleContent: {
       ADMIN: <p>A exclusividade do painel de Auditoria de Sistema permite-lhe fazer uma filtragem poderosa (por utilizador, acção realizada, entidade ou intervalo temporal), assegurando que o sistema cumpre as estritas normativas de integridade e transparência da instituição.</p>,
       SUPERVISOR: <p>O seu <i>dashboard</i> (Painel de Controlo) alimenta-se através das estatísticas globais para mapear a performance da sua equipa e verificar o histórico de relatórios gerados (que guarda um registo de cada exportação processada e por quem).</p>,
-      OPERATOR: <p>O seu painel principal mostra as suas próprias métricas de submissão (entradas criadas, taxa de rejeição/correção), ajudando-o a identificar onde é necessário retificar dados para subir o volume de registos devidamente Aprovados.</p>
+      OPERATOR: <p>O seu painel principal mostra as suas próprias métricas de submissão (entradas criadas, taxa de rejeição/correcção), ajudando-o a identificar onde é necessário rectificar dados para subir o volume de registos devidamente Aprovados.</p>
     }
   }
 ];

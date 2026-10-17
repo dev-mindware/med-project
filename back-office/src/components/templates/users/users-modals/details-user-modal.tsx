@@ -47,6 +47,27 @@ export function DetailsUserModal() {
           </div>
         </section>
 
+        <section className="space-y-3">
+          <h3 className="font-semibold text-foreground border-b pb-2">Âmbito de Supervisão (Letras Iniciais)</h3>
+          {currentUser.assignedLetters && currentUser.assignedLetters.length > 0 ? (
+            <div className="flex flex-wrap gap-1.5 pt-1">
+              {currentUser.assignedLetters.map((letter: string) => (
+                <span
+                  key={letter}
+                  className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-sm font-bold bg-primary/15 text-primary border border-primary/25 shadow-sm"
+                  title={`Letra ${letter}`}
+                >
+                  {letter}
+                </span>
+              ))}
+            </div>
+          ) : (
+            <p className="text-muted-foreground text-xs">
+              Acesso total / Não restringido a letras específicas (A a Z).
+            </p>
+          )}
+        </section>
+
         {(currentUser.createdAt || currentUser.updatedAt) && (
           <section className="space-y-2">
             <h3 className="font-semibold text-foreground">
