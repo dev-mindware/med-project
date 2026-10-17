@@ -19,6 +19,7 @@ export type ToponymData = {
   languageCode?: string;
   isVocabulary?: boolean;
   isVocabularyEP?: boolean;
+  isForeignism?: boolean;
   frequency?: number;
   firstSourceId?: string | null;
   firstSource?: string | null;
