@@ -74,7 +74,7 @@ export function HeroSection({ stats = [] }: { stats?: HeroStat[] }) {
           >
             <Link href="/dictionary">
               <Search className="mr-2 h-4 w-4" />
-              Consultar Vocabulário
+              Pesquisar no dicionário
             </Link>
           </Button>
           <Button

@@ -1,5 +1,7 @@
 export type PublicMeta = {
   total: number
+  /** Pesquisa com muitos resultados: o total conta só os primeiros (ex.: 1000), pode haver mais */
+  totalCapped?: boolean
   page: number
   limit: number
   totalPages: number

@@ -33,15 +33,18 @@ const defaultMeta: PublicMeta = {
   hasPreviousPage: false,
 }
 
+/**
+ * Línguas nacionais que acompanham o código de língua guardado (ex.: «pt-AO; kimbundu»).
+ * Os valores são os mesmos que a API normaliza; a API procura-os dentro do código.
+ */
 const languageOptions = [
   { label: "Todas as línguas", value: "all" },
-  { label: "Português", value: "pt" },
-  { label: "Kimbundu", value: "kmb" },
-  { label: "Umbundu", value: "umb" },
-  { label: "Kikongo", value: "kon" },
-  { label: "Cokwe", value: "cjk" },
-  { label: "Nganguela", value: "nba" },
-  { label: "Kwanyama", value: "kua" },
+  { label: "Kimbundu", value: "kimbundu" },
+  { label: "Umbundu", value: "umbundu" },
+  { label: "Kikongo", value: "kikongo" },
+  { label: "Tchokwe", value: "tchokwe" },
+  { label: "Nganguela", value: "nganguela" },
+  { label: "Kwanyama", value: "kwanyama" },
 ]
 
 export function DictionarySearch({
@@ -215,8 +218,10 @@ export function DictionarySearch({
         <div className="space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
             <p>
-              <span className="font-semibold text-foreground">{meta.total}</span> resultado
-              {meta.total === 1 ? "" : "s"} encontrados
+              <span className="font-semibold text-foreground">
+                {meta.totalCapped ? `${meta.total.toLocaleString("pt-PT")}+` : meta.total.toLocaleString("pt-PT")}
+              </span>{" "}
+              resultado{meta.total === 1 ? "" : "s"} encontrado{meta.total === 1 ? "" : "s"}
             </p>
             <p>
               Página {meta.page} de {Math.max(meta.totalPages, 1)}

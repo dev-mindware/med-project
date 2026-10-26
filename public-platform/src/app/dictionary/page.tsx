@@ -34,6 +34,9 @@ export default async function DicionarioPage({
     ),
   ])
 
+  // Defensivo: nunca rebentar a página se a API omitir o total
+  const total = entries.meta.total ?? entries.data.length
+
   return (
     <div className="min-h-screen flex flex-col pt-[4.75rem]">
       <Header />
@@ -44,9 +47,9 @@ export default async function DicionarioPage({
           subtitle="Consulte definições, etimologias, exemplos de uso e informações gramaticais aprovadas para consulta pública."
           tone="ice"
           stats={[
-            { value: (stats?.dictionaryEntries ?? entries.meta.total).toLocaleString("pt-PT"), label: "Entradas aprovadas" },
-            { value: entries.meta.total.toLocaleString("pt-PT"), label: "Resultados desta consulta" },
-            { value: entries.meta.totalPages.toLocaleString("pt-PT"), label: "Páginas disponíveis" },
+            { value: (stats?.dictionaryEntries ?? total).toLocaleString("pt-PT"), label: "Entradas aprovadas" },
+            { value: total.toLocaleString("pt-PT"), label: "Resultados desta consulta" },
+            { value: (entries.meta.totalPages ?? 1).toLocaleString("pt-PT"), label: "Páginas disponíveis" },
           ]}
         />
         <section className="section-paper py-14">

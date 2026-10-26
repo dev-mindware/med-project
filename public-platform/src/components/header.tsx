@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
@@ -115,9 +115,9 @@ export function Header() {
         </nav>
 
         <div className="flex shrink-0 items-center gap-3">
-          <Link href="/vonalp" className="hidden lg:block">
+          <Link href="/dictionary" className="hidden lg:block">
             <Button className="h-11 rounded-md px-7 text-sm font-semibold shadow-none">
-              Consultar Vocabulário
+              Pesquisar no dicionário
             </Button>
           </Link>
 
@@ -175,8 +175,8 @@ export function Header() {
             ))}
 
             <div className="mt-2 border-t border-border/60 pb-1 pt-3">
-              <Link href="/vonalp" onClick={() => setIsOpen(false)}>
-                <Button className="h-11 w-full rounded-md font-semibold">Consultar Vocabulário</Button>
+              <Link href="/dictionary" onClick={() => setIsOpen(false)}>
+                <Button className="h-11 w-full rounded-md font-semibold">Pesquisar no dicionário</Button>
               </Link>
             </div>
           </div>
