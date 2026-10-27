@@ -39,7 +39,7 @@ export function NewsletterSignup() {
 
         <h2 className="text-3xl font-extrabold tracking-tight mb-3">Newsletter da CN-IILP</h2>
         <p className="text-muted-foreground leading-relaxed mb-8 max-w-md mx-auto">
-          Mantenha-se atualizado com eventos, publicações e novidades sobre a língua portuguesa em Angola.
+          Mantenha-se actualizado com eventos, publicações e novidades sobre a língua portuguesa em Angola.
         </p>
 
         {submitted ? (

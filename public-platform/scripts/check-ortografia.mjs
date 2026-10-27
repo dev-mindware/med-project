@@ -1,14 +1,17 @@
-// Deteta grafias pré-AO90, brasileirismos e texto em inglês conhecidos na interface.
+// Ortografia de Angola (AO45): deteta grafias AO90, brasileirismos e texto em inglês conhecidos na interface.
 import { readdirSync, readFileSync, statSync } from "node:fs"
 import { join } from "node:path"
 
 const rules = [
-  [/\b[Aa]ctividades?\b/, "atividade(s)"],
-  [/\b[Aa]ctualiz\w+/, "atualiz-"],
-  [/\b[Cc]orrect[oa]s?\b/, "correto/a"],
-  [/\b[Dd]idáctic\w+/, "didátic-"],
-  [/\b[Oo]bjectivos?\b/, "objetivo(s)"],
-  [/\b[Dd]efectivo/, "defetivo"],
+  [/\b[Aa]tividades?\b/, "actividade(s)"],
+  [/\b[Aa]tualiz\w+/, "actualiz-"],
+  [/\b[Cc]orret[oa]s?\b/, "correcto/a"],
+  [/\b[Dd]idátic\w+/, "didáctic-"],
+  [/\b[Oo]bjetivos?\b/, "objectivo(s)"],
+  [/\b[Pp]rojetos?\b/, "projecto(s)"],
+  [/\b[Dd]efetivo/, "defectivo"],
+  [/\b[Aa]bstrato|\b[Cc]oletivo|\b[Aa]djetivo|\b[Ff]racionário/, "abstracto/colectivo/adjectivo/fraccionário"],
+  [/\b[Ss]eleç\w+|\b[Dd]ireta\b|\b[Dd]ireto\b/, "selecção/directo"],
   [/\b[Mm]ídias?\b/, "multimédia"],
   [/\bSobrenomes?\b/, "apelido(s)"],
   [/\b[Ee]m andamento\b/, "em curso"],

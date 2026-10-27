@@ -380,7 +380,7 @@ export function LexicalExplorer({
           </div>
         </div>
         {isLoading && (
-          <p className="mt-3 text-xs font-medium text-muted-foreground">A atualizar resultados...</p>
+          <p className="mt-3 text-xs font-medium text-muted-foreground">A actualizar resultados...</p>
         )}
 
         <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-blue-100/80 pt-4">

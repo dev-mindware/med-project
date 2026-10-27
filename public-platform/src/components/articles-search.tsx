@@ -103,7 +103,7 @@ export function ArticlesSearch({
           </Select>
         </div>
       </div>
-      {isSearching && <p className="px-2 text-xs font-medium text-muted-foreground">A atualizar artigos...</p>}
+      {isSearching && <p className="px-2 text-xs font-medium text-muted-foreground">A actualizar artigos...</p>}
 
       {searchResults.length > 0 && (
         <div className="space-y-3">

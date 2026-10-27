@@ -24,13 +24,13 @@ export default async function EventosPage({
       <main className="flex-1">
         <PageHero
           badge="Agenda"
-          title="Eventos e atividades"
-          subtitle="Acompanhe conferências, workshops, seminários e atividades publicadas pela Comissão Nacional de Língua Portuguesa."
+          title="Eventos e actividades"
+          subtitle="Acompanhe conferências, workshops, seminários e actividades publicadas pela Comissão Nacional de Língua Portuguesa."
           tone="ice"
           stats={[
             { value: events.meta.total.toLocaleString("pt-PT"), label: "Eventos encontrados" },
             { value: events.data.filter((event) => event.maxRegistrations).length.toLocaleString("pt-PT"), label: "Com vagas definidas nesta lista" },
-            { value: period === "upcoming" ? "Próximos" : period === "ongoing" ? "Em curso" : "Passados", label: "Período ativo" },
+            { value: period === "upcoming" ? "Próximos" : period === "ongoing" ? "Em curso" : "Passados", label: "Período activo" },
           ]}
         />
         <section className="section-paper py-14">

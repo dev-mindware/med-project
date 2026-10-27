@@ -6,12 +6,12 @@ export const grammaticalCategoryOptions = [
       { label: "Comum", value: "common_noun" },
       { label: "Próprio", value: "proper_noun" },
       { label: "Concreto", value: "concrete_noun" },
-      { label: "Abstrato", value: "abstract_noun" },
-      { label: "Coletivo", value: "collective_noun" },
+      { label: "Abstracto", value: "abstract_noun" },
+      { label: "Colectivo", value: "collective_noun" },
     ],
   },
   {
-    label: "Adjetivo",
+    label: "Adjectivo",
     value: "adjective",
     subcategories: [
       { label: "Qualificativo", value: "qualifying_adjective" },
@@ -27,7 +27,7 @@ export const grammaticalCategoryOptions = [
       { label: "Cardinal", value: "cardinal_numeral" },
       { label: "Ordinal", value: "ordinal_numeral" },
       { label: "Multiplicativo", value: "multiplicative_numeral" },
-      { label: "Fracionário", value: "fractional_numeral" },
+      { label: "Fraccionário", value: "fractional_numeral" },
     ],
   },
   {
@@ -50,7 +50,7 @@ export const grammaticalCategoryOptions = [
       { label: "Irregular", value: "irregular_verb" },
       { label: "Transitivo", value: "transitive_verb" },
       { label: "Intransitivo", value: "intransitive_verb" },
-      { label: "Defetivo", value: "defective_verb" },
+      { label: "Defectivo", value: "defective_verb" },
       { label: "Abundante", value: "abundant_verb" },
     ],
   },

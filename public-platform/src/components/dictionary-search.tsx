@@ -210,7 +210,7 @@ export function DictionarySearch({
 
         </div>
         {(isLoading || isPending) && (
-          <p className="px-2 pt-3 text-xs font-medium text-muted-foreground">A atualizar resultados...</p>
+          <p className="px-2 pt-3 text-xs font-medium text-muted-foreground">A actualizar resultados...</p>
         )}
       </div>
 

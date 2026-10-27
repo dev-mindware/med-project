@@ -15,7 +15,7 @@ export function EventsList({ events = [] }: { events?: PublicEvent[] }) {
         <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-3">Calendário</p>
         <h2 className="text-4xl font-extrabold mb-3 tracking-tight">Próximos Eventos</h2>
         <p className="text-muted-foreground text-lg max-w-xl mx-auto">
-          Não perca as próximas atividades da nossa comissão
+          Não perca as próximas actividades da nossa comissão
         </p>
       </div>
 

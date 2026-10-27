@@ -5,7 +5,7 @@ import Link from "next/link"
 import { RevealOnScroll } from "@/components/reveal-on-scroll"
 
 function countLabel(value: number | undefined, singular: string, plural: string) {
-  if (typeof value !== "number") return "Dados em atualização"
+  if (typeof value !== "number") return "Dados em actualização"
   return `${value.toLocaleString("pt-PT")} ${value === 1 ? singular : plural}`
 }
 
@@ -86,7 +86,7 @@ export function ServicesSection({ stats }: { stats?: PublicStats | null }) {
     {
       icon: Calendar,
       title: "Eventos",
-      description: "Acompanhe conferências, seminários, workshops e atividades oficiais publicadas.",
+      description: "Acompanhe conferências, seminários, workshops e actividades oficiais publicadas.",
       bullets: [
         countLabel(stats?.publishedEvents, "evento publicado", "eventos publicados"),
         countLabel(stats?.upcomingEvents, "evento futuro", "eventos futuros"),

@@ -365,7 +365,7 @@ export function LexicalFlipbook({
             <span className="font-semibold text-foreground">{data.meta.total.toLocaleString("pt-PT")}</span> registos
           </p>
         </div>
-        {isLoading && <p className="mt-3 text-xs font-medium text-muted-foreground">A atualizar páginas...</p>}
+        {isLoading && <p className="mt-3 text-xs font-medium text-muted-foreground">A actualizar páginas...</p>}
       </div>
 
       <div className="flipbook-stage">
