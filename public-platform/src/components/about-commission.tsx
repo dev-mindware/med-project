@@ -7,12 +7,12 @@ export function AboutCommission() {
     {
       icon: Target,
       title: "Promoção da Língua",
-      description: "Promover o uso correcto e o enriquecimento da língua portuguesa em Angola.",
+      description: "Promover o uso correto e o enriquecimento da língua portuguesa em Angola.",
     },
     {
       icon: BookOpen,
       title: "Recursos Educativos",
-      description: "Desenvolver materiais didácticos e recursos para o ensino do português.",
+      description: "Desenvolver materiais didáticos e recursos para o ensino do português.",
     },
     {
       icon: Globe,
@@ -104,7 +104,7 @@ export function AboutCommission() {
       </div>
 
       <div>
-        <h3 className="mb-6 text-center text-2xl font-bold">Nossos Objectivos</h3>
+        <h3 className="mb-6 text-center text-2xl font-bold">Os nossos objetivos</h3>
         <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-4">
           {objectives.map((objective) => {
             const Icon = objective.icon

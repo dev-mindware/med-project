@@ -12,13 +12,13 @@ export default async function ToponimosFlipPage() {
       <Header />
       <main className="flex-1">
         <PageHero
-          badge="Flipbook"
+          badge="Modo livro"
           title="Topónimos em modo livro"
           subtitle="Navegue pelos nomes de lugares em páginas leves, com leitura confortável."
           tone="ice"
           stats={[
             { value: data.meta.total.toLocaleString("pt-PT"), label: "Topónimos" },
-            { value: data.meta.totalPages.toLocaleString("pt-PT"), label: "Páginas do flipbook" },
+            { value: data.meta.totalPages.toLocaleString("pt-PT"), label: "Páginas do livro" },
           ]}
         />
         <section className="section-paper py-14">

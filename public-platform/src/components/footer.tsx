@@ -66,8 +66,8 @@ const cols = [
     heading: "Instituição",
     links: [
       { label: "Sobre a Comissão", href: "/about" },
-      { label: "Política de Privacidade", href: "/privacidade" },
-      { label: "Vocábulos de Uso", href: "/vocabulos-de-uso" },
+      { label: "Política de privacidade", href: "/privacidade" },
+      { label: "Termos de utilização", href: "/vocabulos-de-uso" },
       { label: "Acessibilidade", href: "/acessibilidade" },
     ],
   },

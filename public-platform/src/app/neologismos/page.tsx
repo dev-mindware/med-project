@@ -14,12 +14,12 @@ export default async function NeologismosPage() {
         <PageHero
           badge="Novas palavras"
           title="Neologismos"
-          subtitle="Consulte neologismos aprovados, com classe e subclasse gramatical, definições, exemplos de uso e mídias ligadas ao registo."
+          subtitle="Consulte neologismos aprovados, com classe e subclasse gramatical, definições, exemplos de uso e conteúdo multimédia ligado ao registo."
           tone="soft"
           stats={[
             { value: data.neologisms.meta.total.toLocaleString("pt-PT"), label: "Neologismos publicados" },
             { value: data.neologisms.data.filter((item) => item.grammaticalCategory).length.toLocaleString("pt-PT"), label: "Com classe nesta página" },
-            { value: data.neologisms.data.filter((item) => item.audioUrl || item.imageUrl || item.videoUrl).length.toLocaleString("pt-PT"), label: "Com mídia nesta página" },
+            { value: data.neologisms.data.filter((item) => item.audioUrl || item.imageUrl || item.videoUrl).length.toLocaleString("pt-PT"), label: "Com multimédia nesta página" },
           ]}
         />
         <section className="section-paper py-14">

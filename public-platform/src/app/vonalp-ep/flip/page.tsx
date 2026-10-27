@@ -12,13 +12,13 @@ export default async function VonalpEpFlipPage() {
       <Header />
       <main className="flex-1">
         <PageHero
-          badge="Flipbook"
+          badge="Modo livro"
           title="VONALP-EP em modo livro"
-          subtitle="Vocabulário Ortográfico Nacional de Angola da Língua Portuguesa - Ensino Primário em navegação de livro."
+          subtitle="Vocabulário Ortográfico Nacional de Angola da Língua Portuguesa (Ensino Primário) em navegação de livro."
           tone="soft"
           stats={[
             { value: data.meta.total.toLocaleString("pt-PT"), label: "Vocábulos" },
-            { value: data.meta.totalPages.toLocaleString("pt-PT"), label: "Páginas do flipbook" },
+            { value: data.meta.totalPages.toLocaleString("pt-PT"), label: "Páginas do livro" },
           ]}
         />
         <section className="section-paper py-14">

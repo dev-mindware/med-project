@@ -61,7 +61,7 @@ const collections = [
     key: "neologisms",
     label: "Neologismos",
     eyebrow: "Novas palavras",
-    description: "Entradas novas aprovadas, com definições, categorias gramaticais, exemplos e mídias quando disponíveis.",
+    description: "Entradas novas aprovadas, com definições, categorias gramaticais, exemplos e conteúdo multimédia quando disponíveis.",
     icon: Sparkles,
     accent: "border-blue-500/30 bg-blue-500/10 text-blue-700",
   },
@@ -85,7 +85,7 @@ const collections = [
     key: "anthroponyms",
     label: "Antropónimos",
     eyebrow: "Nomes e identidade",
-    description: "Nomes próprios, sobrenomes, género, etimologia e figuras históricas.",
+    description: "Nomes próprios, apelidos, género, etimologia e figuras históricas.",
     icon: Fingerprint,
     accent: "border-violet-500/30 bg-violet-500/10 text-violet-700",
   },
@@ -380,7 +380,7 @@ export function LexicalExplorer({
           </div>
         </div>
         {isLoading && (
-          <p className="mt-3 text-xs font-medium text-muted-foreground">A actualizar resultados...</p>
+          <p className="mt-3 text-xs font-medium text-muted-foreground">A atualizar resultados...</p>
         )}
 
         <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-blue-100/80 pt-4">
@@ -525,7 +525,7 @@ function LexicalCard({ item, collection }: { item: LexicalItem; collection: Coll
         <CardHeader eyebrow="Antropónimo" title={anthroponym.name} badge={anthroponym.gender} />
         <p className="mt-4 text-sm leading-relaxed text-muted-foreground">{anthroponym.meaning ?? "Significado não disponível."}</p>
         <div className="mt-4 flex flex-wrap gap-1.5">
-          {anthroponym.surname && <Badge variant="outline" className="rounded-md">Sobrenome: {anthroponym.surname}</Badge>}
+          {anthroponym.surname && <Badge variant="outline" className="rounded-md">Apelido: {anthroponym.surname}</Badge>}
           {anthroponym.historicalFigure && <Badge variant="outline" className="rounded-md">{anthroponym.historicalFigure}</Badge>}
         </div>
       </article>

@@ -50,7 +50,7 @@ export const grammaticalCategoryOptions = [
       { label: "Irregular", value: "irregular_verb" },
       { label: "Transitivo", value: "transitive_verb" },
       { label: "Intransitivo", value: "intransitive_verb" },
-      { label: "Defectivo", value: "defective_verb" },
+      { label: "Defetivo", value: "defective_verb" },
       { label: "Abundante", value: "abundant_verb" },
     ],
   },

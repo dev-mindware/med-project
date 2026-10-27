@@ -365,7 +365,7 @@ export function LexicalFlipbook({
             <span className="font-semibold text-foreground">{data.meta.total.toLocaleString("pt-PT")}</span> registos
           </p>
         </div>
-        {isLoading && <p className="mt-3 text-xs font-medium text-muted-foreground">A actualizar páginas...</p>}
+        {isLoading && <p className="mt-3 text-xs font-medium text-muted-foreground">A atualizar páginas...</p>}
       </div>
 
       <div className="flipbook-stage">
@@ -566,7 +566,7 @@ function itemBadges(item: FlipbookItem, collection: FlipbookCollection) {
     badges.push(toponym.province, toponym.municipality, toponym.gentilic && `Gentílico: ${toponym.gentilic}`)
   } else if (collection === "anthroponyms") {
     const anthroponym = item as PublicAnthroponym
-    badges.push(anthroponym.gender, anthroponym.surname && `Sobrenome: ${anthroponym.surname}`)
+    badges.push(anthroponym.gender, anthroponym.surname && `Apelido: ${anthroponym.surname}`)
   } else if (collection === "volna") {
     const term = item as PublicVolnaTerm
     badges.push(

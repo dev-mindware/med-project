@@ -12,13 +12,13 @@ export default async function VolnaFlipPage() {
       <Header />
       <main className="flex-1">
         <PageHero
-          badge="Flipbook"
+          badge="Modo livro"
           title="VOLNA em modo livro"
           subtitle="Vocabulário das Línguas Nacionais de Angola em navegação de livro."
           tone="ice"
           stats={[
             { value: data.meta.total.toLocaleString("pt-PT"), label: "Vocábulos" },
-            { value: data.meta.totalPages.toLocaleString("pt-PT"), label: "Páginas do flipbook" },
+            { value: data.meta.totalPages.toLocaleString("pt-PT"), label: "Páginas do livro" },
           ]}
         />
         <section className="section-paper py-14">

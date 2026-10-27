@@ -22,7 +22,7 @@ export function ContactInfo() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     const subject = encodeURIComponent(formData.subject || "Contacto pelo portal CNLP")
-    const body = encodeURIComponent(`${formData.message}\n\nNome: ${formData.name}\nEmail: ${formData.email}`)
+    const body = encodeURIComponent(`${formData.message}\n\nNome: ${formData.name}\nE-mail: ${formData.email}`)
     window.location.href = `mailto:info@cnlp.gov.ao?subject=${subject}&body=${body}`
     setIsSubmitted(true)
   }
@@ -44,13 +44,13 @@ export function ContactInfo() {
     },
     {
       icon: Mail,
-      title: "Email",
+      title: "E-mail",
       content: ["info@cnlp.gov.ao", "secretaria@cnlp.gov.ao"],
     },
     {
       icon: Clock,
       title: "Horário",
-      content: ["Segunda a Sexta: 08:00 - 17:00", "Sábado: 08:00 - 12:00"],
+      content: ["Segunda a sexta-feira: das 08:00 às 17:00", "Sábado: das 08:00 às 12:00"],
     },
   ]
 
@@ -93,7 +93,7 @@ export function ContactInfo() {
       <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Contact Information */}
         <div className="space-y-6">
-          <h3 className="text-2xl font-bold">Informações de Contacto</h3>
+          <h3 className="text-2xl font-bold">Informações de contacto</h3>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {contactDetails.map((detail, index) => {
@@ -142,7 +142,7 @@ export function ContactInfo() {
                 })}
               </div>
               <p className="text-sm text-muted-foreground mt-3">
-                Siga-nos nas redes sociais para actualizações e conteúdos exclusivos
+                Siga-nos nas redes sociais para atualizações e conteúdos exclusivos
               </p>
             </CardContent>
           </Card>
@@ -170,7 +170,7 @@ export function ContactInfo() {
                 </div>
                 <div className="space-y-2">
                   <label htmlFor="email" className="text-sm font-medium">
-                    Email
+                    E-mail
                   </label>
                   <Input
                     id="email"
@@ -195,7 +195,7 @@ export function ContactInfo() {
                     <SelectItem value="geral">Informação Geral</SelectItem>
                     <SelectItem value="colaboracao">Proposta de Colaboração</SelectItem>
                     <SelectItem value="recursos">Recursos Educativos</SelectItem>
-                    <SelectItem value="eventos">Eventos e Actividades</SelectItem>
+                    <SelectItem value="eventos">Eventos e atividades</SelectItem>
                     <SelectItem value="sugestao">Sugestões</SelectItem>
                     <SelectItem value="outro">Outro</SelectItem>
                   </SelectContent>

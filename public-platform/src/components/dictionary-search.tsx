@@ -210,7 +210,7 @@ export function DictionarySearch({
 
         </div>
         {(isLoading || isPending) && (
-          <p className="px-2 pt-3 text-xs font-medium text-muted-foreground">A actualizar resultados...</p>
+          <p className="px-2 pt-3 text-xs font-medium text-muted-foreground">A atualizar resultados...</p>
         )}
       </div>
 
@@ -340,7 +340,7 @@ function WordCard({
                   tab === item ? "border-b-2 border-primary text-primary" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                {item === "definition" ? "Definição" : item === "media" ? `Mídias (${mediaCount})` : item === "forms" ? "Formas" : "Detalhes"}
+                {item === "definition" ? "Definição" : item === "media" ? `Multimédia (${mediaCount})` : item === "forms" ? "Formas" : "Detalhes"}
               </button>
             ))}
           </div>
@@ -422,7 +422,7 @@ function MediaPanel({ word }: { word: PublicEntry }) {
   if (!word.audioUrl && !word.imageUrl && !word.videoUrl) {
     return (
       <div className="rounded-xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
-        Nenhuma mídia associada a esta entrada.
+        Nenhum conteúdo multimédia associado a esta entrada.
       </div>
     )
   }

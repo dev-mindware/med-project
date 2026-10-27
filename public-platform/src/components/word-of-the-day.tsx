@@ -44,7 +44,7 @@ export function WordOfTheDay({ word }: { word?: PublicEntry }) {
     return (
       <div className="mx-auto max-w-4xl">
         <div className="rounded-lg border border-dashed border-primary/25 bg-white/72 p-8 text-center shadow-sm backdrop-blur">
-          <p className="text-xs font-bold uppercase tracking-widest text-primary">Palavra do Dia</p>
+          <p className="text-xs font-bold uppercase tracking-widest text-primary">Palavra do dia</p>
           <h3 className="mt-3 text-2xl font-extrabold">Sem entrada publicada para destacar</h3>
           <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground">
             Assim que houver entradas aprovadas, esta área passa a escolher uma palavra real do acervo.
@@ -61,7 +61,7 @@ export function WordOfTheDay({ word }: { word?: PublicEntry }) {
       <div className="overflow-hidden rounded-lg border border-blue-100/80 bg-white/88 shadow-lg shadow-blue-950/8 backdrop-blur">
         <div className="flex items-center justify-between border-b border-blue-100/70 bg-primary/5 px-8 py-4">
           <span className="text-xs font-bold uppercase tracking-widest text-primary">
-            Palavra do Dia
+            Palavra do dia
           </span>
           <span className="rounded-md border border-blue-100 bg-white px-3 py-1 text-xs text-muted-foreground">
             {todayStr}

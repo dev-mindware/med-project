@@ -46,7 +46,7 @@ export default function EventRegistrationPage({ params }: { params: Promise<{ id
               <p className="text-xs font-bold uppercase tracking-widest text-primary">Inscrição em evento</p>
               <h1 className="mt-2 text-3xl font-extrabold tracking-tight">Ficha de inscrição</h1>
               <p className="mt-2 text-sm text-muted-foreground">
-                Esta página continua disponível como fallback. O fluxo principal de inscrição também pode ser aberto em modal na agenda.
+                Esta página continua disponível como alternativa. O fluxo principal de inscrição também pode ser aberto em modal na agenda.
               </p>
             </div>
 

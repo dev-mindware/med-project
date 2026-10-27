@@ -18,7 +18,7 @@ const typeAccent: Record<string, { color: string; bg: string; line: string }> = 
 
 const tabs = [
   { key: "upcoming", label: "Próximos" },
-  { key: "ongoing", label: "Em andamento" },
+  { key: "ongoing", label: "Em curso" },
   { key: "past", label: "Passados" },
 ] as const
 
@@ -75,8 +75,8 @@ export function EventsCalendar({
           <h3 className="mb-2 text-lg font-semibold">{isLoading ? "A carregar eventos..." : "Nenhum evento encontrado"}</h3>
           {!isLoading && (
             <p className="text-sm text-muted-foreground">
-              {active === "upcoming" && "Não há eventos programados no momento."}
-              {active === "ongoing" && "Não há eventos em andamento."}
+              {active === "upcoming" && "De momento, não há eventos programados."}
+              {active === "ongoing" && "Não há eventos em curso."}
               {active === "past" && "Não há eventos passados registados."}
             </p>
           )}
@@ -104,8 +104,8 @@ function EventCard({ event, active }: { event: PublicEvent; active: "upcoming" |
           <span className={`rounded-md px-2.5 py-1 text-xs font-bold uppercase tracking-widest ${accent.bg} ${accent.color}`}>
             {type}
           </span>
-          {active === "past" && <Badge variant="secondary" className="rounded-md text-xs">Finalizado</Badge>}
-          {active === "ongoing" && <Badge className="rounded-md bg-blue-500 text-xs">Em andamento</Badge>}
+          {active === "past" && <Badge variant="secondary" className="rounded-md text-xs">Terminado</Badge>}
+          {active === "ongoing" && <Badge className="rounded-md bg-blue-500 text-xs">Em curso</Badge>}
         </div>
 
         <h3 className="mb-2 text-lg font-bold leading-snug text-foreground group-hover:text-primary">{event.title}</h3>

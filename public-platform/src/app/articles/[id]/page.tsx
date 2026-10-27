@@ -121,7 +121,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ id: st
               <CardContent className="p-5">
                 <h2 className="text-lg font-bold">Dados da publicação</h2>
                 <dl className="mt-4 space-y-4 text-sm">
-                  {article.slug && <Detail label="Slug" value={article.slug} />}
+                  {article.slug && <Detail label="Endereço (slug)" value={article.slug} />}
                   {article.type && <Detail label="Tipo" value={getPostTypeLabel(article.type)} />}
                   {article.category && <Detail label="Categoria" value={article.category} />}
                   <Detail label="Destaque" value={article.isFeatured ? "Sim" : "Não"} />
@@ -136,7 +136,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ id: st
                 <CardContent className="p-5">
                   <h2 className="flex items-center gap-2 text-lg font-bold">
                     <Tag className="h-4 w-4" />
-                    Tags
+                    Etiquetas
                   </h2>
                   <div className="mt-4 flex flex-wrap gap-2">
                     {article.tags.map((tag) => (

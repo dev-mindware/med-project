@@ -84,7 +84,7 @@ export function HeroSection({ stats = [] }: { stats?: HeroStat[] }) {
             asChild
           >
             <Link href="/neologismos">
-              Explorar Neologismos
+              Explorar neologismos
               <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
           </Button>
