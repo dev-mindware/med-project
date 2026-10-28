@@ -1,6 +1,6 @@
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
-import { PageHero } from "@/components/page-hero"
+import { CollectionHeader } from "@/components/collection-header"
 import { DictionarySearch } from "@/components/dictionary-search"
 import { FeaturedWords } from "@/components/featured-words"
 import { publicApi, safePublicApi } from "@/lib/public-api"
@@ -41,18 +41,13 @@ export default async function DicionarioPage({
     <div className="min-h-screen flex flex-col pt-[4.75rem]">
       <Header />
       <main className="flex-1">
-        <PageHero
-          badge="Recurso"
+        <CollectionHeader
           title="Dicionário de Língua Portuguesa"
           subtitle="Consulte definições, etimologias, exemplos de uso e informações gramaticais aprovadas para consulta pública."
-          tone="ice"
-          stats={[
-            { value: (stats?.dictionaryEntries ?? total).toLocaleString("pt-PT"), label: "Entradas aprovadas" },
-            { value: total.toLocaleString("pt-PT"), label: "Resultados desta consulta" },
-            { value: (entries.meta.totalPages ?? 1).toLocaleString("pt-PT"), label: "Páginas disponíveis" },
-          ]}
+          total={(stats?.dictionaryEntries ?? total).toLocaleString("pt-PT")}
+          unit="entradas aprovadas"
         />
-        <section className="section-paper py-14">
+        <section className="section-paper py-8 md:py-10">
           <div className="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
             <DictionarySearch
               initialResults={entries.data}

@@ -1,7 +1,7 @@
 import { Footer } from "@/components/footer"
 import { Header } from "@/components/header"
 import { LexicalExplorer } from "@/components/lexical-explorer"
-import { PageHero } from "@/components/page-hero"
+import { CollectionHeader } from "@/components/collection-header"
 import { getLexicalData } from "@/lib/lexical-data"
 
 export default async function VolnaPage() {
@@ -11,16 +11,11 @@ export default async function VolnaPage() {
     <div className="flex min-h-screen flex-col pt-[4.75rem]">
       <Header />
       <main className="flex-1">
-        <PageHero
-          badge="Línguas nacionais"
+        <CollectionHeader
           title="VOLNA"
           subtitle="Vocabulário das Línguas Nacionais de Angola"
-          tone="ice"
-          stats={[
-            { value: data.volna.meta.total.toLocaleString("pt-PT"), label: "Vocábulos publicados" },
-            { value: data.volna.data.filter((item) => item.language).length.toLocaleString("pt-PT"), label: "Línguas nesta consulta" },
-            { value: data.volna.meta.totalPages.toLocaleString("pt-PT"), label: "Páginas disponíveis" },
-          ]}
+          total={data.volna.meta.total.toLocaleString("pt-PT")}
+          unit="vocábulos publicados"
         />
         <section className="section-soft border-y border-border/40 py-10">
           <div className="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
@@ -33,7 +28,7 @@ export default async function VolnaPage() {
             </div>
           </div>
         </section>
-        <section className="section-paper py-14">
+        <section className="section-paper py-8 md:py-10">
           <div className="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
             <LexicalExplorer initialData={data} initialActive="volna" visibleCollections={["volna"]} />
           </div>

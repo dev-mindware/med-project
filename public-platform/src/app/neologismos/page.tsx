@@ -1,7 +1,7 @@
 import { Footer } from "@/components/footer"
 import { Header } from "@/components/header"
 import { LexicalExplorer } from "@/components/lexical-explorer"
-import { PageHero } from "@/components/page-hero"
+import { CollectionHeader } from "@/components/collection-header"
 import { getLexicalData } from "@/lib/lexical-data"
 
 export default async function NeologismosPage() {
@@ -11,18 +11,13 @@ export default async function NeologismosPage() {
     <div className="flex min-h-screen flex-col pt-[4.75rem]">
       <Header />
       <main className="flex-1">
-        <PageHero
-          badge="Novas palavras"
+        <CollectionHeader
           title="Neologismos"
           subtitle="Consulte neologismos aprovados, com classe e subclasse gramatical, definições, exemplos de uso e conteúdo multimédia ligado ao registo."
-          tone="soft"
-          stats={[
-            { value: data.neologisms.meta.total.toLocaleString("pt-PT"), label: "Neologismos publicados" },
-            { value: data.neologisms.data.filter((item) => item.grammaticalCategory).length.toLocaleString("pt-PT"), label: "Com classe nesta página" },
-            { value: data.neologisms.data.filter((item) => item.audioUrl || item.imageUrl || item.videoUrl).length.toLocaleString("pt-PT"), label: "Com multimédia nesta página" },
-          ]}
+          total={data.neologisms.meta.total.toLocaleString("pt-PT")}
+          unit="neologismos publicados"
         />
-        <section className="section-paper py-14">
+        <section className="section-paper py-8 md:py-10">
           <div className="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
             <LexicalExplorer initialData={data} initialActive="neologisms" visibleCollections={["neologisms"]} />
           </div>

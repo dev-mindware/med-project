@@ -22,7 +22,8 @@ import {
   getGrammaticalSubcategoryLabel,
   grammaticalCategoryOptions,
 } from "@/lib/grammatical-labels"
-import { BookOpen, Fingerprint, Globe2, Languages, MapPinned, Search, Sparkles, Volume2, ImageIcon, Video } from "lucide-react"
+import { BookOpen, Fingerprint, Globe2, Languages, MapPinned, Search, SlidersHorizontal, Sparkles, Volume2, ImageIcon, Video } from "lucide-react"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 
 export type CollectionKey = "neologisms" | "foreignisms" | "toponyms" | "anthroponyms" | "vonalp" | "vonalpEp" | "volna"
 type LexicalItem = PublicNeologism | PublicForeignism | PublicToponym | PublicAnthroponym | PublicVonalpTerm | PublicVolnaTerm
@@ -161,6 +162,7 @@ export function LexicalExplorer({
   }, [])
 
   const activeConfig = collections.find((collection) => collection.key === active) ?? collections[0]
+  const [showFilters, setShowFilters] = useState(false)
   const activeItems = itemsByCollection[active].data
   const activeMeta = itemsByCollection[active].meta
   const visibleCollectionConfigs = collections.filter((collection) => allowedCollections.includes(collection.key))
@@ -303,17 +305,27 @@ export function LexicalExplorer({
 
       <div className="rounded-md border border-blue-100/80 bg-white/88 p-4 shadow-sm backdrop-blur md:p-5">
         <div className="grid gap-3 lg:grid-cols-[minmax(220px,1fr)_auto] lg:items-start">
-          <div className="flex items-center gap-2 rounded-md border border-blue-100/80 bg-background/88 px-3">
-            <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
-            <Input
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder={`Pesquisar em ${activeConfig.label}...`}
-              className="h-11 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0"
-            />
+          <div className="flex items-center gap-2">
+            <div className="flex min-w-0 flex-1 items-center gap-2 rounded-md border border-blue-100/80 bg-background/88 px-3">
+              <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
+              <Input
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder={`Pesquisar em ${activeConfig.label}...`}
+                className="h-11 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0"
+              />
+            </div>
+            <Button
+              variant="outline"
+              onClick={() => setShowFilters((value) => !value)}
+              aria-expanded={showFilters}
+              className="h-11 shrink-0 gap-2 rounded-md px-3 lg:hidden"
+            >
+              <SlidersHorizontal className="h-4 w-4" /> Filtros
+            </Button>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2 lg:flex lg:flex-wrap lg:justify-end">
+          <div className={`${showFilters ? "grid" : "hidden"} gap-3 sm:grid-cols-2 lg:flex lg:flex-wrap lg:justify-end`}>
             {usesGrammar(active) && (
               <>
                 <Select value={grammaticalCategory} onValueChange={(value) => {
@@ -401,7 +413,9 @@ export function LexicalExplorer({
         </div>
       </div>
 
-      {activeItems.length > 0 ? (
+      {activeItems.length > 0 && (active === "vonalp" || active === "vonalpEp") ? (
+        <VonalpTable terms={activeItems as PublicVonalpTerm[]} />
+      ) : activeItems.length > 0 ? (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {activeItems.map((item) => (
             <LexicalCard key={item.id} item={item} collection={active} />
@@ -564,6 +578,49 @@ function LexicalCard({ item, collection }: { item: LexicalItem; collection: Coll
         <Badge variant="outline" className="rounded-md">Origem: {vonalpOrigin(term)}</Badge>
       </div>
     </article>
+  )
+}
+
+function VonalpTable({ terms }: { terms: PublicVonalpTerm[] }) {
+  return (
+    <div className="overflow-hidden rounded-md border border-blue-100/80 bg-white/86 shadow-sm">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Vocábulo</TableHead>
+            <TableHead>Classe</TableHead>
+            <TableHead className="hidden md:table-cell">Definição</TableHead>
+            <TableHead className="hidden sm:table-cell">Origem</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {terms.map((term) => (
+            <TableRow key={term.id}>
+              <TableCell className="align-top">
+                <span className="font-semibold text-primary">{term.term}</span>
+                {(term.pronunciation || term.syllabicDivision) && (
+                  <span className="mt-0.5 block font-mono text-xs text-muted-foreground">
+                    {[term.pronunciation, term.syllabicDivision].filter(Boolean).join("  ·  ")}
+                  </span>
+                )}
+                <span className="mt-1 line-clamp-2 block text-xs text-muted-foreground md:hidden">
+                  {term.firstDefinition ?? term.secondDefinition ?? term.thirdDefinition}
+                </span>
+              </TableCell>
+              <TableCell className="align-top text-sm">
+                {categoryBadge(term.grammaticalCategory, term.grammaticalSubcategory) ?? "-"}
+              </TableCell>
+              <TableCell className="hidden max-w-xl align-top text-sm text-muted-foreground md:table-cell">
+                <span className="line-clamp-2">
+                  {term.firstDefinition ?? term.secondDefinition ?? term.thirdDefinition ?? "Definição não disponível."}
+                </span>
+              </TableCell>
+              <TableCell className="hidden align-top text-sm text-muted-foreground sm:table-cell">{vonalpOrigin(term)}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   )
 }
 

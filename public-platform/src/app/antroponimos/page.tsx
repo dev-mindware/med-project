@@ -1,7 +1,7 @@
 import { Footer } from "@/components/footer"
 import { Header } from "@/components/header"
 import { LexicalExplorer } from "@/components/lexical-explorer"
-import { PageHero } from "@/components/page-hero"
+import { CollectionHeader } from "@/components/collection-header"
 import { getLexicalData } from "@/lib/lexical-data"
 
 export default async function AntroponimosPage() {
@@ -11,17 +11,13 @@ export default async function AntroponimosPage() {
     <div className="flex min-h-screen flex-col pt-[4.75rem]">
       <Header />
       <main className="flex-1">
-        <PageHero
-          badge="Antroponímia"
+        <CollectionHeader
           title="Antropónimos"
           subtitle="Pesquise nomes próprios, significados, etimologia e referências históricas publicadas."
-          tone="soft"
-          stats={[
-            { value: data.anthroponyms.meta.total.toLocaleString("pt-PT"), label: "Antropónimos publicados" },
-            { value: data.anthroponyms.meta.totalPages.toLocaleString("pt-PT"), label: "Páginas disponíveis" },
-          ]}
+          total={data.anthroponyms.meta.total.toLocaleString("pt-PT")}
+          unit="antropónimos publicados"
         />
-        <section className="section-paper py-14">
+        <section className="section-paper py-8 md:py-10">
           <div className="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
             <LexicalExplorer initialData={data} initialActive="anthroponyms" visibleCollections={["anthroponyms"]} />
           </div>
