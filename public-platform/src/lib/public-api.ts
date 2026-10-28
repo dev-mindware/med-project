@@ -241,6 +241,15 @@ export type PublicSuggestion = {
   url: string
 }
 
+export type PublicGlobalSearch = {
+  query: string
+  entries: PublicEntry[]
+  neologisms: PublicNeologism[]
+  toponyms: PublicToponym[]
+  anthroponyms: PublicAnthroponym[]
+  foreignisms: PublicForeignism[]
+}
+
 type RequestOptions = RequestInit & {
   filters?: PublicFilters
   signal?: AbortSignal
@@ -299,6 +308,8 @@ export const publicApi = {
   stats: (init?: { signal?: AbortSignal }) => request<PublicStats>("/public/stats", init),
   suggest: (q: string, init?: { signal?: AbortSignal }) =>
     request<PublicSuggestion[]>("/public/suggest", { filters: { q }, ...init }),
+  globalSearch: (q: string, init?: { signal?: AbortSignal }) =>
+    request<PublicGlobalSearch>("/public/search", { filters: { q }, ...init }),
   dictionary: (filters?: PublicFilters, init?: { signal?: AbortSignal }) =>
     request<PublicPaginated<PublicEntry>>("/public/dictionary", { filters, ...init }),
   dictionaryDetails: (id: string, init?: { signal?: AbortSignal }) =>
