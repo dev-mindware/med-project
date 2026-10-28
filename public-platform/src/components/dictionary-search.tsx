@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
+import { AlphabetBar } from "@/components/alphabet-bar"
 import { entryPath } from "@/lib/entry-slug"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -14,7 +15,7 @@ import {
   getGrammaticalSubcategoryLabel,
   grammaticalCategoryOptions,
 } from "@/lib/grammatical-labels"
-import { publicApi, type PublicEntry, type PublicMeta } from "@/lib/public-api"
+import { publicApi, type PublicEntry, type PublicFacets, type PublicMeta } from "@/lib/public-api"
 import { BookOpen, FileText, Heart, ImageIcon, Search, Video, Volume2 } from "lucide-react"
 
 type DictionarySearchProps = {
@@ -24,6 +25,7 @@ type DictionarySearchProps = {
   initialCategory?: string
   initialSubcategory?: string
   initialLanguageCode?: string
+  initialLetter?: string
 }
 
 const defaultMeta: PublicMeta = {
@@ -56,6 +58,7 @@ export function DictionarySearch({
   initialCategory = "",
   initialSubcategory = "",
   initialLanguageCode = "",
+  initialLetter = "",
 }: DictionarySearchProps) {
   const router = useRouter()
   const pathname = usePathname()
@@ -64,6 +67,8 @@ export function DictionarySearch({
   const [wordClass, setWordClass] = useState(initialCategory || "all")
   const [subcategory, setSubcategory] = useState(initialSubcategory || "all")
   const [languageCode, setLanguageCode] = useState(initialLanguageCode || "all")
+  const [letter, setLetter] = useState<string | undefined>(initialLetter || undefined)
+  const [facets, setFacets] = useState<PublicFacets | null>(null)
   const [searchResults, setSearchResults] = useState<PublicEntry[]>(initialResults)
   const [meta, setMeta] = useState<PublicMeta>(initialMeta)
   const [hasSearched, setHasSearched] = useState(initialResults.length > 0 || Boolean(initialQuery || initialCategory))
@@ -102,7 +107,7 @@ export function DictionarySearch({
 
     setHasSearched(true)
     setIsLoading(true)
-    updateUrl({ q, category, grammaticalSubcategory, languageCode: language, page: page > 1 ? page : undefined })
+    updateUrl({ q, category, grammaticalSubcategory, languageCode: language, letter, page: page > 1 ? page : undefined })
 
     try {
       const response = await publicApi.dictionary(
@@ -111,8 +116,9 @@ export function DictionarySearch({
           category,
           grammaticalSubcategory,
           languageCode: language,
+          letter,
           page,
-          limit: 6,
+          limit: 20,
         },
         { signal: controller.signal }
       )
@@ -128,7 +134,7 @@ export function DictionarySearch({
         setIsLoading(false)
       }
     }
-  }, [languageCode, searchTerm, subcategory, wordClass])
+  }, [languageCode, letter, searchTerm, subcategory, wordClass])
 
   useEffect(() => {
     if (!didMount.current) {
@@ -146,6 +152,16 @@ export function DictionarySearch({
       abortRef.current?.abort()
     }
   }, [loadResults, searchTerm])
+
+  // Contagens por letra e por classe (todas as páginas)
+  useEffect(() => {
+    const controller = new AbortController()
+    publicApi
+      .facets("dictionary", { signal: controller.signal })
+      .then(setFacets)
+      .catch(() => undefined)
+    return () => controller.abort()
+  }, [])
 
   const handleCategoryChange = (value: string) => {
     setWordClass(value)
@@ -178,6 +194,7 @@ export function DictionarySearch({
               {grammaticalCategoryOptions.map((option) => (
                 <SelectItem key={option.value} value={option.value}>
                   {option.label}
+                  {facets?.facets.grammaticalCategory?.[option.value] !== undefined ? ` (${facets.facets.grammaticalCategory[option.value]})` : ""}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -215,6 +232,8 @@ export function DictionarySearch({
           <p className="px-2 pt-3 text-xs font-medium text-muted-foreground">A actualizar resultados...</p>
         )}
       </div>
+
+      <AlphabetBar counts={facets?.letters} value={letter} onChange={setLetter} />
 
       {searchResults.length > 0 ? (
         <div className="space-y-4">

@@ -13,6 +13,7 @@ export default async function DicionarioPage({
     category?: string
     grammaticalSubcategory?: string
     languageCode?: string
+    letter?: string
     page?: string
   }>
 }) {
@@ -27,10 +28,11 @@ export default async function DicionarioPage({
           category: params?.category,
           grammaticalSubcategory: params?.grammaticalSubcategory,
           languageCode: params?.languageCode,
+          letter: params?.letter,
           page: Number.isFinite(page) ? page : 1,
-          limit: 6,
+          limit: 20,
         }),
-      { data: [], meta: { total: 0, page: 1, limit: 6, totalPages: 0, hasNextPage: false, hasPreviousPage: false } },
+      { data: [], meta: { total: 0, page: 1, limit: 20, totalPages: 0, hasNextPage: false, hasPreviousPage: false } },
     ),
   ])
 
@@ -56,6 +58,7 @@ export default async function DicionarioPage({
               initialCategory={params?.category ?? ""}
               initialSubcategory={params?.grammaticalSubcategory ?? ""}
               initialLanguageCode={params?.languageCode ?? ""}
+              initialLetter={params?.letter ?? ""}
             />
           </div>
         </section>
