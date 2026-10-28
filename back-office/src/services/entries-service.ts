@@ -14,6 +14,12 @@ export const entriesService = {
   reviewEntry: async (id: string, data: { status: ApprovalStatus; reason?: string }) => {
     return api.patch<EntryResponse>(`/entries/${id}/review`, data);
   },
+  bulkReview: async (data: { ids: string[]; status: ApprovalStatus; reason?: string }) => {
+    return api.patch<{ count: number; status: ApprovalStatus }>("/entries/bulk-review", data);
+  },
+  bulkDelete: async (ids: string[]) => {
+    return api.post<{ count: number }>("/entries/bulk-delete", { ids });
+  },
   toggleVocabulary: async (id: string, action: "mark" | "unmark") => {
     const payload = { sourceType: "ENTRY", sourceId: id, vocabularyType: "VONALP" };
     return action === "mark"

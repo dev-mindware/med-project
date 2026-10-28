@@ -240,6 +240,8 @@ export const InputFetch = forwardRef<HTMLInputElement, InputFetchProps>(({
   );
 });
 
+InputFetch.displayName = "InputFetch";
+
 /*
 
 import { useState, useRef, useCallback } from "react";

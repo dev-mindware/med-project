@@ -56,6 +56,38 @@ export function UsersList() {
       },
     },
     {
+      key: "assignedLetters",
+      header: "Escopo (Letras)",
+      render: (_, item) => {
+        const letters = (item as any).assignedLetters || [];
+        if (letters.length === 0) {
+          return (
+            <span className="text-xs text-muted-foreground font-medium">
+              Todas (A-Z)
+            </span>
+          );
+        }
+        return (
+          <div className="flex flex-wrap items-center gap-1 max-w-[180px]">
+            {letters.slice(0, 5).map((letter: string) => (
+              <span
+                key={letter}
+                className="inline-flex items-center justify-center w-5 h-5 rounded-md text-[11px] font-bold bg-primary/15 text-primary border border-primary/25"
+                title={`Letra ${letter}`}
+              >
+                {letter}
+              </span>
+            ))}
+            {letters.length > 5 && (
+              <span className="text-[11px] font-semibold text-muted-foreground ml-0.5">
+                +{letters.length - 5}
+              </span>
+            )}
+          </div>
+        );
+      },
+    },
+    {
       key: "createdAt",
       header: "Criado em",
       render: (_, item) => (

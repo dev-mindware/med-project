@@ -4,14 +4,30 @@ import { FilterPopover, PaginatedSelect } from "@/components/shared";
 import { useEntriesFilters, useAuth } from "@/hooks";
 import { Button, Input } from "@/components";
 import { DatePicker } from "@/components/ui/date-picker";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { usePagination } from "@/hooks/common";
 import { UserResponse } from "@/types";
+import { useDebounce } from "use-debounce";
 
 export function EntriesFiltersTSX() {
   const { filters, setFilters, clearAllFilters } = useEntriesFilters();
   const { user } = useAuth();
   const [usersPage, setUsersPage] = useState(1);
+  const [searchValue, setSearchValue] = useState(filters.search || "");
+  const [debouncedSearch] = useDebounce(searchValue, 350);
+
+  // Synchronize local input state if URL search changes externally (e.g. clear filters)
+  useEffect(() => {
+    setSearchValue(filters.search || "");
+  }, [filters.search]);
+
+  // Push debounced search to URL filters
+  useEffect(() => {
+    const current = filters.search || "";
+    if (debouncedSearch !== current) {
+      setFilters({ search: debouncedSearch || null });
+    }
+  }, [debouncedSearch, filters.search, setFilters]);
 
   const { data: users, totalPages: usersTotalPages, isLoading: isLoadingUsers } = usePagination<UserResponse>({
     endpoint: "/users",
@@ -24,21 +40,70 @@ export function EntriesFiltersTSX() {
   const hasActiveFilters = !!(
     filters.approvalStatus || filters.search || filters.startDate ||
     filters.endDate || filters.orderBy || filters.isVocabulary ||
-    filters.isVocabularyEP || filters.isForeignism || filters.createdById || filters.languageCode
+    filters.isVocabularyEP || filters.isForeignism || filters.createdById ||
+    filters.languageCode || filters.grammaticalCategory ||
+    filters.entryType || filters.letter
   );
+
+  const grammaticalCategoryOptions = [
+    { label: "Substantivo", value: "substantivo" },
+    { label: "Adjectivo", value: "adjectivo" },
+    { label: "Verbo", value: "verbo" },
+    { label: "Advérbio", value: "advérbio" },
+    { label: "Pronome", value: "pronome" },
+    { label: "Preposição", value: "preposição" },
+    { label: "Conjunção", value: "conjunção" },
+    { label: "Interjeição", value: "interjeição" },
+    { label: "Numeral", value: "numeral" },
+    { label: "Artigo", value: "artigo" },
+  ];
+
+  const entryTypeOptions = [
+    { label: "VONALP", value: "vocabulary" },
+    { label: "VONALP-EP", value: "vocabularyEP" },
+    { label: "Estrangeirismo", value: "foreignism" },
+    { label: "Vocabulário Geral", value: "general" },
+    { label: "Com Divisão Silábica", value: "hasSyllabicDivision" },
+    { label: "Com Pronúncia", value: "hasPronunciation" },
+    { label: "Com Etimologia", value: "hasEtymology" },
+    { label: "Com Áudio", value: "hasAudio" },
+    { label: "Sigla / Acrónimo", value: "hasAcronym" },
+    { label: "Abreviatura", value: "hasAbbreviation" },
+  ];
+
+  const letterOptions = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").map((l) => ({
+    label: `Letra ${l}`,
+    value: l,
+  }));
+
+  const orderOptions = [
+    { label: "Mais recentes", value: "createdAt-desc" },
+    { label: "Mais antigos", value: "createdAt-asc" },
+    { label: "Entrada (A-Z)", value: "entry-asc" },
+    { label: "Entrada (Z-A)", value: "entry-desc" },
+    { label: "Mais frequentes", value: "frequency-desc" },
+    { label: "Menos frequentes", value: "frequency-asc" },
+  ];
 
   return (
     <div className="flex flex-col gap-4 mb-6">
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="flex-1 max-w-sm">
           <SearchHandlerWrapper 
-            search={filters.search || ""}
-            setSearch={(val) => setFilters({ search: val })}
+            search={searchValue}
+            setSearch={setSearchValue}
             placeholder="Pesquisar entradas..." 
             className="w-full"
           />
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          <FilterPopover
+            label="Categoria"
+            icon="Bookmark"
+            options={grammaticalCategoryOptions}
+            value={filters.grammaticalCategory}
+            onChange={(val) => setFilters({ grammaticalCategory: val ?? null })}
+          />
           <FilterPopover
             label="Estado"
             icon="Activity"
@@ -57,33 +122,44 @@ export function EntriesFiltersTSX() {
           <FilterPopover
             label="Tipo"
             icon="Tag"
-            options={[
-              { label: "VONALP", value: "vocabulary" },
-              { label: "VONALP-EP", value: "vocabularyEP" },
-              { label: "Estrangeirismo", value: "foreignism" },
-            ]}
+            options={entryTypeOptions}
             value={
-              filters.isVocabulary === "true" ? "vocabulary" :
-              filters.isVocabularyEP === "true" ? "vocabularyEP" :
-              filters.isForeignism === "true" ? "foreignism" : null
+              filters.entryType ||
+              (filters.isVocabulary === "true" ? "vocabulary" :
+               filters.isVocabularyEP === "true" ? "vocabularyEP" :
+               filters.isForeignism === "true" ? "foreignism" : null)
             }
             onChange={(val) => {
-              if (val === "vocabulary") setFilters({ isVocabulary: "true", isVocabularyEP: null, isForeignism: null });
-              else if (val === "vocabularyEP") setFilters({ isVocabularyEP: "true", isVocabulary: null, isForeignism: null });
-              else if (val === "foreignism") setFilters({ isForeignism: "true", isVocabulary: null, isVocabularyEP: null });
-              else setFilters({ isVocabulary: null, isVocabularyEP: null, isForeignism: null });
+              if (val) {
+                setFilters({
+                  entryType: val,
+                  isVocabulary: val === "vocabulary" ? "true" : null,
+                  isVocabularyEP: val === "vocabularyEP" ? "true" : null,
+                  isForeignism: val === "foreignism" ? "true" : null,
+                });
+              } else {
+                setFilters({
+                  entryType: null,
+                  isVocabulary: null,
+                  isVocabularyEP: null,
+                  isForeignism: null,
+                });
+              }
             }}
+          />
+
+          <FilterPopover
+            label="Letra"
+            icon="Type"
+            options={letterOptions}
+            value={filters.letter}
+            onChange={(val) => setFilters({ letter: val ?? null })}
           />
 
           <FilterPopover
             label="Ordenar por"
             icon="ArrowUpDown"
-            options={[
-              { label: "Mais recentes", value: "createdAt-desc" },
-              { label: "Mais antigos", value: "createdAt-asc" },
-              { label: "Entrada (A-Z)", value: "entry-asc" },
-              { label: "Entrada (Z-A)", value: "entry-desc" },
-            ]}
+            options={orderOptions}
             value={filters.orderBy ? `${filters.orderBy}-${filters.orderDirection}` : null}
             onChange={(val) => {
               if (val) {

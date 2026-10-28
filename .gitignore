@@ -72,3 +72,11 @@ Thumbs.db
 
 # Docker overrides
 docker-compose.override.yml
+
+# Knowledge Graph & Agent Tooling
+graphify-out/
+.graphify*
+.agents/
+.serena/
+.ast-grep/
+sgconfig.yml

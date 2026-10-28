@@ -29,6 +29,10 @@ interface AsyncCreatableSelectProps {
   inputId?: string;
 }
 
+const getNestedValue = (obj: any, path: string): any => {
+  return path.split(".").reduce((current, key) => current?.[key], obj);
+};
+
 export function AsyncCreatableSelectField({
   endpoint,
   label,
@@ -118,10 +122,6 @@ export function AsyncCreatableSelectField({
   useEffect(() => {
     setPage(1);
   }, [debouncedSearch]);
-
-  const getNestedValue = (obj: any, path: string): any => {
-    return path.split(".").reduce((current, key) => current?.[key], obj);
-  };
 
   const handleCreate = (inputValue: string) => {
     const newOption: Option = {

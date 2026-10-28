@@ -24,6 +24,23 @@ export type EntryData = {
   isVocabulary?: boolean;
   isVocabularyEP?: boolean;
   isForeignism?: boolean;
+  frequency?: number;
+  firstSourceId?: string | null;
+  firstSource?: string | null;
+  sourceDocument?: {
+    id: string;
+    filename: string;
+    category?: string;
+    pageCount?: number;
+  } | null;
+  importBatchId?: string | null;
+  occurrences?: Array<{
+    id: string;
+    filename: string;
+    category: string;
+    count: number;
+    pages?: number[];
+  }>;
   vonalpCompletionStatus?: VonalpCompletionStatus;
   vonalpEpCompletionStatus?: VonalpCompletionStatus;
 };

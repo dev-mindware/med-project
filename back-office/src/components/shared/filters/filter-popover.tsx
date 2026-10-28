@@ -33,7 +33,7 @@ export function FilterPopover({
           {label}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-56 space-y-2">
+      <PopoverContent className="w-56 max-h-72 overflow-y-auto space-y-2">
         <p className="p-1 text-sm font-medium">
           Selecionar {label.toLowerCase()}
         </p>

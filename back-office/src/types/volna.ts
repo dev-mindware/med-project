@@ -8,6 +8,15 @@ export type VolnaTermData = {
   definition: string;
   usageExample?: string;
   notes?: string;
+  frequency?: number;
+  firstSourceId?: string | null;
+  firstSource?: string | null;
+  sourceDocument?: {
+    id: string;
+    filename: string;
+    category?: string;
+    pageCount?: number;
+  } | null;
   approvalStatus?: ApprovalStatus;
 };
 

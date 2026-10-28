@@ -41,6 +41,31 @@ export function useReviewEntry() {
   });
 }
 
+export function useBulkReviewEntries() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: { ids: string[]; status: ApprovalStatus; reason?: string }) =>
+      entriesService.bulkReview(data),
+    onSuccess: (res) => {
+      SucessMessage(`${res.data?.count ?? "Itens"} entradas revistas com sucesso!`);
+      queryClient.invalidateQueries({ queryKey: ["entries"] });
+    },
+  });
+}
+
+export function useBulkDeleteEntries() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (ids: string[]) => entriesService.bulkDelete(ids),
+    onSuccess: (res) => {
+      SucessMessage(`${res.data?.count ?? "Itens"} entradas eliminadas com sucesso!`);
+      queryClient.invalidateQueries({ queryKey: ["entries"] });
+    },
+  });
+}
+
 export function useToggleVocabulary() {
   const queryClient = useQueryClient();
 

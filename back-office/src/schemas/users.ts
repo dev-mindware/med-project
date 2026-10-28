@@ -6,6 +6,7 @@ export const userSchema = z.object({
   name: z.string().trim().min(1, "Campo obrigatório"),
   role: z.enum(["ADMIN", "SUPERVISOR", "OPERATOR"]).optional(),
   isActive: z.boolean().optional(),
+  assignedLetters: z.array(z.string()).optional(),
 });
 
 export type UserFormData = z.infer<typeof userSchema>;
