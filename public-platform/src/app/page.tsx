@@ -1,4 +1,5 @@
 import { Header } from "@/components/header"
+import { NoticeStrip } from "@/components/notice-strip"
 import { HeroSection } from "@/components/hero-section"
 import { ServicesSection } from "@/components/services-section"
 import { HomeVisualSection } from "@/components/home-visual-section"
@@ -37,6 +38,7 @@ export default async function HomePage() {
   return (
     <div className="flex min-h-screen flex-col pt-[4.75rem]">
       <Header />
+      <NoticeStrip />
       <main className="flex-1">
         <HeroSection
           stats={stats ? [

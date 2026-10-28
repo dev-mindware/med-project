@@ -22,5 +22,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     )
     if (!result.meta.hasNextPage) break
   }
-  return [...staticRoutes.map((route) => ({ url: `${SITE_URL}${route}` })), ...entries]
+  const [articles, events] = await Promise.all([
+    safePublicApi(() => publicApi.blogPosts({ limit: 50 }), null),
+    safePublicApi(() => publicApi.events({ limit: 50 }), null),
+  ])
+  const content: MetadataRoute.Sitemap = [
+    ...(articles?.data ?? []).map((article) => ({
+      url: `${SITE_URL}/articles/${article.slug || article.id}`,
+      lastModified: article.updatedAt ?? article.publishedAt ?? undefined,
+    })),
+    ...(events?.data ?? []).map((event) => ({
+      url: `${SITE_URL}/events/${event.slug || event.id}`,
+      lastModified: event.updatedAt ?? undefined,
+    })),
+  ]
+  return [...staticRoutes.map((route) => ({ url: `${SITE_URL}${route}` })), ...content, ...entries]
 }
