@@ -162,7 +162,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ id: st
             )}
           </article>
 
-          <aside className="space-y-5">
+          <div className="space-y-5">
             <Card>
               <CardContent className="p-5">
                 <h2 className="text-lg font-bold">Dados da publicação</h2>
@@ -198,7 +198,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ id: st
             <Button variant="outline" className="w-full bg-transparent" asChild>
               <Link href="/articles">Ver todos os artigos</Link>
             </Button>
-          </aside>
+          </div>
         </section>
       </main>
       <Footer />

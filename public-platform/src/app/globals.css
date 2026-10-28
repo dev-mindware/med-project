@@ -214,7 +214,7 @@
     bottom: 0;
     width: min(24vw, 220px);
     pointer-events: none;
-    background-image: url("/textura.png");
+    background-image: url("/textura.webp");
     background-size: 360px auto;
     background-repeat: no-repeat;
     opacity: 0.14;
@@ -236,12 +236,12 @@
   .texture-footer {
     background-image:
       linear-gradient(rgba(6,31,74,0.94), rgba(6,31,74,0.94)),
-      url("/textura.png");
+      url("/textura.webp");
     background-size: auto, 520px auto;
   }
 
   .texture-hero-corner {
-    background-image: url("/textura.png");
+    background-image: url("/textura.webp");
     background-size: 520px auto;
     background-repeat: no-repeat;
     opacity: 0.12;
@@ -256,7 +256,7 @@
       url("/angolan-traditional-music.jpg");
     background-size: cover;
     background-position: center;
-    background-attachment: fixed;
+    background-attachment: scroll;
   }
 
   .word-parallax-section::before {
@@ -493,7 +493,7 @@
   position: absolute;
   inset: 1.1rem;
   border-radius: 0.65rem;
-  background-image: url("/textura.png");
+  background-image: url("/textura.webp");
   background-size: 520px auto;
   opacity: 0.045;
   pointer-events: none;
@@ -517,7 +517,7 @@
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background-image: url("/textura.png");
+  background-image: url("/textura.webp");
   background-size: 380px auto;
   opacity: 0.08;
   mix-blend-mode: overlay;
@@ -638,7 +638,7 @@
 .flipbook-page-texture {
   position: absolute;
   inset: 0;
-  background-image: url("/textura.png");
+  background-image: url("/textura.webp");
   background-size: 480px auto;
   opacity: 0.025;
   mix-blend-mode: multiply;

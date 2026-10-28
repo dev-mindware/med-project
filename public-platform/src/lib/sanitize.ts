@@ -12,6 +12,9 @@ export function sanitizeArticleHtml(html: string) {
     },
     allowedSchemes: ["http", "https", "mailto", "tel"],
     allowedIframeHostnames: ["www.youtube.com", "www.youtube-nocookie.com", "player.vimeo.com"],
-    transformTags: { a: sanitizeHtml.simpleTransform("a", { rel: "noopener noreferrer" }) },
+    transformTags: {
+      a: sanitizeHtml.simpleTransform("a", { rel: "noopener noreferrer" }),
+      img: (tagName, attribs) => ({ tagName, attribs: { alt: "", loading: "lazy", ...attribs } }),
+    },
   })
 }

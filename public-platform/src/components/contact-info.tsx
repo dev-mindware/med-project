@@ -188,7 +188,7 @@ export function ContactInfo() {
                   Assunto
                 </label>
                 <Select value={formData.subject} onValueChange={(value) => handleInputChange("subject", value)}>
-                  <SelectTrigger>
+                  <SelectTrigger aria-label="Assunto">
                     <SelectValue placeholder="Selecione o assunto" />
                   </SelectTrigger>
                   <SelectContent>

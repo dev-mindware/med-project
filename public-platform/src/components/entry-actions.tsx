@@ -68,7 +68,7 @@ export function EntryActions({ id, word, citation }: { id: string; word: string;
   )}`
 
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-wrap gap-2 print:hidden">
       <Button variant="outline" size="sm" onClick={share}>
         <Share2 className="h-4 w-4" /> Partilhar
       </Button>

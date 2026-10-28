@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button"
 import { ArrowRight, CheckCircle2, Search } from "lucide-react"
 import Link from "next/link"
+import { HeroSlides } from "@/components/hero-slides"
 
 type HeroStat = {
   value: string
@@ -13,31 +14,10 @@ const trust = [
   "Vocabulários Ortográficos Nacionais",
 ]
 
-const heroImages = [
-  "/angolan-cultural-festival.jpg",
-  "/angolan-culture-traditional-dance.jpg",
-  "/damian-patkowski-T-LfvX-7IVg-unsplash.jpg",
-  "/ninno-jackjr-CG6Gd__QIOY-unsplash.jpg",
-]
-
 export function HeroSection({ stats = [] }: { stats?: HeroStat[] }) {
   return (
     <section className="relative flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center overflow-hidden bg-slate-950 px-4 py-24 text-center">
-      <div className="absolute inset-0">
-        {heroImages.map((image, index) => (
-          <img
-            key={image}
-            src={image}
-            alt=""
-            aria-hidden="true"
-            className="absolute inset-0 h-full w-full object-cover opacity-0"
-            style={{
-              animation: "heroImageFade 28s ease-in-out infinite",
-              animationDelay: `${index * 7}s`,
-            }}
-          />
-        ))}
-      </div>
+      <HeroSlides />
 
       <div
         className="pointer-events-none absolute inset-0 opacity-[0.08]"

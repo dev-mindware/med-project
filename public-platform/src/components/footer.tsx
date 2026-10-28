@@ -75,7 +75,7 @@ const cols = [
 
 export function Footer() {
   return (
-    <footer className="texture-footer bg-[#061f4a] text-blue-100">
+    <footer className="texture-footer bg-[#061f4a] text-blue-100 print:hidden">
       <div className="border-b border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(0,112,255,0.42),transparent_36%)]">
         <div className="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12 py-16 lg:py-20">
           <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">

@@ -186,7 +186,7 @@ export function DictionarySearch({
           </div>
 
           <Select value={wordClass} onValueChange={handleCategoryChange}>
-            <SelectTrigger className="h-11 rounded-xl">
+            <SelectTrigger aria-label="Classe gramatical" className="h-11 rounded-xl">
               <SelectValue placeholder="Classe" />
             </SelectTrigger>
             <SelectContent>
@@ -201,7 +201,7 @@ export function DictionarySearch({
           </Select>
 
           <Select value={subcategory} onValueChange={setSubcategory} disabled={wordClass === "all" || subcategoryOptions.length === 0}>
-            <SelectTrigger className="h-11 rounded-xl">
+            <SelectTrigger aria-label="Subclasse gramatical" className="h-11 rounded-xl">
               <SelectValue placeholder="Subclasse" />
             </SelectTrigger>
             <SelectContent>
@@ -215,7 +215,7 @@ export function DictionarySearch({
           </Select>
 
           <Select value={languageCode} onValueChange={setLanguageCode}>
-            <SelectTrigger className="h-11 rounded-xl">
+            <SelectTrigger aria-label="Língua" className="h-11 rounded-xl">
               <SelectValue placeholder="Língua" />
             </SelectTrigger>
             <SelectContent>
@@ -312,9 +312,9 @@ function WordCard({
           <div className="px-6 pt-6 pb-4 flex items-start justify-between gap-4">
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2 mb-1">
-                <h3 className="text-2xl font-extrabold text-primary">
+                <h2 className="text-2xl font-extrabold text-primary">
                   <Link href={entryPath(word)} className="hover:underline">{word.entry}</Link>
-                </h3>
+                </h2>
                 {word.audioUrl && (
                   <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full text-muted-foreground hover:text-foreground" asChild>
                     <a href={word.audioUrl} aria-label={`Ouvir ${word.entry}`} target="_blank" rel="noreferrer">
@@ -421,7 +421,7 @@ function WordCard({
           </div>
         </div>
 
-        <aside className="border-t border-border bg-muted/20 p-5 lg:border-l lg:border-t-0">
+        <div className="border-t border-border bg-muted/20 p-5 lg:border-l lg:border-t-0">
           <div className="space-y-3">
             <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
               <FileText className="h-3.5 w-3.5" />
@@ -435,7 +435,7 @@ function WordCard({
               <Detail label="Língua" value={word.languageCode} />
             </dl>
           </div>
-        </aside>
+        </div>
       </div>
     </article>
   )

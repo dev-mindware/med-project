@@ -61,12 +61,12 @@ export default async function VerbetePage({ params }: Params) {
   }
 
   return (
-    <div className="min-h-screen bg-background pt-[4.75rem]">
+    <div className="min-h-screen bg-background pt-[4.75rem] print:pt-0">
       <Header />
       <main className="mx-auto max-w-3xl px-6 py-10 sm:px-8">
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
 
-        <Link href="/dictionary" className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary">
+        <Link href="/dictionary" className="mb-6 inline-flex print:hidden items-center gap-1.5 text-sm text-muted-foreground hover:text-primary">
           <ArrowLeft className="h-4 w-4" /> Dicionário
         </Link>
 

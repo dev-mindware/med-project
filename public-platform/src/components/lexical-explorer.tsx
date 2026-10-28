@@ -405,7 +405,7 @@ export function LexicalExplorer({
                   setGrammaticalCategory(value)
                   setGrammaticalSubcategory(allValue)
                 }}>
-                  <SelectTrigger className="h-11 rounded-md lg:w-[190px]">
+                  <SelectTrigger aria-label="Classe gramatical" className="h-11 rounded-md lg:w-[190px]">
                     <SelectValue placeholder="Classe gramatical" />
                   </SelectTrigger>
                   <SelectContent>
@@ -419,7 +419,7 @@ export function LexicalExplorer({
                 </Select>
 
                 <Select value={grammaticalSubcategory} onValueChange={setGrammaticalSubcategory}>
-                  <SelectTrigger className="h-11 rounded-md lg:w-[205px]">
+                  <SelectTrigger aria-label="Subclasse gramatical" className="h-11 rounded-md lg:w-[205px]">
                     <SelectValue placeholder="Subclasse" />
                   </SelectTrigger>
                   <SelectContent>
@@ -434,7 +434,7 @@ export function LexicalExplorer({
 
             {usesLanguage(active) && (
               <Select value={languageCode} onValueChange={setLanguageCode}>
-                <SelectTrigger className="h-11 rounded-md lg:w-[160px]">
+                <SelectTrigger aria-label="Língua" className="h-11 rounded-md lg:w-[160px]">
                   <SelectValue placeholder="Língua" />
                 </SelectTrigger>
                 <SelectContent>
@@ -501,7 +501,7 @@ export function LexicalExplorer({
       ) : (
         <div className="rounded-md border border-dashed border-primary/25 bg-white/72 p-12 text-center shadow-sm backdrop-blur">
           <BookOpen className="mx-auto mb-4 h-12 w-12 text-primary/35" />
-          <h3 className="text-lg font-semibold">Nenhum registo encontrado</h3>
+          <h2 className="text-lg font-semibold">Nenhum registo encontrado</h2>
           <p className="mt-2 text-sm text-muted-foreground">Ajuste a pesquisa ou consulte novamente quando houver mais conteúdo aprovado.</p>
         </div>
       )}
@@ -556,7 +556,7 @@ function SimpleSelect({
 }) {
   return (
     <Select value={value} onValueChange={onChange}>
-      <SelectTrigger className="h-11 rounded-md lg:w-[180px]">
+      <SelectTrigger aria-label={label} className="h-11 rounded-md lg:w-[180px]">
         <SelectValue placeholder={label} />
       </SelectTrigger>
       <SelectContent>
@@ -735,7 +735,7 @@ function CardHeader({ eyebrow, title, badge }: { eyebrow: string; title: string;
     <div className="flex items-start justify-between gap-3">
       <div>
         <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{eyebrow}</p>
-        <h3 className="mt-1 text-2xl font-extrabold text-primary">{title}</h3>
+        <h2 className="mt-1 text-2xl font-extrabold text-primary">{title}</h2>
       </div>
       {badge && <Badge variant="secondary" className="rounded-md">{badge}</Badge>}
     </div>

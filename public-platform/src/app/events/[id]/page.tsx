@@ -126,7 +126,7 @@ export default async function EventDetailsPage({ params }: { params: Promise<{ i
               </div>
             </article>
 
-            <aside className="h-fit rounded-lg border border-blue-100/80 bg-white/88 p-5 shadow-sm backdrop-blur">
+            <div className="h-fit rounded-lg border border-blue-100/80 bg-white/88 p-5 shadow-sm backdrop-blur">
               <h2 className="text-lg font-bold">Dados do evento</h2>
               <Separator className="my-4" />
               <dl className="space-y-4 text-sm">
@@ -137,7 +137,7 @@ export default async function EventDetailsPage({ params }: { params: Promise<{ i
                 {event.category && <Detail label="Categoria" value={event.category} />}
                 {event.publishedAt && <Detail label="Publicado em" value={formatDateTime(event.publishedAt)} />}
               </dl>
-            </aside>
+            </div>
           </div>
         </section>
       </main>

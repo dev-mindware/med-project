@@ -16,7 +16,7 @@ export async function NoticeStrip() {
 
   const full = Boolean(event.maxRegistrations && (event.registrationCount ?? 0) >= event.maxRegistrations)
   return (
-    <aside aria-label="Aviso" className="border-b border-primary/20 bg-primary/10">
+    <aside aria-label="Aviso" className="border-b border-primary/20 bg-primary/10 print:hidden">
       <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-4 gap-y-1 px-6 py-2.5 text-sm sm:px-8 lg:px-12">
         <span className="flex items-center gap-2 font-semibold text-primary">
           <CalendarDays className="h-4 w-4" /> Próximo evento
