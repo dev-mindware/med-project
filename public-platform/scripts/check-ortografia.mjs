@@ -12,6 +12,7 @@ const rules = [
   [/\b[Dd]efetivo/, "defectivo"],
   [/\b[Aa]bstrato|\b[Cc]oletivo|\b[Aa]djetivo|\b[Ff]racionário/, "abstracto/colectivo/adjectivo/fraccionário"],
   [/\b[Ss]eleç\w+|\b[Dd]ireta\b|\b[Dd]ireto\b/, "selecção/directo"],
+  [/\b[Cc]orre[çc]ões?\b|\b[Cc]orreção\b/, "correcção/correcções"],
   [/\b[Mm]ídias?\b/, "multimédia"],
   [/\bSobrenomes?\b/, "apelido(s)"],
   [/\b[Ee]m andamento\b/, "em curso"],

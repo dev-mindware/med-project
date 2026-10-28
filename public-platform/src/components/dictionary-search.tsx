@@ -1,7 +1,9 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react"
+import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
+import { entryPath } from "@/lib/entry-slug"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -291,7 +293,9 @@ function WordCard({
           <div className="px-6 pt-6 pb-4 flex items-start justify-between gap-4">
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2 mb-1">
-                <h3 className="text-2xl font-extrabold text-primary">{word.entry}</h3>
+                <h3 className="text-2xl font-extrabold text-primary">
+                  <Link href={entryPath(word)} className="hover:underline">{word.entry}</Link>
+                </h3>
                 {word.audioUrl && (
                   <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full text-muted-foreground hover:text-foreground" asChild>
                     <a href={word.audioUrl} aria-label={`Ouvir ${word.entry}`} target="_blank" rel="noreferrer">
