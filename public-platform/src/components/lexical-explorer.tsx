@@ -6,8 +6,11 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import Link from "next/link"
+import { AlphabetBar } from "@/components/alphabet-bar"
+import { ProvinceMap } from "@/components/province-map"
 import {
   publicApi,
+  type PublicFacets,
   type PublicAnthroponym,
   type PublicFilters,
   type PublicForeignism,
@@ -22,7 +25,8 @@ import {
   getGrammaticalSubcategoryLabel,
   grammaticalCategoryOptions,
 } from "@/lib/grammatical-labels"
-import { BookOpen, Fingerprint, Globe2, Languages, MapPinned, Search, Sparkles, Volume2, ImageIcon, Video } from "lucide-react"
+import { BookOpen, Fingerprint, Globe2, Languages, MapPinned, Search, SlidersHorizontal, Sparkles, Volume2, ImageIcon, Video } from "lucide-react"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 
 export type CollectionKey = "neologisms" | "foreignisms" | "toponyms" | "anthroponyms" | "vonalp" | "vonalpEp" | "volna"
 type LexicalItem = PublicNeologism | PublicForeignism | PublicToponym | PublicAnthroponym | PublicVonalpTerm | PublicVolnaTerm
@@ -61,7 +65,7 @@ const collections = [
     key: "neologisms",
     label: "Neologismos",
     eyebrow: "Novas palavras",
-    description: "Entradas novas aprovadas, com definições, categorias gramaticais, exemplos e mídias quando disponíveis.",
+    description: "Entradas novas aprovadas, com definições, categorias gramaticais, exemplos e conteúdo multimédia quando disponíveis.",
     icon: Sparkles,
     accent: "border-blue-500/30 bg-blue-500/10 text-blue-700",
   },
@@ -85,7 +89,7 @@ const collections = [
     key: "anthroponyms",
     label: "Antropónimos",
     eyebrow: "Nomes e identidade",
-    description: "Nomes próprios, sobrenomes, género, etimologia e figuras históricas.",
+    description: "Nomes próprios, apelidos, género, etimologia e figuras históricas.",
     icon: Fingerprint,
     accent: "border-violet-500/30 bg-violet-500/10 text-violet-700",
   },
@@ -116,6 +120,16 @@ const collections = [
 ] as const
 
 const allValue = "__all__"
+const PAGE_SIZE = 20
+const facetNames: Record<CollectionKey, string> = {
+  neologisms: "neologisms",
+  foreignisms: "foreignisms",
+  toponyms: "toponyms",
+  anthroponyms: "anthroponyms",
+  vonalp: "vonalp",
+  vonalpEp: "vonalp-ep",
+  volna: "volna",
+}
 const flipbookRoutes: Record<CollectionKey, string> = {
   neologisms: "/neologismos/flip",
   foreignisms: "/estrangeirismos/flip",
@@ -150,6 +164,9 @@ export function LexicalExplorer({
   const [originalLanguage, setOriginalLanguage] = useState(allValue)
   const [originCountry, setOriginCountry] = useState(allValue)
   const [field, setField] = useState(allValue)
+  const [letter, setLetter] = useState<string | undefined>()
+  const [page, setPage] = useState(1)
+  const [facets, setFacets] = useState<PublicFacets | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const didMount = useRef(false)
   const abortRef = useRef<AbortController | null>(null)
@@ -161,6 +178,7 @@ export function LexicalExplorer({
   }, [])
 
   const activeConfig = collections.find((collection) => collection.key === active) ?? collections[0]
+  const [showFilters, setShowFilters] = useState(false)
   const activeItems = itemsByCollection[active].data
   const activeMeta = itemsByCollection[active].meta
   const visibleCollectionConfigs = collections.filter((collection) => allowedCollections.includes(collection.key))
@@ -172,16 +190,17 @@ export function LexicalExplorer({
       ...initialData.toponyms.data.map((item) => item.languageCode),
       ...initialData.volna.data.map((item) => item.language),
     ])
+    const fromFacets = (name: string) => (facets?.facets[name] ? unique(Object.keys(facets.facets[name])) : undefined)
     return {
-      languageCodes,
-      provinces: unique(initialData.toponyms.data.map((item) => item.province)),
+      languageCodes: (active === "volna" && fromFacets("language")) || languageCodes,
+      provinces: fromFacets("province") ?? unique(initialData.toponyms.data.map((item) => item.province)),
       municipalities: unique(initialData.toponyms.data.map((item) => item.municipality)),
-      genders: unique(initialData.anthroponyms.data.map((item) => item.gender)),
-      originalLanguages: unique(initialData.foreignisms.data.map((item) => item.originalLanguage)),
+      genders: fromFacets("gender") ?? unique(initialData.anthroponyms.data.map((item) => item.gender)),
+      originalLanguages: fromFacets("originalLanguage") ?? unique(initialData.foreignisms.data.map((item) => item.originalLanguage)),
       originCountries: unique(initialData.foreignisms.data.map((item) => item.originCountry)),
       fields: unique(initialData.foreignisms.data.map((item) => item.field)),
     }
-  }, [initialData])
+  }, [initialData, facets, active])
 
   const search = useCallback(async (collection = active) => {
     abortRef.current?.abort()
@@ -203,7 +222,9 @@ export function LexicalExplorer({
         originalLanguage: collection === "foreignisms" ? valueOrUndefined(originalLanguage) : undefined,
         originCountry: collection === "foreignisms" ? valueOrUndefined(originCountry) : undefined,
         field: collection === "foreignisms" ? valueOrUndefined(field) : undefined,
-        limit: 6,
+        letter,
+        page,
+        limit: PAGE_SIZE,
       }
 
       const response = await fetchCollection(collection, filters, controller.signal)
@@ -237,7 +258,25 @@ export function LexicalExplorer({
     originalLanguage,
     province,
     query,
+    letter,
+    page,
   ])
+
+  // Qualquer mudança de filtro volta à primeira página
+  useEffect(() => {
+    setPage(1)
+  }, [active, field, gender, grammaticalCategory, grammaticalSubcategory, languageCode, municipality, originCountry, originalLanguage, province, query, letter])
+
+  // Contagens por letra e por filtro da colecção activa (todas as páginas)
+  useEffect(() => {
+    const controller = new AbortController()
+    setFacets(null)
+    publicApi
+      .facets(facetNames[active], { signal: controller.signal })
+      .then(setFacets)
+      .catch(() => undefined)
+    return () => controller.abort()
+  }, [active])
 
   useEffect(() => {
     if (!didMount.current) {
@@ -262,6 +301,8 @@ export function LexicalExplorer({
     originalLanguage,
     province,
     query,
+    letter,
+    page,
     search,
   ])
 
@@ -301,38 +342,84 @@ export function LexicalExplorer({
         </div>
       )}
 
+      {active === "toponyms" && facets?.facets.province && (
+        <ProvinceMap
+          counts={facets.facets.province}
+          value={valueOrUndefined(province)}
+          onChange={(value) => setProvince(value ?? allValue)}
+        />
+      )}
+
+      {active === "volna" && facets?.facets.language && (
+        <div className="flex flex-wrap gap-2" role="group" aria-label="Língua nacional">
+          <button
+            type="button"
+            aria-pressed={languageCode === allValue}
+            onClick={() => setLanguageCode(allValue)}
+            className={`rounded-md border px-3 py-1.5 text-sm font-medium ${languageCode === allValue ? "border-primary bg-primary text-primary-foreground" : "border-border hover:bg-primary/10"}`}
+          >
+            Todas ({facets.total})
+          </button>
+          {Object.entries(facets.facets.language)
+            .sort(([a], [b]) => a.localeCompare(b, "pt"))
+            .map(([language, count]) => (
+              <button
+                key={language}
+                type="button"
+                aria-pressed={languageCode === language}
+                onClick={() => setLanguageCode(language)}
+                className={`rounded-md border px-3 py-1.5 text-sm font-medium ${languageCode === language ? "border-primary bg-primary text-primary-foreground" : "border-border hover:bg-primary/10"}`}
+              >
+                {language} ({count})
+              </button>
+            ))}
+        </div>
+      )}
+
       <div className="rounded-md border border-blue-100/80 bg-white/88 p-4 shadow-sm backdrop-blur md:p-5">
         <div className="grid gap-3 lg:grid-cols-[minmax(220px,1fr)_auto] lg:items-start">
-          <div className="flex items-center gap-2 rounded-md border border-blue-100/80 bg-background/88 px-3">
-            <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
-            <Input
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder={`Pesquisar em ${activeConfig.label}...`}
-              className="h-11 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0"
-            />
+          <div className="flex items-center gap-2">
+            <div className="flex min-w-0 flex-1 items-center gap-2 rounded-md border border-blue-100/80 bg-background/88 px-3">
+              <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
+              <Input
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder={`Pesquisar em ${activeConfig.label}...`}
+                className="h-11 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0"
+              />
+            </div>
+            <Button
+              variant="outline"
+              onClick={() => setShowFilters((value) => !value)}
+              aria-expanded={showFilters}
+              className="h-11 shrink-0 gap-2 rounded-md px-3 lg:hidden"
+            >
+              <SlidersHorizontal className="h-4 w-4" /> Filtros
+            </Button>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2 lg:flex lg:flex-wrap lg:justify-end">
+          <div className={`${showFilters ? "grid" : "hidden"} gap-3 sm:grid-cols-2 lg:flex lg:flex-wrap lg:justify-end`}>
             {usesGrammar(active) && (
               <>
                 <Select value={grammaticalCategory} onValueChange={(value) => {
                   setGrammaticalCategory(value)
                   setGrammaticalSubcategory(allValue)
                 }}>
-                  <SelectTrigger className="h-11 rounded-md lg:w-[190px]">
+                  <SelectTrigger aria-label="Classe gramatical" className="h-11 rounded-md lg:w-[190px]">
                     <SelectValue placeholder="Classe gramatical" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value={allValue}>Todas as classes</SelectItem>
                     {grammaticalCategoryOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}{facets?.facets.grammaticalCategory?.[option.value] !== undefined ? ` (${facets.facets.grammaticalCategory[option.value]})` : ""}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
 
                 <Select value={grammaticalSubcategory} onValueChange={setGrammaticalSubcategory}>
-                  <SelectTrigger className="h-11 rounded-md lg:w-[205px]">
+                  <SelectTrigger aria-label="Subclasse gramatical" className="h-11 rounded-md lg:w-[205px]">
                     <SelectValue placeholder="Subclasse" />
                   </SelectTrigger>
                   <SelectContent>
@@ -347,7 +434,7 @@ export function LexicalExplorer({
 
             {usesLanguage(active) && (
               <Select value={languageCode} onValueChange={setLanguageCode}>
-                <SelectTrigger className="h-11 rounded-md lg:w-[160px]">
+                <SelectTrigger aria-label="Língua" className="h-11 rounded-md lg:w-[160px]">
                   <SelectValue placeholder="Língua" />
                 </SelectTrigger>
                 <SelectContent>
@@ -361,18 +448,18 @@ export function LexicalExplorer({
 
             {active === "toponyms" && (
               <>
-                <SimpleSelect label="Província" value={province} onChange={setProvince} options={optionSets.provinces} allLabel="Todas as províncias" />
+                <SimpleSelect label="Província" value={province} onChange={setProvince} options={optionSets.provinces} counts={facets?.facets.province} allLabel="Todas as províncias" />
                 <SimpleSelect label="Município" value={municipality} onChange={setMunicipality} options={optionSets.municipalities} allLabel="Todos os municípios" />
               </>
             )}
 
             {active === "anthroponyms" && (
-              <SimpleSelect label="Género" value={gender} onChange={setGender} options={optionSets.genders} allLabel="Todos os géneros" />
+              <SimpleSelect label="Género" value={gender} onChange={setGender} options={optionSets.genders} counts={facets?.facets.gender} allLabel="Todos os géneros" />
             )}
 
             {active === "foreignisms" && (
               <>
-                <SimpleSelect label="Língua original" value={originalLanguage} onChange={setOriginalLanguage} options={optionSets.originalLanguages} allLabel="Todas as línguas" />
+                <SimpleSelect label="Língua original" value={originalLanguage} onChange={setOriginalLanguage} options={optionSets.originalLanguages} counts={facets?.facets.originalLanguage} allLabel="Todas as línguas" />
                 <SimpleSelect label="País de origem" value={originCountry} onChange={setOriginCountry} options={optionSets.originCountries} allLabel="Todos os países" />
                 <SimpleSelect label="Campo" value={field} onChange={setField} options={optionSets.fields} allLabel="Todos os campos" />
               </>
@@ -401,7 +488,11 @@ export function LexicalExplorer({
         </div>
       </div>
 
-      {activeItems.length > 0 ? (
+      <AlphabetBar counts={facets?.letters} value={letter} onChange={setLetter} />
+
+      {activeItems.length > 0 && (active === "vonalp" || active === "vonalpEp") ? (
+        <VonalpTable terms={activeItems as PublicVonalpTerm[]} />
+      ) : activeItems.length > 0 ? (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {activeItems.map((item) => (
             <LexicalCard key={item.id} item={item} collection={active} />
@@ -410,9 +501,25 @@ export function LexicalExplorer({
       ) : (
         <div className="rounded-md border border-dashed border-primary/25 bg-white/72 p-12 text-center shadow-sm backdrop-blur">
           <BookOpen className="mx-auto mb-4 h-12 w-12 text-primary/35" />
-          <h3 className="text-lg font-semibold">Nenhum registo encontrado</h3>
+          <h2 className="text-lg font-semibold">Nenhum registo encontrado</h2>
           <p className="mt-2 text-sm text-muted-foreground">Ajuste a pesquisa ou consulte novamente quando houver mais conteúdo aprovado.</p>
         </div>
+      )}
+
+      {activeMeta.totalPages > 1 && (
+        <nav aria-label="Paginação" className="flex items-center justify-between gap-3">
+          <p className="text-sm text-muted-foreground">
+            Página {activeMeta.page} de {activeMeta.totalPages}
+          </p>
+          <div className="flex gap-2">
+            <Button variant="outline" disabled={!activeMeta.hasPreviousPage || isLoading} onClick={() => setPage(activeMeta.page - 1)}>
+              Anterior
+            </Button>
+            <Button variant="outline" disabled={!activeMeta.hasNextPage || isLoading} onClick={() => setPage(activeMeta.page + 1)}>
+              Seguinte
+            </Button>
+          </div>
+        </nav>
       )}
     </div>
   )
@@ -428,6 +535,7 @@ export function LexicalExplorer({
     setOriginalLanguage(allValue)
     setOriginCountry(allValue)
     setField(allValue)
+    setLetter(undefined)
   }
 }
 
@@ -437,22 +545,24 @@ function SimpleSelect({
   onChange,
   options,
   allLabel,
+  counts,
 }: {
   label: string
   value: string
   onChange: (value: string) => void
   options: string[]
   allLabel: string
+  counts?: Record<string, number>
 }) {
   return (
     <Select value={value} onValueChange={onChange}>
-      <SelectTrigger className="h-11 rounded-md lg:w-[180px]">
+      <SelectTrigger aria-label={label} className="h-11 rounded-md lg:w-[180px]">
         <SelectValue placeholder={label} />
       </SelectTrigger>
       <SelectContent>
         <SelectItem value={allValue}>{allLabel}</SelectItem>
         {options.map((option) => (
-          <SelectItem key={option} value={option}>{option}</SelectItem>
+          <SelectItem key={option} value={option}>{counts?.[option] !== undefined ? `${option} (${counts[option]})` : option}</SelectItem>
         ))}
       </SelectContent>
     </Select>
@@ -530,7 +640,7 @@ function LexicalCard({ item, collection }: { item: LexicalItem; collection: Coll
         <CardHeader eyebrow="Antropónimo" title={anthroponym.name} badge={anthroponym.gender} />
         <p className="mt-4 text-sm leading-relaxed text-muted-foreground">{anthroponym.meaning ?? "Significado não disponível."}</p>
         <div className="mt-4 flex flex-wrap gap-1.5">
-          {anthroponym.surname && <Badge variant="outline" className="rounded-md">Sobrenome: {anthroponym.surname}</Badge>}
+          {anthroponym.surname && <Badge variant="outline" className="rounded-md">Apelido: {anthroponym.surname}</Badge>}
           {anthroponym.historicalFigure && <Badge variant="outline" className="rounded-md">{anthroponym.historicalFigure}</Badge>}
         </div>
       </article>
@@ -543,6 +653,7 @@ function LexicalCard({ item, collection }: { item: LexicalItem; collection: Coll
       <article className="rounded-md border border-emerald-100/80 bg-white/86 p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/30">
         <CardHeader eyebrow="VOLNA" title={term.term} badge={categoryBadge(term.grammaticalCategory, term.grammaticalSubcategory)} />
         <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
+          <span className="mr-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Em português</span>
           {term.definition ?? "Definição não disponível."}
         </p>
         {term.usageExample && (
@@ -572,6 +683,49 @@ function LexicalCard({ item, collection }: { item: LexicalItem; collection: Coll
   )
 }
 
+function VonalpTable({ terms }: { terms: PublicVonalpTerm[] }) {
+  return (
+    <div className="overflow-hidden rounded-md border border-blue-100/80 bg-white/86 shadow-sm">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Vocábulo</TableHead>
+            <TableHead>Classe</TableHead>
+            <TableHead className="hidden md:table-cell">Definição</TableHead>
+            <TableHead className="hidden sm:table-cell">Origem</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {terms.map((term) => (
+            <TableRow key={term.id}>
+              <TableCell className="align-top">
+                <span className="font-semibold text-primary">{term.term}</span>
+                {(term.pronunciation || term.syllabicDivision) && (
+                  <span className="mt-0.5 block font-mono text-xs text-muted-foreground">
+                    {[term.pronunciation, term.syllabicDivision].filter(Boolean).join("  ·  ")}
+                  </span>
+                )}
+                <span className="mt-1 line-clamp-2 block text-xs text-muted-foreground md:hidden">
+                  {term.firstDefinition ?? term.secondDefinition ?? term.thirdDefinition}
+                </span>
+              </TableCell>
+              <TableCell className="align-top text-sm">
+                {categoryBadge(term.grammaticalCategory, term.grammaticalSubcategory) ?? "-"}
+              </TableCell>
+              <TableCell className="hidden max-w-xl align-top text-sm text-muted-foreground md:table-cell">
+                <span className="line-clamp-2">
+                  {term.firstDefinition ?? term.secondDefinition ?? term.thirdDefinition ?? "Definição não disponível."}
+                </span>
+              </TableCell>
+              <TableCell className="hidden align-top text-sm text-muted-foreground sm:table-cell">{vonalpOrigin(term)}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  )
+}
+
 function vonalpOrigin(term: PublicVonalpTerm) {
   if (term.sourceLabel) return term.sourceLabel
   if (term.sourceType === "ENTRY") return "Dicionário"
@@ -586,7 +740,7 @@ function CardHeader({ eyebrow, title, badge }: { eyebrow: string; title: string;
     <div className="flex items-start justify-between gap-3">
       <div>
         <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{eyebrow}</p>
-        <h3 className="mt-1 text-2xl font-extrabold text-primary">{title}</h3>
+        <h2 className="mt-1 text-2xl font-extrabold text-primary">{title}</h2>
       </div>
       {badge && <Badge variant="secondary" className="rounded-md">{badge}</Badge>}
     </div>

@@ -30,7 +30,7 @@ export function FeaturedWords({ entries = [] }: { entries?: PublicEntry[] }) {
           <h2 className="text-3xl font-extrabold">Entradas publicadas</h2>
         </div>
         <p className="max-w-xl text-sm leading-relaxed text-muted-foreground">
-          Uma seleção direta das entradas aprovadas disponíveis nesta página.
+          Uma selecção directa das entradas aprovadas disponíveis nesta página.
         </p>
       </div>
 

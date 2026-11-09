@@ -1,4 +1,5 @@
 import { Header } from "@/components/header"
+import { NoticeStrip } from "@/components/notice-strip"
 import { HeroSection } from "@/components/hero-section"
 import { ServicesSection } from "@/components/services-section"
 import { HomeVisualSection } from "@/components/home-visual-section"
@@ -37,6 +38,7 @@ export default async function HomePage() {
   return (
     <div className="flex min-h-screen flex-col pt-[4.75rem]">
       <Header />
+      <NoticeStrip />
       <main className="flex-1">
         <HeroSection
           stats={stats ? [
@@ -54,7 +56,7 @@ export default async function HomePage() {
           <div className="relative mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
             <div className="mb-10 text-center">
               <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-blue-100">Base lexical</p>
-              <h2 className="mb-3 text-4xl font-extrabold tracking-tight text-white">Palavra do Dia</h2>
+              <h2 className="mb-3 text-4xl font-extrabold tracking-tight text-white">Palavra do dia</h2>
               <p className="mx-auto max-w-xl text-lg text-blue-50/82">
                 Descubra e aprenda uma nova palavra do português de Angola todos os dias
               </p>

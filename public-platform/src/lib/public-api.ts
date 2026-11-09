@@ -1,5 +1,7 @@
 export type PublicMeta = {
   total: number
+  /** Pesquisa com muitos resultados: o total conta só os primeiros (ex.: 1000), pode haver mais */
+  totalCapped?: boolean
   page: number
   limit: number
   totalPages: number
@@ -201,6 +203,7 @@ export type PublicStats = {
 export type PublicFilters = {
   q?: string
   search?: string
+  letter?: string
   category?: string
   grammaticalCategory?: string
   grammaticalSubcategory?: string
@@ -237,6 +240,24 @@ export type PublicSuggestion = {
   type: string
   meta?: string
   url: string
+}
+
+export type PublicFacets = {
+  collection: string
+  total: number
+  /** Contagem por letra inicial (A-Z) */
+  letters: Record<string, number>
+  /** Contagem por valor de cada filtro da colecção (classe gramatical, província, género…) */
+  facets: Record<string, Record<string, number>>
+}
+
+export type PublicGlobalSearch = {
+  query: string
+  entries: PublicEntry[]
+  neologisms: PublicNeologism[]
+  toponyms: PublicToponym[]
+  anthroponyms: PublicAnthroponym[]
+  foreignisms: PublicForeignism[]
 }
 
 type RequestOptions = RequestInit & {
@@ -297,6 +318,10 @@ export const publicApi = {
   stats: (init?: { signal?: AbortSignal }) => request<PublicStats>("/public/stats", init),
   suggest: (q: string, init?: { signal?: AbortSignal }) =>
     request<PublicSuggestion[]>("/public/suggest", { filters: { q }, ...init }),
+  facets: (collection: string, init?: { signal?: AbortSignal }) =>
+    request<PublicFacets>(`/public/facets/${encodeURIComponent(collection)}`, init),
+  globalSearch: (q: string, init?: { signal?: AbortSignal }) =>
+    request<PublicGlobalSearch>("/public/search", { filters: { q }, ...init }),
   dictionary: (filters?: PublicFilters, init?: { signal?: AbortSignal }) =>
     request<PublicPaginated<PublicEntry>>("/public/dictionary", { filters, ...init }),
   dictionaryDetails: (id: string, init?: { signal?: AbortSignal }) =>

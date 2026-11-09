@@ -38,7 +38,7 @@ export function ServicesSection({ stats }: { stats?: PublicStats | null }) {
     {
       icon: Users,
       title: "Antropónimos",
-      description: "Explore nomes próprios angolanos, sobrenomes, género, etimologia e figuras históricas identificadas.",
+      description: "Explore nomes próprios angolanos, apelidos, género, etimologia e figuras históricas identificadas.",
       bullets: [
         countLabel(stats?.anthroponyms, "antropónimo publicado", "antropónimos publicados"),
         "Nomes e identidade",

@@ -1,0 +1,41 @@
+// Ortografia de Angola (AO45): deteta grafias AO90, brasileirismos e texto em inglês conhecidos na interface.
+import { readdirSync, readFileSync, statSync } from "node:fs"
+import { join } from "node:path"
+
+const rules = [
+  [/\b[Aa]tividades?\b/, "actividade(s)"],
+  [/\b[Aa]tualiz\w+/, "actualiz-"],
+  [/\b[Cc]orret[oa]s?\b/, "correcto/a"],
+  [/\b[Dd]idátic\w+/, "didáctic-"],
+  [/\b[Oo]bjetivos?\b/, "objectivo(s)"],
+  [/\b[Pp]rojetos?\b/, "projecto(s)"],
+  [/\b[Dd]efetivo/, "defectivo"],
+  [/\b[Aa]bstrato|\b[Cc]oletivo|\b[Aa]djetivo|\b[Ff]racionário/, "abstracto/colectivo/adjectivo/fraccionário"],
+  [/\b[Ss]eleç\w+|\b[Dd]ireta\b|\b[Dd]ireto\b/, "selecção/directo"],
+  [/\b[Cc]orre[çc]ões?\b|\b[Cc]orreção\b/, "correcção/correcções"],
+  [/\b[Mm]ídias?\b/, "multimédia"],
+  [/\bSobrenomes?\b/, "apelido(s)"],
+  [/\b[Ee]m andamento\b/, "em curso"],
+  [/>Close<|>Previous slide<|>Next slide<|>More<|Toggle Sidebar/, "texto em inglês"],
+]
+
+let bad = 0
+const walk = (dir) => {
+  for (const name of readdirSync(dir)) {
+    const path = join(dir, name)
+    if (statSync(path).isDirectory()) walk(path)
+    else if (/\.(tsx|ts)$/.test(name)) {
+      readFileSync(path, "utf8").split("\n").forEach((line, i) => {
+        if (/^\s*(import|\/\/)/.test(line)) return
+        for (const [re, hint] of rules) {
+          if (re.test(line)) {
+            console.log(`${path}:${i + 1}: ${hint}`)
+            bad++
+          }
+        }
+      })
+    }
+  }
+}
+walk("src")
+process.exit(bad ? 1 : 0)

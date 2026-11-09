@@ -23,7 +23,7 @@ export const metadata: Metadata = {
     template: "%s | CNLP Angola",
   },
   description:
-    "Portal oficial da Comissão Nacional de Língua Portuguesa de Angola - Dicionário, Gramática, Topónimos, Antropónimos, Vocabulário Ortográfico Nacional de Angola da Língua Portuguesa e recursos educativos.",
+    "Portal oficial da Comissão Nacional de Língua Portuguesa de Angola: dicionário, gramática, topónimos, antropónimos, vocabulário ortográfico nacional e recursos educativos.",
   keywords: ["língua portuguesa", "Angola", "dicionário", "gramática", "topónimos", "antropónimos", "VONALP", "educação"],
   openGraph: {
     type: "website",
@@ -40,7 +40,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="pt">
+    <html lang="pt-AO">
       <body className={`${manrope.variable} ${outfit.variable} font-sans antialiased`}>
         {children}
         <Analytics />

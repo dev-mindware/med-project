@@ -35,7 +35,7 @@ export function AboutCommission() {
     },
     {
       name: "Téc. Leo da Silva",
-      position: "Gestor de Projetos",
+      position: "Gestor de Projectos",
       specialization: "Técnico de Informática",
       institution: "Ministério da Educação",
     },
@@ -53,7 +53,7 @@ export function AboutCommission() {
     },
     {
       name: "Téc. Jesus Fernando",
-      position: "Coordenador de Projetos",
+      position: "Coordenador de Projectos",
       specialization: "Sociolinguística",
       institution: "Academia Angolana de Letras",
     },
@@ -104,7 +104,7 @@ export function AboutCommission() {
       </div>
 
       <div>
-        <h3 className="mb-6 text-center text-2xl font-bold">Nossos Objectivos</h3>
+        <h3 className="mb-6 text-center text-2xl font-bold">Os nossos objectivos</h3>
         <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-4">
           {objectives.map((objective) => {
             const Icon = objective.icon

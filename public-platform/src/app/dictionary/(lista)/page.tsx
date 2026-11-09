@@ -1,6 +1,6 @@
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
-import { PageHero } from "@/components/page-hero"
+import { CollectionHeader } from "@/components/collection-header"
 import { DictionarySearch } from "@/components/dictionary-search"
 import { FeaturedWords } from "@/components/featured-words"
 import { publicApi, safePublicApi } from "@/lib/public-api"
@@ -13,6 +13,7 @@ export default async function DicionarioPage({
     category?: string
     grammaticalSubcategory?: string
     languageCode?: string
+    letter?: string
     page?: string
   }>
 }) {
@@ -27,29 +28,28 @@ export default async function DicionarioPage({
           category: params?.category,
           grammaticalSubcategory: params?.grammaticalSubcategory,
           languageCode: params?.languageCode,
+          letter: params?.letter,
           page: Number.isFinite(page) ? page : 1,
-          limit: 6,
+          limit: 20,
         }),
-      { data: [], meta: { total: 0, page: 1, limit: 6, totalPages: 0, hasNextPage: false, hasPreviousPage: false } },
+      { data: [], meta: { total: 0, page: 1, limit: 20, totalPages: 0, hasNextPage: false, hasPreviousPage: false } },
     ),
   ])
+
+  // Defensivo: nunca rebentar a página se a API omitir o total
+  const total = entries.meta.total ?? entries.data.length
 
   return (
     <div className="min-h-screen flex flex-col pt-[4.75rem]">
       <Header />
       <main className="flex-1">
-        <PageHero
-          badge="Recurso"
+        <CollectionHeader
           title="Dicionário de Língua Portuguesa"
           subtitle="Consulte definições, etimologias, exemplos de uso e informações gramaticais aprovadas para consulta pública."
-          tone="ice"
-          stats={[
-            { value: (stats?.dictionaryEntries ?? entries.meta.total).toLocaleString("pt-PT"), label: "Entradas aprovadas" },
-            { value: entries.meta.total.toLocaleString("pt-PT"), label: "Resultados desta consulta" },
-            { value: entries.meta.totalPages.toLocaleString("pt-PT"), label: "Páginas disponíveis" },
-          ]}
+          total={(stats?.dictionaryEntries ?? total).toLocaleString("pt-PT")}
+          unit="entradas aprovadas"
         />
-        <section className="section-paper py-14">
+        <section className="section-paper py-8 md:py-10">
           <div className="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
             <DictionarySearch
               initialResults={entries.data}
@@ -58,6 +58,7 @@ export default async function DicionarioPage({
               initialCategory={params?.category ?? ""}
               initialSubcategory={params?.grammaticalSubcategory ?? ""}
               initialLanguageCode={params?.languageCode ?? ""}
+              initialLetter={params?.letter ?? ""}
             />
           </div>
         </section>

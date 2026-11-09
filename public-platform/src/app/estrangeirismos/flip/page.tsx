@@ -12,13 +12,13 @@ export default async function EstrangeirismosFlipPage() {
       <Header />
       <main className="flex-1">
         <PageHero
-          badge="Flipbook"
+          badge="Modo livro"
           title="Estrangeirismos em modo livro"
           subtitle="Percorra os empréstimos linguísticos em páginas leves, com pesquisa instantânea."
           tone="ice"
           stats={[
             { value: data.meta.total.toLocaleString("pt-PT"), label: "Estrangeirismos" },
-            { value: data.meta.totalPages.toLocaleString("pt-PT"), label: "Páginas do flipbook" },
+            { value: data.meta.totalPages.toLocaleString("pt-PT"), label: "Páginas do livro" },
           ]}
         />
         <section className="section-paper py-14">

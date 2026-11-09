@@ -1,7 +1,10 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react"
+import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
+import { AlphabetBar } from "@/components/alphabet-bar"
+import { entryPath } from "@/lib/entry-slug"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -12,7 +15,7 @@ import {
   getGrammaticalSubcategoryLabel,
   grammaticalCategoryOptions,
 } from "@/lib/grammatical-labels"
-import { publicApi, type PublicEntry, type PublicMeta } from "@/lib/public-api"
+import { publicApi, type PublicEntry, type PublicFacets, type PublicMeta } from "@/lib/public-api"
 import { BookOpen, FileText, Heart, ImageIcon, Search, Video, Volume2 } from "lucide-react"
 
 type DictionarySearchProps = {
@@ -22,6 +25,7 @@ type DictionarySearchProps = {
   initialCategory?: string
   initialSubcategory?: string
   initialLanguageCode?: string
+  initialLetter?: string
 }
 
 const defaultMeta: PublicMeta = {
@@ -33,15 +37,18 @@ const defaultMeta: PublicMeta = {
   hasPreviousPage: false,
 }
 
+/**
+ * Línguas nacionais que acompanham o código de língua guardado (ex.: «pt-AO; kimbundu»).
+ * Os valores são os mesmos que a API normaliza; a API procura-os dentro do código.
+ */
 const languageOptions = [
   { label: "Todas as línguas", value: "all" },
-  { label: "Português", value: "pt" },
-  { label: "Kimbundu", value: "kmb" },
-  { label: "Umbundu", value: "umb" },
-  { label: "Kikongo", value: "kon" },
-  { label: "Cokwe", value: "cjk" },
-  { label: "Nganguela", value: "nba" },
-  { label: "Kwanyama", value: "kua" },
+  { label: "Kimbundu", value: "kimbundu" },
+  { label: "Umbundu", value: "umbundu" },
+  { label: "Kikongo", value: "kikongo" },
+  { label: "Tchokwe", value: "tchokwe" },
+  { label: "Nganguela", value: "nganguela" },
+  { label: "Kwanyama", value: "kwanyama" },
 ]
 
 export function DictionarySearch({
@@ -51,6 +58,7 @@ export function DictionarySearch({
   initialCategory = "",
   initialSubcategory = "",
   initialLanguageCode = "",
+  initialLetter = "",
 }: DictionarySearchProps) {
   const router = useRouter()
   const pathname = usePathname()
@@ -59,6 +67,8 @@ export function DictionarySearch({
   const [wordClass, setWordClass] = useState(initialCategory || "all")
   const [subcategory, setSubcategory] = useState(initialSubcategory || "all")
   const [languageCode, setLanguageCode] = useState(initialLanguageCode || "all")
+  const [letter, setLetter] = useState<string | undefined>(initialLetter || undefined)
+  const [facets, setFacets] = useState<PublicFacets | null>(null)
   const [searchResults, setSearchResults] = useState<PublicEntry[]>(initialResults)
   const [meta, setMeta] = useState<PublicMeta>(initialMeta)
   const [hasSearched, setHasSearched] = useState(initialResults.length > 0 || Boolean(initialQuery || initialCategory))
@@ -97,7 +107,7 @@ export function DictionarySearch({
 
     setHasSearched(true)
     setIsLoading(true)
-    updateUrl({ q, category, grammaticalSubcategory, languageCode: language, page: page > 1 ? page : undefined })
+    updateUrl({ q, category, grammaticalSubcategory, languageCode: language, letter, page: page > 1 ? page : undefined })
 
     try {
       const response = await publicApi.dictionary(
@@ -106,8 +116,9 @@ export function DictionarySearch({
           category,
           grammaticalSubcategory,
           languageCode: language,
+          letter,
           page,
-          limit: 6,
+          limit: 20,
         },
         { signal: controller.signal }
       )
@@ -123,7 +134,7 @@ export function DictionarySearch({
         setIsLoading(false)
       }
     }
-  }, [languageCode, searchTerm, subcategory, wordClass])
+  }, [languageCode, letter, searchTerm, subcategory, wordClass])
 
   useEffect(() => {
     if (!didMount.current) {
@@ -141,6 +152,16 @@ export function DictionarySearch({
       abortRef.current?.abort()
     }
   }, [loadResults, searchTerm])
+
+  // Contagens por letra e por classe (todas as páginas)
+  useEffect(() => {
+    const controller = new AbortController()
+    publicApi
+      .facets("dictionary", { signal: controller.signal })
+      .then(setFacets)
+      .catch(() => undefined)
+    return () => controller.abort()
+  }, [])
 
   const handleCategoryChange = (value: string) => {
     setWordClass(value)
@@ -165,7 +186,7 @@ export function DictionarySearch({
           </div>
 
           <Select value={wordClass} onValueChange={handleCategoryChange}>
-            <SelectTrigger className="h-11 rounded-xl">
+            <SelectTrigger aria-label="Classe gramatical" className="h-11 rounded-xl">
               <SelectValue placeholder="Classe" />
             </SelectTrigger>
             <SelectContent>
@@ -173,13 +194,14 @@ export function DictionarySearch({
               {grammaticalCategoryOptions.map((option) => (
                 <SelectItem key={option.value} value={option.value}>
                   {option.label}
+                  {facets?.facets.grammaticalCategory?.[option.value] !== undefined ? ` (${facets.facets.grammaticalCategory[option.value]})` : ""}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
 
           <Select value={subcategory} onValueChange={setSubcategory} disabled={wordClass === "all" || subcategoryOptions.length === 0}>
-            <SelectTrigger className="h-11 rounded-xl">
+            <SelectTrigger aria-label="Subclasse gramatical" className="h-11 rounded-xl">
               <SelectValue placeholder="Subclasse" />
             </SelectTrigger>
             <SelectContent>
@@ -193,7 +215,7 @@ export function DictionarySearch({
           </Select>
 
           <Select value={languageCode} onValueChange={setLanguageCode}>
-            <SelectTrigger className="h-11 rounded-xl">
+            <SelectTrigger aria-label="Língua" className="h-11 rounded-xl">
               <SelectValue placeholder="Língua" />
             </SelectTrigger>
             <SelectContent>
@@ -211,12 +233,16 @@ export function DictionarySearch({
         )}
       </div>
 
+      <AlphabetBar counts={facets?.letters} value={letter} onChange={setLetter} />
+
       {searchResults.length > 0 ? (
         <div className="space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
             <p>
-              <span className="font-semibold text-foreground">{meta.total}</span> resultado
-              {meta.total === 1 ? "" : "s"} encontrados
+              <span className="font-semibold text-foreground">
+                {meta.totalCapped ? `${meta.total.toLocaleString("pt-PT")}+` : meta.total.toLocaleString("pt-PT")}
+              </span>{" "}
+              resultado{meta.total === 1 ? "" : "s"} encontrado{meta.total === 1 ? "" : "s"}
             </p>
             <p>
               Página {meta.page} de {Math.max(meta.totalPages, 1)}
@@ -286,7 +312,9 @@ function WordCard({
           <div className="px-6 pt-6 pb-4 flex items-start justify-between gap-4">
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2 mb-1">
-                <h3 className="text-2xl font-extrabold text-primary">{word.entry}</h3>
+                <h2 className="text-2xl font-extrabold text-primary">
+                  <Link href={entryPath(word)} className="hover:underline">{word.entry}</Link>
+                </h2>
                 {word.audioUrl && (
                   <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full text-muted-foreground hover:text-foreground" asChild>
                     <a href={word.audioUrl} aria-label={`Ouvir ${word.entry}`} target="_blank" rel="noreferrer">
@@ -335,7 +363,7 @@ function WordCard({
                   tab === item ? "border-b-2 border-primary text-primary" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                {item === "definition" ? "Definição" : item === "media" ? `Mídias (${mediaCount})` : item === "forms" ? "Formas" : "Detalhes"}
+                {item === "definition" ? "Definição" : item === "media" ? `Multimédia (${mediaCount})` : item === "forms" ? "Formas" : "Detalhes"}
               </button>
             ))}
           </div>
@@ -393,7 +421,7 @@ function WordCard({
           </div>
         </div>
 
-        <aside className="border-t border-border bg-muted/20 p-5 lg:border-l lg:border-t-0">
+        <div className="border-t border-border bg-muted/20 p-5 lg:border-l lg:border-t-0">
           <div className="space-y-3">
             <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
               <FileText className="h-3.5 w-3.5" />
@@ -407,7 +435,7 @@ function WordCard({
               <Detail label="Língua" value={word.languageCode} />
             </dl>
           </div>
-        </aside>
+        </div>
       </div>
     </article>
   )
@@ -417,7 +445,7 @@ function MediaPanel({ word }: { word: PublicEntry }) {
   if (!word.audioUrl && !word.imageUrl && !word.videoUrl) {
     return (
       <div className="rounded-xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
-        Nenhuma mídia associada a esta entrada.
+        Nenhum conteúdo multimédia associado a esta entrada.
       </div>
     )
   }

@@ -12,13 +12,13 @@ export default async function NeologismosFlipPage() {
       <Header />
       <main className="flex-1">
         <PageHero
-          badge="Flipbook"
+          badge="Modo livro"
           title="Neologismos em modo livro"
           subtitle="Navegue pelas novas palavras aprovadas em páginas leves e pesquisáveis."
           tone="soft"
           stats={[
             { value: data.meta.total.toLocaleString("pt-PT"), label: "Neologismos" },
-            { value: data.meta.totalPages.toLocaleString("pt-PT"), label: "Páginas do flipbook" },
+            { value: data.meta.totalPages.toLocaleString("pt-PT"), label: "Páginas do livro" },
           ]}
         />
         <section className="section-paper py-14">

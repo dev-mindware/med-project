@@ -1,8 +1,9 @@
-﻿"use client"
+"use client"
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import { SiteSearch } from "@/components/site-search"
 import {
   Award,
   Book,
@@ -23,7 +24,7 @@ import {
 
 const navGroups = [
   {
-    label: "Recursos",
+    label: "Explorar",
     items: [
       { name: "Dicionário", href: "/dictionary", icon: Book, desc: "Definições, etimologias e exemplos de uso" },
       { name: "Neologismos", href: "/neologismos", icon: Sparkles, desc: "Novas palavras aprovadas no acervo público" },
@@ -115,11 +116,7 @@ export function Header() {
         </nav>
 
         <div className="flex shrink-0 items-center gap-3">
-          <Link href="/vonalp" className="hidden lg:block">
-            <Button className="h-11 rounded-md px-7 text-sm font-semibold shadow-none">
-              Consultar Vocabulário
-            </Button>
-          </Link>
+          <SiteSearch />
 
           <Button
             variant="ghost"
@@ -174,11 +171,6 @@ export function Header() {
               </div>
             ))}
 
-            <div className="mt-2 border-t border-border/60 pb-1 pt-3">
-              <Link href="/vonalp" onClick={() => setIsOpen(false)}>
-                <Button className="h-11 w-full rounded-md font-semibold">Consultar Vocabulário</Button>
-              </Link>
-            </div>
           </div>
         </div>
       )}

@@ -12,13 +12,13 @@ export default async function DictionaryFlipPage() {
       <Header />
       <main className="flex-1">
         <PageHero
-          badge="Flipbook"
+          badge="Modo livro"
           title="Dicionário em modo livro"
           subtitle="Navegue pelo dicionário em páginas leves, com viragem visual e pesquisa instantânea."
           tone="ice"
           stats={[
             { value: data.meta.total.toLocaleString("pt-PT"), label: "Entradas no acervo" },
-            { value: data.meta.totalPages.toLocaleString("pt-PT"), label: "Páginas do flipbook" },
+            { value: data.meta.totalPages.toLocaleString("pt-PT"), label: "Páginas do livro" },
           ]}
         />
         <section className="section-paper py-14">
