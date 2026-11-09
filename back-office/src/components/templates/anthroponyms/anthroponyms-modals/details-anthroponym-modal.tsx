@@ -71,10 +71,25 @@ export function DetailsAnthroponymModal() {
             <DetailRow label="Figura Histórica Associada" value={currentAnthroponym.historicalFigure || "—"} />
             <DetailRow label="Pseudónimo Histórico" value={currentAnthroponym.historicalFigurePseudonym || "—"} />
             <DetailRow label="Domínio Histórico / Relevância" value={currentAnthroponym.historicalFigureDomain || "—"} />
+            <DetailRow label="Data de Nascimento" value={currentAnthroponym.birthDate || "—"} />
+            <DetailRow label="Data de Falecimento" value={currentAnthroponym.deathDate || "—"} />
             <DetailRow label="É Vocabulário (VONALP)?" value={currentAnthroponym.isVocabulary ? "Sim" : "Não"} />
             <DetailRow label="É Estrangeirismo?" value={currentAnthroponym.isForeignism ? "Sim" : "Não"} />
           </div>
         </section>
+
+        {/* Biografia / Perfil da Figura Histórica */}
+        {currentAnthroponym.biography && (
+          <section className="space-y-2 border-t pt-4">
+            <div className="flex items-center gap-2 pb-1">
+              <Icon name="BookOpen" className="w-4 h-4 text-primary" />
+              <h3 className="font-semibold text-foreground">Breve Biografia da Figura Notável</h3>
+            </div>
+            <div className="p-4 rounded-lg bg-muted/40 border border-border/60 text-foreground leading-relaxed">
+              {currentAnthroponym.biography}
+            </div>
+          </section>
+        )}
 
         {/* Proveniência Documental */}
         <section className="space-y-3 border-t pt-4">

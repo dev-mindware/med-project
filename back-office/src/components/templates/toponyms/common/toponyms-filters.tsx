@@ -7,6 +7,7 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { useState } from "react";
 import { usePagination } from "@/hooks/common";
 import { UserResponse } from "@/types";
+import { ao_provinces } from "@/constants/toponym";
 
 export function ToponymsFiltersTSX() {
   const { filters, setFilters, clearAllFilters } = useToponymsFilters();
@@ -20,11 +21,13 @@ export function ToponymsFiltersTSX() {
   });
 
   const usersOptions = users.map((u) => ({ label: u.name, value: u.id }));
+  const provinceOptions = ao_provinces.map((p) => ({ label: p.label, value: p.value }));
 
   const hasActiveFilters = !!(
     filters.approvalStatus || filters.search || filters.startDate ||
     filters.endDate || filters.orderBy || filters.isVocabulary ||
-    filters.isVocabularyEP || filters.isForeignism || filters.createdById || filters.languageCode
+    filters.isVocabularyEP || filters.isForeignism || filters.createdById ||
+    filters.languageCode || filters.province
   );
 
   return (
@@ -39,6 +42,14 @@ export function ToponymsFiltersTSX() {
           />
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          <FilterPopover
+            label="Província"
+            icon="MapPin"
+            options={provinceOptions}
+            value={filters.province}
+            onChange={(val) => setFilters({ province: val ?? null })}
+          />
+
           <FilterPopover
             label="Estado"
             icon="Activity"

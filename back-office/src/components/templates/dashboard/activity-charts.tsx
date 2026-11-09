@@ -32,9 +32,9 @@ const PALETTE = [
 
 // Vocabulary type colour mapping
 const VOCAB_PALETTE: Record<string, string> = {
-  "VONALP":    "hsl(217 91% 53%)",
+  "VONALP": "hsl(217 91% 53%)",
   "VONALP-EP": "hsl(217 91% 67%)",
-  "Outros":    "hsl(217 91% 80%)",
+  "Outros": "hsl(217 91% 80%)",
 };
 const VOCAB_FALLBACK = "hsl(217 91% 53%)";
 
@@ -55,9 +55,9 @@ export function ActivityCharts() {
 
   const moduleData = data?.charts.moduleDistribution || [];
   const statusData = data?.charts.statusDistribution || [];
-  const vocabData  = data?.charts.vocabularyStats    || [];
+  const vocabData = data?.charts.vocabularyStats || [];
   const totalStatus = statusData.reduce((acc, cur) => acc + cur.value, 0);
-  const totalVocab  = vocabData.reduce((acc, cur) => acc + cur.value, 0);
+  const totalVocab = vocabData.reduce((acc, cur) => acc + cur.value, 0);
 
   if (
     moduleData.length === 0 &&
@@ -125,7 +125,7 @@ export function ActivityCharts() {
         <div className="col-span-3 bg-card rounded-2xl border border-border p-5 shadow-sm">
           <div className="mb-4">
             <h3 className="text-sm font-semibold text-foreground">
-              Distribuição por Módulo
+              Organização por Módulo
             </h3>
             <p className="text-xs text-muted-foreground mt-0.5">
               Total de registos em cada categoria linguística
@@ -242,7 +242,7 @@ export function ActivityCharts() {
                 Vocabulário VONALP
               </h3>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Distribuição de vocábulos por tipo de vocábulo
+                Distribuição por tipologia vocabular
               </p>
             </div>
             <span className="text-xs font-semibold text-primary bg-primary/10 px-2.5 py-1 rounded-full">

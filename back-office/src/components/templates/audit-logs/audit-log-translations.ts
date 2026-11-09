@@ -169,7 +169,7 @@ export function buildAuditTitle(log: AuditLogResponse) {
   if (log.action === "DELETE") return `${translateEntity(log.entity)} removido`;
   if (log.action === "LOGIN") return "Sessão iniciada";
 
-  return "Atividade registada";
+  return "Actividade registada";
 }
 
 export function buildAuditDescription(log: AuditLogResponse) {

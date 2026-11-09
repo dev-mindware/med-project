@@ -29,7 +29,7 @@ const WORD_TYPES = [
 
 const FLAGS: FieldDef[] = [
   { key: "isVocabulary", label: "VONALP", kind: "boolean", hint: "Pertence ao vocabulário nacional angolano." },
-  { key: "isVocabularyEP", label: "VONALP-EP", kind: "boolean", hint: "Pertence ao vocabulário do português europeu padrão." },
+  { key: "isVocabularyEP", label: "VONALP-EP", kind: "boolean", hint: "Pertence ao Vocabulário do Ensino Primário (VONALP-EP)." },
 ];
 
 const LANGUAGE_CODE: FieldDef = {
@@ -69,7 +69,7 @@ export const MODULE_FIELDS: Record<ManualVocabularyModule, FieldDef[]> = {
   NEOLOGISM: ENTRY_FIELDS,
   TOPONYM: [
     { key: "toponym", label: "Vocábulo", required: true, wide: true },
-    { key: "province", label: "Província", required: true, hint: "Província angolana ou país estrangeiro." },
+    { key: "province", label: "Província", required: true, hint: "Província angolana (ex.: Luanda, Cuanza-Norte, Benguela) ou país estrangeiro." },
     { key: "municipality", label: "Município" },
     { key: "meaning", label: "Significado", kind: "textarea", wide: true },
     { key: "pronunciation", label: "Pronúncia" },
@@ -78,7 +78,11 @@ export const MODULE_FIELDS: Record<ManualVocabularyModule, FieldDef[]> = {
     { key: "toponymHistory", label: "História", kind: "textarea", wide: true },
     { key: "toponymProvenance", label: "Proveniência", hint: "Língua de origem do nome." },
     { key: "commonUsage", label: "Uso comum" },
-    { key: "graphicVariation", label: "Variação gráfica" },
+    {
+      key: "graphicVariation",
+      label: "Variação gráfica",
+      hint: "Formas alternativas em que a palavra pode ser escrita (ex.: grafias históricas, variantes com/sem hífen ou adaptações ortográficas).",
+    },
     { key: "toponymClasses", label: "Classes", kind: "list", hint: "Separe por ponto e vírgula: cidade; rio." },
     { key: "toponymSubclasses", label: "Subclasses", kind: "list", hint: "Separe por ponto e vírgula: capital; histórico." },
     LANGUAGE_CODE,

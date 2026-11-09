@@ -17,7 +17,7 @@ import { ToponymsFiltersTSX } from "./common/toponyms-filters";
 import { useToponymActions, useToponymsFilters, useAuth, useVonalpActions } from "@/hooks";
 import { ItemStatusBadge } from "@/components/common/badges/item-status-badge";
 import { DetailsToponymModal, DeleteToponymModal, ToponymModal, ReviewToponymModal } from "./toponyms-modals";
-import { ao_provinces } from "@/constants";
+import { ao_provinces, findProvince, findMunicipality } from "@/constants/toponym";
 import { ButtonAddToponym } from "./common/button-add-toponym";
 import { VonalpImporter } from "@/components/templates/vonalp-importer";
 import { VonalpBadges, VonalpModal } from "@/components/templates/vonalp";
@@ -46,22 +46,37 @@ export function ToponymsList() {
   const { user } = useAuth();
 
   const columns: Column<ToponymResponse>[] = [
-    { key: "toponym", header: "Topónimo" },
+    { 
+      key: "toponym", 
+      header: "Topónimo",
+      render: (_, item) => (
+        <div>
+          <div className="font-medium text-foreground">{item.toponym}</div>
+          {item.graphicVariation && (
+            <div 
+              className="text-xs text-muted-foreground mt-0.5" 
+              title="Formas variantes em que a palavra pode ser escrita"
+            >
+              <span className="font-medium text-foreground/70">Var.:</span> {item.graphicVariation}
+            </div>
+          )}
+        </div>
+      )
+    },
     { 
       key: "province", 
       header: "Província",
       render: (_, item) => {
-        const p = ao_provinces.find((p) => p.value === item.province);
-        return <span className="text-sm text-muted-foreground">{p?.label || item.province || "—"}</span>
+        const p = findProvince(item.province);
+        return <span className="text-sm text-muted-foreground">{p?.label || item.province || "—"}</span>;
       }
     },
     { 
       key: "municipality", 
       header: "Município",
       render: (_, item) => {
-        const province = ao_provinces.find((p) => p.value === item.province);
-        const municipality = province?.municipalities.find((m) => m.value === item.municipality);
-        return <span className="text-sm text-muted-foreground">{municipality?.label || item.municipality || "—"}</span>
+        const municipality = findMunicipality(item.province, item.municipality);
+        return <span className="text-sm text-muted-foreground">{municipality?.label || item.municipality || "—"}</span>;
       }
     },
     {
@@ -202,12 +217,12 @@ export function ToponymsList() {
           setPage={setPage}
           goToNextPage={goToNextPage}
           goToPreviousPage={goToPreviousPage}
-          emptyMessage="Nenhum registro encontrado"
+          emptyMessage="Nenhum registo encontrado"
         />
       ) : (
         <EmptyState
-          description="Adicione novos registros"
-          title="Nenhum Registro Encontrado"
+          description="Adicione novos registos"
+          title="Nenhum Registo Encontrado"
           icon="MapPin"
         />
       )}

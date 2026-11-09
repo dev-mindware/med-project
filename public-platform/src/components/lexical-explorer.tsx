@@ -509,6 +509,11 @@ function LexicalCard({ item, collection }: { item: LexicalItem; collection: Coll
         <CardHeader eyebrow="Topónimo" title={toponym.toponym} badge={toponym.province} />
         <p className="mt-4 text-sm leading-relaxed text-muted-foreground">{toponym.meaning ?? "Significado não disponível."}</p>
         <div className="mt-4 flex flex-wrap gap-1.5">
+          {toponym.graphicVariation && (
+            <Badge variant="outline" className="rounded-md border-amber-300 bg-amber-50/60 text-amber-900" title="Variação gráfica (formas variantes em que a palavra pode ser escrita)">
+              Var. gráfica: {toponym.graphicVariation}
+            </Badge>
+          )}
           {toponym.municipality && <Badge variant="outline" className="rounded-md">{toponym.municipality}</Badge>}
           {toponym.gentilic && <Badge variant="outline" className="rounded-md">Gentílico: {toponym.gentilic}</Badge>}
           {toponym.languageCode && <Badge variant="outline" className="rounded-md">{toponym.languageCode}</Badge>}

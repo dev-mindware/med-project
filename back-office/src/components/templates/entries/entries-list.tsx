@@ -172,7 +172,20 @@ export function EntriesList() {
   });
 
   const columns: Column<EntryResponse>[] = [
-    { key: "entry", header: "Entrada" },
+    {
+      key: "entry",
+      header: "Entrada",
+      render: (_, item) => (
+        <div className="flex flex-col gap-1 items-start">
+          <span className="font-semibold text-foreground text-sm">{item.entry}</span>
+          {item.isSchoolManual && (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-emerald-600/15 text-emerald-800 dark:text-emerald-300 border border-emerald-500/30">
+              Manual Escolar
+            </span>
+          )}
+        </div>
+      ),
+    },
     { key: "syllabicDivision", header: "Divisão Silábica" },
     {
       key: "grammaticalCategory",
@@ -207,11 +220,18 @@ export function EntriesList() {
     },
     {
       key: "frequency",
-      header: "Frequência",
+      header: "Freq. / Datação",
       render: (_, item) => (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
-          {item.frequency || 1}×
-        </span>
+        <div className="flex flex-col gap-0.5 items-start">
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
+            {item.frequency || 1}×
+          </span>
+          {item.datingYear && (
+            <span className="text-[11px] font-medium text-amber-700 dark:text-amber-400">
+              Ano: {item.datingYear}
+            </span>
+          )}
+        </div>
       ),
     },
     {
@@ -356,12 +376,12 @@ export function EntriesList() {
           selectedIds={selectedIds}
           onSelectChange={setSelectedIds}
           batchActions={batchActions}
-          emptyMessage="Nenhum registro encontrado"
+          emptyMessage="Nenhum registo encontrado"
         />
       ) : (
         <EmptyState
-          description="Adicione novos registros"
-          title="Nenhum Registro Encontrado"
+          description="Adicione novos registos"
+          title="Nenhum Registo Encontrado"
           icon="BookA"
         />
       )}

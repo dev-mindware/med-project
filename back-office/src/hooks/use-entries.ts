@@ -9,7 +9,7 @@ export function useAddEntry() {
   return useMutation({
     mutationFn: (data: EntryData) => entriesService.addEntry(data),
     onSuccess: () => {
-      SucessMessage("Registro adicionado com sucesso!");
+      SucessMessage("Registo adicionado com sucesso!");
       queryClient.invalidateQueries({ queryKey: ["entries"] });
     },
   });

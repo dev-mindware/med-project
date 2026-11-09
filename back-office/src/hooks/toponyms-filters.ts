@@ -14,6 +14,7 @@ export type ToponymsFilters = {
   endDate: string | null;
   search: string | null;
   limit: number | null;
+  province: string | null;
 };
 
 export function useToponymsFilters() {
@@ -39,6 +40,7 @@ export function useToponymsFilters() {
     endDate: getParam("endDate"),
     search: getParam("search") || urlSearch,
     limit: getParam("limit") ? parseInt(getParam("limit")!) : null,
+    province: getParam("province"),
   };
 
   const setFilters = useCallback((newFilters: Partial<ToponymsFilters>) => {

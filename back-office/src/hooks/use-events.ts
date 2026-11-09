@@ -9,7 +9,7 @@ export function useAddEvent() {
   return useMutation({
     mutationFn: (data: EventData) => eventsService.addEvent(data),
     onSuccess: () => {
-      SucessMessage("Registro adicionado com sucesso!");
+      SucessMessage("Registo adicionado com sucesso!");
       queryClient.invalidateQueries({ queryKey: ["events"] });
     },
   });

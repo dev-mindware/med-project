@@ -14,11 +14,11 @@ import { BarChart, Bar, CartesianGrid, XAxis, YAxis, Cell } from "recharts";
 import { FileText, ShieldCheck, Database, Layers, CheckCircle } from "lucide-react";
 
 const DEFAULT_DOC_CATEGORIES = [
-  { name: "Jornais & Periódicos", value: 263, color: "#3B82F6" },
+  { name: "Jornais", value: 263, color: "#3B82F6" },
   { name: "Comunicados Oficiais", value: 177, color: "#6366F1" },
   { name: "Legislação & Normas", value: 68, color: "#8B5CF6" },
   { name: "Livros & Manuais", value: 63, color: "#10B981" },
-  { name: "Economia & Finanças", value: 40, color: "#F59E0B" },
+  { name: "Relatórios", value: 40, color: "#F59E0B" },
   { name: "Apresentações", value: 32, color: "#EC4899" },
 ];
 
@@ -47,7 +47,7 @@ export function CorpusProvenanceCard() {
 
   const chartConfig = useMemo<ChartConfig>(() => {
     const cfg: ChartConfig = {
-      value: { label: "PDFs" },
+      value: { label: "PDF" },
     };
     docCategories.forEach((cat) => {
       cfg[cat.name] = { label: cat.name, color: cat.color };
@@ -66,11 +66,11 @@ export function CorpusProvenanceCard() {
                 <FileText className="w-5 h-5" />
               </div>
               <CardTitle className="text-base font-bold text-foreground">
-                Documentos Fonte do Corpus MED
+                Documentos Fonte dos Corpora MED
               </CardTitle>
             </div>
             <CardDescription className="text-xs text-muted-foreground">
-              {totalDocs.toLocaleString("pt-PT")} PDFs escolares e oficiais minerados com SHA-256
+              {totalDocs.toLocaleString("pt-PT")} PDF escolares e oficiais minerados com SHA-256
             </CardDescription>
           </div>
           <Badge variant="outline" className="gap-1 text-xs border-emerald-500/30 text-emerald-600 bg-emerald-500/10 py-1">
@@ -186,12 +186,12 @@ export function CorpusProvenanceCard() {
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-amber-800 dark:text-amber-300 flex items-center gap-1.5">
                 <Layers className="w-4 h-4 text-amber-600" />
-                Etimologia Histórica & Filológica
+                Etimologia & Filológica
               </span>
               <span className="text-xs font-extrabold text-amber-600">100%</span>
             </div>
             <p className="text-[11px] text-muted-foreground">
-              Raízes latinas, gregas, árabes e bantas (kimbundu / umbundu / kikongo).
+              Raízes latinas, gregas, árabes, inglês, línguas bantu de Angola...
             </p>
           </div>
         </CardContent>

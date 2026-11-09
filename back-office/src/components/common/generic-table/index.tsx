@@ -57,7 +57,7 @@ export function GenericTable<T extends { id: string }>({
   columns,
   className,
   emptyMessage = "Nenhum dado encontrado",
-  emptyTitle = "Nenhum registro encontrado",
+  emptyTitle = "Nenhum registo encontrado",
   emptyDescription,
   emptyIcon = "Inbox",
   page,

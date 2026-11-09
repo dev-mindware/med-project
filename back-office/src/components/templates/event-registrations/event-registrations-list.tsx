@@ -154,12 +154,12 @@ export function EventRegistrationsList() {
           setPage={setPage}
           goToNextPage={goToNextPage}
           goToPreviousPage={goToPreviousPage}
-          emptyMessage="Nenhum registro encontrado"
+          emptyMessage="Nenhum registo encontrado"
         />
       ) : (
         <EmptyState
-          description="Adicione novos registros"
-          title="Nenhum Registro Encontrado"
+          description="Adicione novos registos"
+          title="Nenhum Registo Encontrado"
           icon="Ticket"
         />
       )}

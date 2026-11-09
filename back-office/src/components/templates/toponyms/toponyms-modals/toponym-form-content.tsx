@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -16,7 +16,7 @@ import {
   SelectField,
   FormSection 
 } from "@/components";
-import { ao_provinces, common_usage, toponym_classes } from "@/constants/toponym";
+import { ao_provinces, common_usage, toponym_classes, findProvince } from "@/constants/toponym";
 import { useWatch } from "react-hook-form";
 
 interface ToponymFormContentProps {
@@ -58,9 +58,7 @@ export function ToponymFormContent({ action, currentToponym }: ToponymFormConten
   });
   const locationImage = useWatch({ control, name: "locationImage" });
 
-  const selectedProvince = ao_provinces.find(
-    (p) => p.value === selectedProvinceValue
-  );
+  const selectedProvince = findProvince(selectedProvinceValue);
 
   const municipalityOptions = selectedProvince?.municipalities || [];
 
@@ -182,12 +180,18 @@ export function ToponymFormContent({ action, currentToponym }: ToponymFormConten
             {...register("pronunciation")}
             error={errors.pronunciation?.message}
           />
-          <Input
-            label="Variação Gráfica"
-            startIcon="Type"
-            {...register("graphicVariation")}
-            error={errors.graphicVariation?.message}
-          />
+          <div className="space-y-1">
+            <Input
+              label="Variação Gráfica"
+              startIcon="Type"
+              placeholder="Ex.: Lwanda (para Luanda), Kwanza (para Cuanza)..."
+              {...register("graphicVariation")}
+              error={errors.graphicVariation?.message}
+            />
+            <p className="text-xs text-muted-foreground">
+              Formas alternativas em que a palavra pode ser escrita (ex.: grafias históricas, com/sem hífen ou adaptações ortográficas).
+            </p>
+          </div>
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Controller

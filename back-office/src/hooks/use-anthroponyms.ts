@@ -9,7 +9,7 @@ export function useAddAnthroponym() {
   return useMutation({
     mutationFn: (data: AnthroponymData) => anthroponymsService.addAnthroponym(data),
     onSuccess: () => {
-      SucessMessage("Registro adicionado com sucesso!");
+      SucessMessage("Registo adicionado com sucesso!");
       queryClient.invalidateQueries({ queryKey: ["anthroponyms"] });
     },
   });

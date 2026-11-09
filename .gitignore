@@ -80,3 +80,8 @@ graphify-out/
 .serena/
 .ast-grep/
 sgconfig.yml
+
+# PDFs & Corpus
+docs/PDFs_Organizados/
+docs/PDF_Organizados/
+*.pdf

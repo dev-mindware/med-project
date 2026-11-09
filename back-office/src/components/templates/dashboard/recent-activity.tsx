@@ -79,7 +79,7 @@ export function RecentActivity() {
       {/* Modal fora do loop — alimentado por estado local */}
       <GlobalModal
         id={MODAL_ID}
-        title="Detalhes da Atividade"
+        title="Detalhes da Actividade"
         description="Informação detalhada sobre o registo criado ou modificado."
         canClose
         footer={
@@ -133,7 +133,7 @@ export function RecentActivity() {
       <div className="col-span-3 bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
         <div className="px-5 pt-5 pb-3 flex items-center justify-between border-b border-border">
           <div>
-            <h3 className="text-sm font-semibold text-foreground">Atividade Recente</h3>
+            <h3 className="text-sm font-semibold text-foreground">Actividade Recente</h3>
             <p className="text-xs text-muted-foreground mt-0.5">
               Últimos registos adicionados ou modificados
             </p>
@@ -233,7 +233,7 @@ export function RecentActivity() {
 
       <div className="col-span-2 bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
         <div className="px-5 pt-5 pb-3 border-b border-border">
-          <h3 className="text-sm font-semibold text-foreground">Top Contribuidores</h3>
+          <h3 className="text-sm font-semibold text-foreground">Principais Contribuidores</h3>
           <p className="text-xs text-muted-foreground mt-0.5">
             Utilizadores com mais registos
           </p>

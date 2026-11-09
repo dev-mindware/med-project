@@ -25,6 +25,9 @@ export type EntryData = {
   isVocabularyEP?: boolean;
   isForeignism?: boolean;
   frequency?: number;
+  datingYear?: number;
+  isSchoolManual?: boolean;
+  grammaticalStructure?: string;
   firstSourceId?: string | null;
   firstSource?: string | null;
   sourceDocument?: {

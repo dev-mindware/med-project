@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -40,6 +40,9 @@ export function AnthroponymFormContent({ action, currentAnthroponym }: Anthropon
       isVocabulary: false,
       isVocabularyEP: false,
       isForeignism: false,
+      birthDate: "",
+      deathDate: "",
+      biography: "",
     }
   });
 
@@ -51,6 +54,9 @@ export function AnthroponymFormContent({ action, currentAnthroponym }: Anthropon
         isVocabulary: false,
         isVocabularyEP: false,
         isForeignism: false,
+        birthDate: "",
+        deathDate: "",
+        biography: "",
       });
     }
   }, [action, currentAnthroponym, reset]);
@@ -152,6 +158,29 @@ export function AnthroponymFormContent({ action, currentAnthroponym }: Anthropon
             placeholder="Ex: Política, Literatura..."
           />
         </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Input
+            label="Data de Nascimento"
+            startIcon="Calendar"
+            {...register("birthDate")}
+            error={errors.birthDate?.message}
+            placeholder="Ex: 1922 ou 17/09/1922"
+          />
+          <Input
+            label="Data de Falecimento"
+            startIcon="Calendar"
+            {...register("deathDate")}
+            error={errors.deathDate?.message}
+            placeholder="Ex: 1979 ou 10/09/1979"
+          />
+        </div>
+        <Textarea
+          label="Breve Biografia da Figura Notável"
+          {...register("biography")}
+          error={errors.biography?.message}
+          placeholder="Síntese biográfica e relevância histórica para a cultura de Angola..."
+          rows={3}
+        />
       </FormSection>
 
       <section className="grid grid-cols-1 gap-6 sm:grid-cols-2 p-4 bg-muted/40 rounded-xl border border-border/50">

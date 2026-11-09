@@ -125,7 +125,7 @@ export const vonalpImportConfigs: Record<string, VonalpImportConfig> = {
     schema: toponymSchema,
     columns: [
       text("toponym", "Topónimo", { required: true, aliases: ["toponym", "Toponimo", "Topónimo (Nome do Lugar)"], example: "Luanda" }),
-      text("province", "Província", { required: true, aliases: ["province", "Provincia"], options: provinceOptions, example: "luanda" }),
+      text("province", "Província", { required: true, aliases: ["province", "Provincia"], options: provinceOptions, example: "Cuanza-Norte" }),
       text("municipality", "Município", { recommended: true, aliases: ["municipality", "Municipio"], options: municipalityOptions }),
       array("toponymClasses", "Classe do topónimo", { recommended: true, aliases: ["toponymClasses", "Classe do Topónimo", "Classe do toponimo"], options: toponymClassOptions }),
       array("toponymSubclasses", "Subclasse", { recommended: true, aliases: ["toponymSubclasses"], options: toponymSubclassOptions }),
@@ -133,7 +133,7 @@ export const vonalpImportConfigs: Record<string, VonalpImportConfig> = {
       text("gentilic", "Gentílico", { recommended: true, aliases: ["gentilic", "Gentilico"] }),
       text("pronunciation", "Pronúncia", { aliases: ["pronunciation", "Pronuncia"] }),
       text("location", "Localização específica", { aliases: ["location", "Localizacao especifica", "Localização Específica"] }),
-      text("graphicVariation", "Variação gráfica", { aliases: ["graphicVariation", "Variacao grafica", "Variação Gráfica"] }),
+      text("graphicVariation", "Variação gráfica (formas de escrita)", { aliases: ["graphicVariation", "Variacao grafica", "Variação Gráfica", "Variação gráfica", "Formas alternativas de escrita"], example: "Lwanda" }),
       text("locationImage", "Imagem da localidade", { aliases: ["locationImage", "Imagem da Localidade"] }),
       text("toponymHistory", "História do topónimo", { aliases: ["toponymHistory", "Historia do toponimo", "História do Topónimo"] }),
       text("toponymProvenance", "Proveniência", { aliases: ["toponymProvenance", "Proveniencia"] }),

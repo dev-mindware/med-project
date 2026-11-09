@@ -44,7 +44,7 @@ cd api
 docker compose up -d
 ```
 
-O PostgreSQL ficará disponível em `localhost:5439`.
+O PostgreSQL ficará disponível em `localhost:5432`.
 
 ### 3. Instalar dependências
 

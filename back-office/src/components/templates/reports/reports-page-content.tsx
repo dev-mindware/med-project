@@ -25,7 +25,7 @@ const reportTypes: Array<{
   },
   {
     type: "activity",
-    title: "Atividade",
+    title: "Actividade",
     description: "Últimas acções registadas nos logs de auditoria.",
     icon: "History",
   },
@@ -213,7 +213,7 @@ export function ReportsPageContent() {
 function getReportLabel(type: string) {
   return {
     users: "Utilizadores",
-    activity: "Atividade",
+    activity: "Actividade",
     summary: "Resumo geral",
   }[type] || type;
 }

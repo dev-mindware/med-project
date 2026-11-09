@@ -11,6 +11,9 @@ export type AnthroponymData = {
   historicalFigure?: string;
   historicalFigurePseudonym?: string;
   historicalFigureDomain?: string;
+  birthDate?: string;
+  deathDate?: string;
+  biography?: string;
   isVocabulary?: boolean;
   isVocabularyEP?: boolean;
   isForeignism?: boolean;

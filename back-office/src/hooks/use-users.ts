@@ -38,7 +38,7 @@ export function useAddUser() {
   return useMutation({
     mutationFn: (data: UserData) => usersService.addUser(data),
     onSuccess: () => {
-      SucessMessage("Registro adicionado com sucesso!");
+      SucessMessage("Utilizador registado com sucesso!");
       queryClient.invalidateQueries({ queryKey: ["users"] });
     },
   });

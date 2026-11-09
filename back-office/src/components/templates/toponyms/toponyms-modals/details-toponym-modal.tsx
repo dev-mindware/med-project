@@ -3,6 +3,7 @@ import { useModal, currentToponymStore } from "@/stores";
 import { Icon, Button, DetailRow, GlobalModal } from "@/components";
 import { ItemStatusBadge } from "@/components/common/badges/item-status-badge";
 import { formatDateTime } from "@/utils/format-date";
+import { findProvince, findMunicipality } from "@/constants/toponym";
 
 export function DetailsToponymModal() {
   const { closeModal, open } = useModal();
@@ -65,14 +66,14 @@ export function DetailsToponymModal() {
             <DetailRow label="Topónimo" value={currentToponym.toponym} />
             <DetailRow label="Pronúncia" value={currentToponym.pronunciation || "—"} />
             <DetailRow label="Gentílico" value={currentToponym.gentilic || "—"} />
-            <DetailRow label="Província" value={currentToponym.province || "—"} />
-            <DetailRow label="Município" value={currentToponym.municipality || "—"} />
+            <DetailRow label="Província" value={findProvince(currentToponym.province)?.label || currentToponym.province || "—"} />
+            <DetailRow label="Município" value={findMunicipality(currentToponym.province, currentToponym.municipality)?.label || currentToponym.municipality || "—"} />
             <DetailRow label="Localização / Comuna" value={currentToponym.location || "—"} />
             <DetailRow label="Significado" value={currentToponym.meaning || "—"} />
             <DetailRow label="História" value={currentToponym.toponymHistory || "—"} />
             <DetailRow label="Proveniência" value={currentToponym.toponymProvenance || "—"} />
             <DetailRow label="Uso Comum" value={currentToponym.commonUsage || "—"} />
-            <DetailRow label="Variação Gráfica" value={currentToponym.graphicVariation || "—"} />
+            <DetailRow label="Variação Gráfica (Formas de Escrita)" value={currentToponym.graphicVariation || "—"} />
             <DetailRow label="Classes" value={currentToponym.toponymClasses?.join(", ") || "—"} />
             <DetailRow label="Subclasses" value={currentToponym.toponymSubclasses?.join(", ") || "—"} />
             <DetailRow label="Código da Língua" value={currentToponym.languageCode || "pt-AO"} />

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -44,6 +44,9 @@ export function EntryFormContent({ action, currentEntry }: EntryFormContentProps
       isVocabulary: true,
       isVocabularyEP: false,
       isForeignism: false,
+      isSchoolManual: false,
+      datingYear: undefined,
+      grammaticalStructure: "",
     }
   });
 
@@ -68,6 +71,9 @@ export function EntryFormContent({ action, currentEntry }: EntryFormContentProps
         isVocabulary: true,
         isVocabularyEP: false,
         isForeignism: false,
+        isSchoolManual: false,
+        datingYear: undefined,
+        grammaticalStructure: "",
       });
     }
   }, [action, currentEntry, reset]);
@@ -191,6 +197,23 @@ export function EntryFormContent({ action, currentEntry }: EntryFormContentProps
                 error={errors.grammaticalStatus?.message}
               />
             )}
+          />
+        </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 mt-4">
+          <Input
+            label="Datação (Ano da 1.ª ocorrência nos corpora)"
+            startIcon="Calendar"
+            type="number"
+            {...register("datingYear", { valueAsNumber: true })}
+            error={errors.datingYear?.message}
+            placeholder="Ex: 2013"
+          />
+          <Input
+            label="Estrutura Gramatical"
+            startIcon="Layers"
+            {...register("grammaticalStructure")}
+            error={errors.grammaticalStructure?.message}
+            placeholder="Ex: palavra simples, composta por aglutinação, etc."
           />
         </div>
       </FormSection>
@@ -341,6 +364,19 @@ export function EntryFormContent({ action, currentEntry }: EntryFormContentProps
           <Controller
             control={control}
             name="isVocabularyEP"
+            render={({ field: { value, onChange } }) => (
+              <Switch checked={value} onCheckedChange={onChange} />
+            )}
+          />
+        </div>
+        <div className="flex items-center justify-between space-x-4">
+          <div className="flex flex-col space-y-0.5">
+            <span className="text-sm font-semibold">Manual Escolar (MED)</span>
+            <span className="text-xs text-muted-foreground leading-tight">Consta em manuais do Ensino Primário?</span>
+          </div>
+          <Controller
+            control={control}
+            name="isSchoolManual"
             render={({ field: { value, onChange } }) => (
               <Switch checked={value} onCheckedChange={onChange} />
             )}

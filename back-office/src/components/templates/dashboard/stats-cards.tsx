@@ -43,14 +43,20 @@ const CARD_DESCRIPTIONS: Record<string, string> = {
   "Eventos":             "Eventos académicos e culturais programados",
   "Total de Eventos":    "Eventos académicos e culturais programados",
 
-  // Blog
-  "Publicações":         "Artigos publicados no blogue da plataforma",
-  "Total de Publicações":"Artigos publicados no blogue da plataforma",
+  // Corpus & Quality
+  "Total do Acervo":     "Total de entradas linguísticas catalogadas",
+  "Documentos Fonte":    "Obras e documentos oficiais catalogados",
+  "Ocorrências no Corpus": "Citações e ocorrências textuais documentadas",
+  "Conformidade AO45":   "Rigor fonológico, silábico e etimológico",
 };
 
-function getDescription(label: string, apiDescription?: string): string | undefined {
-  if (apiDescription) return apiDescription;
-  return CARD_DESCRIPTIONS[label] ?? `Total de ${label.toLowerCase()} no sistema`;
+function cleanDescription(desc?: string, label?: string): string | undefined {
+  if (desc) {
+    return desc
+      .replace(/1:N/gi, "documentada")
+      .replace(/proveniência 1:N/gi, "proveniência documental");
+  }
+  return label ? CARD_DESCRIPTIONS[label] : undefined;
 }
 
 export function StatsCards() {
@@ -86,7 +92,7 @@ export function StatsCards() {
           key={index}
           title={card.value.toLocaleString()}
           subtitle={card.label}
-          description={card.description}
+          description={cleanDescription(card.description, card.label)}
           icon={card.icon as IconName}
           variant="default"
         />

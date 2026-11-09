@@ -9,7 +9,7 @@ export function useAddBlogPost() {
   return useMutation({
     mutationFn: (data: BlogPostData) => blogPostsService.addBlogPost(data),
     onSuccess: () => {
-      SucessMessage("Registro adicionado com sucesso!");
+      SucessMessage("Publicação registada com sucesso!");
       queryClient.invalidateQueries({ queryKey: ["blog-posts"] });
     },
   });

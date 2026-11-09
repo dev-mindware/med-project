@@ -26,6 +26,9 @@ export const entrySchema = z.object({
   isVocabulary: z.boolean().optional(),
   isVocabularyEP: z.boolean().optional(),
   isForeignism: z.boolean().optional(),
+  isSchoolManual: z.boolean().optional(),
+  datingYear: z.number().int().min(1000, "Ano inválido").max(2100, "Ano inválido").optional(),
+  grammaticalStructure: z.string().trim().optional(),
 });
 
 export type EntryFormData = z.infer<typeof entrySchema>;

@@ -9,7 +9,7 @@ export function useAddForeignism() {
   return useMutation({
     mutationFn: (data: ForeignismData) => foreignismsService.addForeignism(data),
     onSuccess: () => {
-      SucessMessage("Registro adicionado com sucesso!");
+      SucessMessage("Registo adicionado com sucesso!");
       queryClient.invalidateQueries({ queryKey: ["foreignisms"] });
     },
   });

@@ -22,41 +22,86 @@ interface CategoryItem {
   description: string;
 }
 
+const CATEGORY_META: Record<string, { description: string; color: string }> = {
+  "Substantivos": {
+    description: "Substantivos comuns, próprios, abstractos e colectivos catalogados",
+    color: "#2563EB", // Blue 600
+  },
+  "Adjectivos": {
+    description: "Qualificativos, relacionais e formas biformes/uniformes",
+    color: "#059669", // Emerald 600
+  },
+  "Advérbios": {
+    description: "Advérbios de modo, tempo, lugar, afirmação, negação e intensidade",
+    color: "#8B5CF6", // Violet 600
+  },
+  "Verbos": {
+    description: "Formas infinitivas transitivas, intransitivas e pronominais",
+    color: "#D97706", // Amber 600
+  },
+  "Pronomes": {
+    description: "Pronomes pessoais, possessivos, demonstrativos e relativos",
+    color: "#0284C7", // Sky 600
+  },
+  "Interjeições": {
+    description: "Expressões emotivas, apelativas e fórmulas conversacionais",
+    color: "#EC4899", // Pink 600
+  },
+  "Outras Classes": {
+    description: "Preposições, conjunções, numerais e artigos relacionais",
+    color: "#64748B", // Slate 500
+  },
+};
+
 const DEFAULT_CATEGORIES: CategoryItem[] = [
   {
     name: "Substantivos",
-    value: 133790,
-    percentage: 66.7,
-    color: "#2563EB", // Blue 600
-    description: "Nomes comuns, próprios, abstractos e colectivos catalogados",
+    value: 145921,
+    percentage: 58.3,
+    color: "#2563EB",
+    description: "Substantivos comuns, próprios, abstractos e colectivos catalogados",
   },
   {
     name: "Adjectivos",
-    value: 49723,
-    percentage: 24.8,
-    color: "#059669", // Emerald 600
+    value: 67407,
+    percentage: 26.9,
+    color: "#059669",
     description: "Qualificativos, relacionais e formas biformes/uniformes",
   },
   {
+    name: "Advérbios",
+    value: 19997,
+    percentage: 8.0,
+    color: "#8B5CF6",
+    description: "Advérbios de modo, tempo, lugar, afirmação, negação e intensidade",
+  },
+  {
     name: "Verbos",
-    value: 16558,
-    percentage: 8.3,
-    color: "#D97706", // Amber / Terracotta
+    value: 16549,
+    percentage: 6.6,
+    color: "#D97706",
     description: "Formas infinitivas transitivas, intransitivas e pronominais",
+  },
+  {
+    name: "Pronomes",
+    value: 84,
+    percentage: 0.1,
+    color: "#0284C7",
+    description: "Pronomes pessoais, possessivos, demonstrativos e relativos",
   },
   {
     name: "Interjeições",
     value: 239,
     percentage: 0.1,
-    color: "#7C3AED", // Violet 600
+    color: "#EC4899",
     description: "Expressões emotivas, apelativas e fórmulas conversacionais",
   },
   {
-    name: "Pronomes, Preposições e Conjunções",
-    value: 190,
+    name: "Outras Classes",
+    value: 106,
     percentage: 0.1,
-    color: "#0284C7", // Sky 600
-    description: "Classes gramaticais relacionais e estruturais da língua",
+    color: "#64748B",
+    description: "Preposições, conjunções, numerais e artigos relacionais",
   },
 ];
 
@@ -66,13 +111,16 @@ export function GrammaticalDistributionCard() {
   const categories = useMemo<CategoryItem[]>(() => {
     const apiCats = data?.charts?.grammaticalCategories;
     if (apiCats && apiCats.length > 0) {
-      return apiCats.map((cat, i) => ({
-        name: cat.name,
-        value: cat.value,
-        percentage: cat.percentage,
-        color: cat.color || DEFAULT_CATEGORIES[i]?.color || "#2563EB",
-        description: DEFAULT_CATEGORIES[i]?.description || "Classe gramatical",
-      }));
+      return apiCats.map((cat, i) => {
+        const meta = CATEGORY_META[cat.name] || DEFAULT_CATEGORIES[i];
+        return {
+          name: cat.name,
+          value: cat.value,
+          percentage: cat.percentage,
+          color: cat.color || meta?.color || "#2563EB",
+          description: meta?.description || "Classe gramatical",
+        };
+      });
     }
     return DEFAULT_CATEGORIES;
   }, [data]);
@@ -111,22 +159,22 @@ export function GrammaticalDistributionCard() {
               <BookOpen className="w-5 h-5" />
             </div>
             <CardTitle className="text-lg font-bold tracking-tight text-foreground">
-              Distribuição por Categoria Gramatical
+              Organização por Categoria Gramatical
             </CardTitle>
           </div>
           <CardDescription className="text-xs sm:text-sm text-muted-foreground">
-            Composição morfossintáctica detalhada das 200.500 entradas lexicográficas do MED
+            Composição morfossintáctica detalhada das entradas lexicográficas catalogadas no acervo
           </CardDescription>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
           <Badge variant="success" className="gap-1 text-[11px] font-semibold py-1">
             <CheckCircle2 className="w-3.5 h-3.5" />
-            AO45 Conforme
+            Padrão Oficial Conforme
           </Badge>
           <Badge variant="default" className="gap-1 text-[11px] font-semibold py-1 bg-primary/15 text-primary border-primary/30">
             <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-            Meta 200k Concluída
+            Acervo Integral
           </Badge>
         </div>
       </CardHeader>
@@ -177,7 +225,7 @@ export function GrammaticalDistributionCard() {
                                 y={(viewBox.cy ?? 0) + 18}
                                 className="fill-muted-foreground text-xs font-medium uppercase tracking-wider"
                               >
-                                Registos AO45
+                                Vocábulos Registados
                               </tspan>
                             </text>
                           );

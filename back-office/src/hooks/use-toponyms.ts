@@ -9,7 +9,7 @@ export function useAddToponym() {
   return useMutation({
     mutationFn: (data: ToponymData) => toponymsService.addToponym(data),
     onSuccess: () => {
-      SucessMessage("Registro adicionado com sucesso!");
+      SucessMessage("Registo adicionado com sucesso!");
       queryClient.invalidateQueries({ queryKey: ["toponyms"] });
     },
   });

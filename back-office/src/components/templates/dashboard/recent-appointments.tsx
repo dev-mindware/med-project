@@ -19,7 +19,7 @@ export function RecentActivity() {
   return (
     <div className="rounded-xl border border-border bg-card shadow-sm">
       <div className="p-6 pb-4">
-        <h3 className="font-semibold leading-none tracking-tight">Atividade Recente</h3>
+        <h3 className="font-semibold leading-none tracking-tight">Actividade Recente</h3>
         <p className="text-sm text-muted-foreground mt-1">
           Os últimos registos adicionados ao sistema.
         </p>

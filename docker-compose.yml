@@ -41,7 +41,7 @@ services:
       - path: ./api/.env
         required: false
     ports:
-      - "${POSTGRES_PORT:-5439}:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - med_pgdata:/var/lib/postgresql/data
     networks:

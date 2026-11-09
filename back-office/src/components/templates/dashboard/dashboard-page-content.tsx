@@ -17,12 +17,12 @@ export function DashboardPageContent() {
       {/* Mindgest-inspired Top Header Banner */}
       <TitleList
         title="Painel de Controlo & Acervo Lexicográfico"
-        suTitle="Monitorização em tempo real das 200.500 entradas, proveniência de 643 PDFs escolares e conformidade estrita ao AO45."
+        suTitle="Monitorização em tempo real das entradas lexicográficas, com ampla cobertura morfossintáctica e proveniência documental detalhada."
       >
         <div className="hidden sm:flex items-center gap-2">
           <Badge variant="outline" className="gap-1 border-primary/30 bg-primary/10 text-primary py-1 px-3 text-xs font-semibold">
             <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-            Meta de 200k Atingida
+            Acervo Consolidado
           </Badge>
           <Button asChild size="sm" className="gap-1.5 h-8 text-xs font-medium">
             <Link href="/vonalp/entries">
