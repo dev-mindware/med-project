@@ -3,11 +3,15 @@
 import { useEffect, useState } from "react"
 
 const images = [
-  "/angolan-cultural-festival.jpg",
-  "/angolan-culture-traditional-dance.jpg",
-  "/damian-patkowski-T-LfvX-7IVg-unsplash.jpg",
-  "/ninno-jackjr-CG6Gd__QIOY-unsplash.jpg",
+  "/hero-barragem-canyon.jpg",
+  "/hero-rochedo.jpg",
+  "/hero-pico-estrada.jpg",
+  "/hero-igreja.jpg",
+  "/hero-cascata.jpg",
+  "/hero-cubata.jpg",
 ]
+
+const SLIDE_SECONDS = 7
 
 /**
  * Fundo rotativo do topo da página inicial. Só a primeira imagem entra no carregamento
@@ -46,8 +50,8 @@ export function HeroSlides() {
           fetchPriority={index === 0 ? "high" : "low"}
           className="absolute inset-0 h-full w-full object-cover opacity-0"
           style={{
-            animation: "heroImageFade 28s ease-in-out infinite",
-            animationDelay: `${index * 7}s`,
+            animation: `heroImageFade ${images.length * SLIDE_SECONDS}s ease-in-out infinite`,
+            animationDelay: `${index * SLIDE_SECONDS}s`,
           }}
         />
       ))}
